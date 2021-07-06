@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{{useTraits}{properties}
+
+{methods}
+   /**
+    * Converting an object into an array.
+    */
+    public function serialize(): array
+    {
+        return $this->normalize();
+    }
+
+    /**
+     * Return current aggregate root unique key.
+     */
+    public function getAggregateRootId(): string
+    {
+        return $this->uuid->toNative();
+    }
+
+    /**
+     * Return entity primary key value.
+     */
+    public function getPrimaryKeyValue(): string
+    {
+        return $this->getAggregateRootId();
+    }
+}

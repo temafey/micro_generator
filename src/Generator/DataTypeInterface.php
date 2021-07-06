@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MicroModule\MicroserviceGenerator\Generator;
+
+/**
+ * Interface DataTypeInterface.
+ */
+interface DataTypeInterface
+{
+    public const BUILDER_STRUCTURE_TYPE         = 'type';
+    public const BUILDER_STRUCTURE_TYPE_ARGS    = 'args';
+    public const BUILDER_STRUCTURE_TYPE_METHODS = 'methods';
+    public const BUILDER_STRUCTURE_TYPE_RETURN  = 'return';
+
+    public const DATA_TYPE_INT = 'int';
+    public const DATA_TYPE_INTEGER = 'integer';
+    public const DATA_TYPE_FLOAT = 'float';
+    public const DATA_TYPE_MIXED = 'mixed';
+    public const DATA_TYPE_STRING = 'string';
+    public const DATA_TYPE_BOOL = 'bool';
+    public const DATA_TYPE_BOOLEAN = 'boolean';
+    public const DATA_TYPE_BOOL_TRUE = 'true';
+    public const DATA_TYPE_BOOL_FALSE = 'false';
+    public const DATA_TYPE_NULL = 'null';
+    public const DATA_TYPE_VOID = 'void';
+    public const DATA_TYPE_ARRAY = 'array';
+    public const DATA_TYPE_ARRAY_MIXED = 'mixed[]';
+    public const DATA_TYPE_CLOSURE = '\Closure';
+    public const DATA_TYPE_CALLABLE = 'callable';
+    public const DATA_TYPE_THIS = '$this';
+    public const DATA_TYPE_SELF = 'self';
+    public const DATA_TYPE_STATIC = 'static';
+    public const DATA_TYPE_ = '';
+    public const DATA_TYPE_UUID = 'uuid';
+
+    public const STRUCTURE_TYPE_COMMAND = 'command';
+    public const STRUCTURE_TYPE_QUERY = 'query';
+    public const STRUCTURE_TYPE_COMMAND_HANDLER = 'commandHandler';
+    public const STRUCTURE_TYPE_QUERY_HANDLER = 'queryHandler';
+    public const STRUCTURE_TYPE_EVENT = 'event';
+    public const STRUCTURE_TYPE_ENTITY = 'entity';
+    public const STRUCTURE_TYPE_FACTORY = 'factory';
+    public const STRUCTURE_TYPE_SERVICE = 'service';
+    public const STRUCTURE_TYPE_DTO = 'dto';
+    public const STRUCTURE_TYPE_VALUE_OBJECT = 'valueObject';
+    public const STRUCTURE_TYPE_SAGA = 'saga';
+    public const STRUCTURE_TYPE_PROJECTOR = 'projector';
+    public const STRUCTURE_TYPE_REPOSITORY = 'repository';
+    public const STRUCTURE_TYPE_EXCEPTION = 'exception';
+    public const STRUCTURE_TYPE_MIGRATIONS = 'migrations';
+    public const STRUCTURE_TYPE_RPC = 'rpc';
+    public const STRUCTURE_TYPE_CLI = 'cli';
+
+    public const STRUCTURE_LAYER_APPLICATION = 'application';
+    public const STRUCTURE_LAYER_DOMAIN = 'domain';
+    public const STRUCTURE_LAYER_INFRASTRUCTURE = 'infrastructure';
+    public const STRUCTURE_LAYER_PRESENTATION = 'presentation';
+
+    public const VALUE_OBJECT_NAMESPACE = 'MicroModule\ValueObject\\';
+    public const VALUE_OBJECT_TYPE_ENTITY = 'value_object_entity';
+    public const VALUE_OBJECT_TYPE_IDENTITY_UUID = 'identity_uuid';
+    public const VALUE_OBJECT_TYPE_STRING = 'stringLiteral_string';
+    public const VALUE_OBJECT_TYPE_NUMBER_INTEGER = 'number_integer';
+    public const VALUE_OBJECT_TYPE_NUMBER_REAL = 'number_real';
+    public const VALUE_OBJECT_TYPE_STRUCTURE_COLLECTION = 'structure_collection';
+    public const VALUE_OBJECT_TYPE_STRUCTURE_DICTIONARY = 'structure_dictionary';
+    public const VALUE_OBJECT_TYPE_STRUCTURE_KEYVALUE = 'structure_keyvalue';
+    public const VALUE_OBJECT_TYPE_DATETIME_DATETIME = 'dateTime_datetime';
+    public const VALUE_OBJECT_TYPE_DATETIME_DATE = 'dateTime_date';
+    public const VALUE_OBJECT_TYPE_DATETIME_TIME = 'dateTime_time';
+    public const VALUE_OBJECT_TYPE_PERSON_AGE = 'person_age';
+    public const VALUE_OBJECT_TYPE_PERSON_GENDER = 'person_gender';
+    public const VALUE_OBJECT_TYPE_PERSON_NAME = 'person_name';
+
+    public const PROPERTY_VISIBILITY_PUBLIC = "public";
+    public const PROPERTY_VISIBILITY_PROTECTED = "protected";
+    public const PROPERTY_VISIBILITY_PRIVATE = "private";
+    public const PROPERTY_CONSTANT = "const";
+
+    public const DOMAIN_BASE_STRUCTURE = [
+        DataTypeInterface::STRUCTURE_LAYER_APPLICATION => [
+            DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER => [],
+            DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER => [],
+            DataTypeInterface::STRUCTURE_TYPE_FACTORY => [],
+            DataTypeInterface::STRUCTURE_TYPE_PROJECTOR => [],
+            DataTypeInterface::STRUCTURE_TYPE_SAGA => [],
+            DataTypeInterface::STRUCTURE_TYPE_SERVICE => [],
+            DataTypeInterface::STRUCTURE_TYPE_DTO => [],
+        ],
+
+        DataTypeInterface::STRUCTURE_LAYER_DOMAIN => [
+            DataTypeInterface::STRUCTURE_TYPE_ENTITY => [],
+            DataTypeInterface::STRUCTURE_TYPE_COMMAND => [],
+            DataTypeInterface::STRUCTURE_TYPE_QUERY => [],
+            DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
+            DataTypeInterface::STRUCTURE_TYPE_SERVICE => [],
+            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => [],
+            DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT => [],
+            DataTypeInterface::STRUCTURE_TYPE_EXCEPTION => [],
+            DataTypeInterface::STRUCTURE_TYPE_FACTORY => [
+                DataTypeInterface::STRUCTURE_TYPE_ENTITY => [],
+                DataTypeInterface::STRUCTURE_TYPE_COMMAND => [],
+                DataTypeInterface::STRUCTURE_TYPE_QUERY => [],
+                DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
+                DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT => [],
+            ],
+
+        ],
+
+        DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE => [
+            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => [],
+            DataTypeInterface::STRUCTURE_TYPE_SERVICE => [],
+            DataTypeInterface::STRUCTURE_TYPE_MIGRATIONS => [],
+        ],
+
+        DataTypeInterface::STRUCTURE_LAYER_PRESENTATION => [
+            DataTypeInterface::STRUCTURE_TYPE_RPC => [],
+            DataTypeInterface::STRUCTURE_TYPE_CLI => [],
+        ],
+    ];
+}

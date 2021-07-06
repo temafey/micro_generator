@@ -1,0 +1,7 @@
+
+    /**
+     * {methodComment}
+     */
+    public function {methodName}({arguments}): void
+    {{methodLogic}
+    }

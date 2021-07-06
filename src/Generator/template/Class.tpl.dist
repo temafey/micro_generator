@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}
+{{methods}}

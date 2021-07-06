@@ -1,0 +1,5 @@
+
+    /**
+     * {methodComment}
+     */
+    public function {methodName}({arguments}){returnType};
