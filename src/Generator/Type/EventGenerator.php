@@ -42,87 +42,111 @@ class EventGenerator extends AbstractGenerator
         if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
             throw new Exception(sprintf("Entity for event '%s' was not found!", $this->name));
         }
-        $useStatement = [];
         $implements = [];
         $useTraits = [];
-        $properties = [];
-        $constructArguments = [];
-        $constructArgumentsInitialize = [];
         $methods = [];
-        $classNamespace = $this->getClassNamespace($this->type);
-        $useStatement[] = "\r\nuse ".$classNamespace. "\\AbstractEvent;";
-        $useStatement[] = "\r\nuse Assert\Assertion;";
-        $useStatement[] = "\r\nuse Assert\AssertionFailedException;";
+        $classNamespace = $this->getClassNamespace($this->type);        
+        $this->addUseStatement("Assert\Assertion");
+        $this->addUseStatement("Assert\AssertionFailedException");
+        
+        if ($this->useCommonComponent) {
+            $this->addUseStatement("MicroModule\Common\Domain\Event\AbstractEvent");
+        } else {
+            $this->addUseStatement($classNamespace. "\\AbstractEvent");
+        }
         $extends = "AbstractEvent";
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $useStatement[] = sprintf("\r\nuse %s;", $this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $methodName = "get".$shortClassName;
-            $methodComment = sprintf("Return %s value object.", $shortClassName);
-            $propertyName = lcfirst($shortClassName);
-            $properties[] = $this->renderProperty(
-                self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-                $shortClassName,
-                $propertyName
-            );
-            $methods[] = $this->renderMethod(
-                self::METHOD_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                $methodName,
-                "",
-                $shortClassName,
-                "",
-                "\$this->".$propertyName
-            );
-            $constructArguments[] = $shortClassName." $".$propertyName;
-            $constructArgumentsInitialize[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $methodLogic = $this->renderValueObjectGetMethod($arg);
+
+            if (null === $methodLogic) {
+                continue;
+            }
+            $methods[] = $methodLogic;
         }
-        array_unshift($methods, $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
-            "Constructor",
-            "__construct",
-            implode(", ", $constructArguments),
-            "",
-            implode("", $constructArgumentsInitialize),
-            ""
-        ));
-        $methods[] = $this->renderDeserializeMethod();
-        $methods[] = $this->renderSerializeMethod();
+        if (!empty($this->constructArgumentsAssignment)) {
+            $methodLogic = implode("", $this->constructArgumentsAssignment);
+            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid);";
+                array_unshift(
+                    $methods, $this->renderMethod(
+                    self::METHOD_TEMPLATE_TYPE_DEFAULT,
+                    "Constructor",
+                    "__construct",
+                    implode(", ", $this->constructArguments),
+                    "",
+                    $methodLogic,
+                    ""
+                )
+            );
+            $methods[] = $this->renderDeserializeMethod();
+            $methods[] = $this->renderSerializeMethod();
+        }
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_FULL,
             $classNamespace,
-            $useStatement,
+            $this->useStatement,
             $extends,
             $implements,
             $useTraits,
-            $properties,
+            $this->properties,
             $methods
+        );
+    }
+
+    protected function renderValueObjectGetMethod(string $valueObjectName): ?string
+    {
+        $shortClassName = $this->getShortClassName($valueObjectName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $propertyName = lcfirst($shortClassName);
+        $methodName = "get".$shortClassName;
+
+        if ($valueObjectName === self::UNIQUE_KEY_UUID) {
+            $this->addUseStatement("Ramsey\Uuid\UuidInterface");
+            $shortClassName = "UuidInterface";
+        } elseif ($this->useCommonComponent && $valueObjectName === self::UNIQUE_KEY_PROCESS_UUID) {
+            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
+        } else {
+            $this->addUseStatement(sprintf("%s;", $this->getClassName($valueObjectName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
+            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        }
+        $this->constructArguments[] = $shortClassName." $".$propertyName;
+
+        if ($this->useCommonComponent && in_array($valueObjectName, self::UNIQUE_KEYS)) {
+            return null;
+        }
+        $methodComment = sprintf("Return %s value object.", $shortClassName);
+        $this->addProperty($propertyName, $shortClassName, $methodComment);
+
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            $methodComment,
+            $methodName,
+            "",
+            $shortClassName,
+            "",
+            "\$this->".$propertyName
         );
     }
 
     protected function renderDeserializeMethod(): string
     {
         $assertion = [];
-        $constructArguments = [];
+        $this->constructArguments = [];
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
             $assertion[] = sprintf("\r\n\t\tAssertion::keyExists(\$data, '%s');", $arg);
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $constructArguments[] = sprintf("\r\n\t\t\t$shortClassName::fromNative(\$data['%s'])", $arg);
+            $this->constructArguments[] = sprintf("\r\n\t\t\t$shortClassName::fromNative(\$data['%s'])", $arg);
         }
 
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            self::METHOD_TEMPLATE_TYPE_STATIC,
             'Initialize event from data array.',
             "deserialize",
             "array \$data",
             "static",
             implode("", $assertion),
-            "new static(".implode(",", $constructArguments)."\r\n\t\t)"
+            "new static(".implode(",", $this->constructArguments)."\r\n\t\t)"
         );
     }
 
@@ -140,7 +164,7 @@ class EventGenerator extends AbstractGenerator
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             'Convert event object to array.',
             "serialize",
-            "array \$data",
+            "",
             "array",
             "",
             "[".implode(",", $arguments)."\r\n\t\t]"

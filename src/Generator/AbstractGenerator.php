@@ -14,21 +14,47 @@ use MicroModule\MicroserviceGenerator\Generator\Helper\CodeHelper;
  *
  * @license http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  */
-abstract class AbstractGenerator
+abstract class AbstractGenerator implements GeneratorInterface
 {
     use CodeHelper;
 
-    protected const CLASS_TEMPLATE_TYPE_DEFAULT         = "Class";
-    protected const CLASS_TEMPLATE_TYPE_FULL            = "ClassFull";
-    protected const CLASS_TEMPLATE_TYPE_ENTITY          = "ClassEntity";
-    protected const CLASS_TEMPLATE_TYPE_VALUE_OBJECT    = "ClassValueObject";
-    protected const METHOD_TEMPLATE_TYPE_DEFAULT        = "Method";
-    protected const METHOD_TEMPLATE_TYPE_STATIC         = "MethodStatic";
-    protected const METHOD_TEMPLATE_TYPE_BOOL           = "MethodBool";
-    protected const METHOD_TEMPLATE_TYPE_INTERFACE      = "MethodInterface";
-    protected const METHOD_TEMPLATE_TYPE_VOID           = "MethodVoid";
-    protected const PROPERTY_TEMPLATE_TYPE_DEFAULT      = "Property";
-    protected const INTERFACE_TEMPLATE_TYPE_DEFAULT     = "Interface";
+    protected const CLASS_TEMPLATE_TYPE_DEFAULT             = "Class";
+    protected const CLASS_TEMPLATE_TYPE_FULL                = "ClassFull";
+    protected const CLASS_TEMPLATE_TYPE_ENTITY              = "ClassEntity";
+    protected const CLASS_TEMPLATE_TYPE_READ_MODEL          = "ClassReadModel";
+    protected const CLASS_TEMPLATE_TYPE_READ_MODEL_INTERFACE= "ClassReadModelInterface";
+    protected const CLASS_TEMPLATE_TYPE_VALUE_OBJECT        = "ClassValueObject";
+    protected const CLASS_TEMPLATE_REPOSITORY_ENTITY_STORE  = "repository/ClassEntityStoreRepository";
+    protected const CLASS_TEMPLATE_REPOSITORY_ENTITY_STORE_INTERFACE  = "repository/ClassEntityStoreInterfaceRepository";
+    protected const CLASS_TEMPLATE_REPOSITORY_EVENT_SOURCING_STORE  = "repository/ClassEventSourcingStoreRepository";
+    protected const CLASS_TEMPLATE_REPOSITORY_READ_MODEL    = "repository/ClassEventSourcingStoreRepository";
+    protected const CLASS_TEMPLATE_REPOSITORY_TASK          = "repository/ClassTaskRepository";
+    protected const METHOD_TEMPLATE_TYPE_DEFAULT            = "Method";
+    protected const METHOD_TEMPLATE_TYPE_STATIC             = "MethodStatic";
+    protected const METHOD_TEMPLATE_TYPE_BOOL               = "MethodBool";
+    protected const METHOD_TEMPLATE_TYPE_INTERFACE          = "MethodInterface";
+    protected const METHOD_TEMPLATE_TYPE_VOID               = "MethodVoid";
+    protected const METHOD_TEMPLATE_TYPE_FIND_BY_UUID       = "MethodFindByUuid";
+    protected const METHOD_TEMPLATE_TYPE_FIND_ONE_BY        = "MethodFindOneBy";
+    protected const METHOD_TEMPLATE_TYPE_FIND_BY_CRITERIA   = "MethodFindByCriteria";
+    protected const METHOD_TEMPLATE_TYPE_READ_MODEL         = "MethodReadModel";
+    protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
+    protected const PROPERTY_TEMPLATE_TYPE_DEFAULT          = "Property";
+    protected const INTERFACE_TEMPLATE_TYPE_DEFAULT         = "Interface";
+
+    public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";
+    public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";
+    public const METHOD_TYPE_FIND_BY_CRITERIA               = "findByCriteria";
+
+    /**
+     * Domain name.
+     */
+    protected string $domainName;
+
+    /**
+     * Class DDD layer.
+     */
+    protected string $layer;
 
     /**
      * Object name.
@@ -39,11 +65,6 @@ abstract class AbstractGenerator
      * Class DDD pattern type.
      */
     protected string $type;
-
-    /**
-     * Class DDD layer.
-     */
-    protected string $layer;
 
     /**
      * Project global namespace.
@@ -79,11 +100,38 @@ abstract class AbstractGenerator
     protected array $useStatement = [];
 
     /**
-     * Method preprocessor closure.
-     *
-     * @var PreprocessorInterface
+     * Array of class rendered properties.
+     * @var string[]
      */
-    protected $preprocessor;
+    protected array $properties = [];
+
+    /**
+     * Constructor method arguments.
+     * @var string[]
+     */
+    protected $constructArguments = [];
+
+    /**
+     * Constructor method arguments assignment.
+     * @var string[]
+     */
+    protected $constructArgumentsAssignment = [];
+
+    /**
+     * Method preprocessor closure.
+     */
+    protected ?PreprocessorInterface $preprocessor = null;
+
+    /**
+     * Use common abstract component.
+     */
+    protected bool $useCommonComponent = true;
+
+    /**
+     * Additional template variables.
+     * @var <string, mixed>
+     */
+    protected array $additionalVariables = [];
 
     /**
      * Constructor.
@@ -97,6 +145,7 @@ abstract class AbstractGenerator
      * @param string $layerPatternPath
      */
     public function __construct(
+        string $domainName,
         string $layer,
         string $type,
         string $name,
@@ -105,6 +154,7 @@ abstract class AbstractGenerator
         array $domainStructure,
         string $layerPatternPath
     ) {
+        $this->domainName = $domainName;
         $this->layer = $layer;
         $this->type = $type;
         $this->name = $name;
@@ -112,7 +162,49 @@ abstract class AbstractGenerator
         $this->structure = $structure;
         $this->domainStructure = $domainStructure;
         $this->layerPatternPath = $layerPatternPath;
-        $this->sourceFile = $layerPatternPath.DIRECTORY_SEPARATOR.$this->getShortClassName($name, $type).".php";
+        $this->setSourceFile();
+        $this->initAdditionalVariables();
+    }
+
+    /**
+     * Set source file full path.
+     */
+    protected function setSourceFile(): void
+    {
+        $this->sourceFile = $this->layerPatternPath.DIRECTORY_SEPARATOR.$this->getShortClassName($this->name , $this->type).".php";
+    }
+
+    /**
+     * Initializes additional variables to use in template rendering.
+     */
+    protected function initAdditionalVariables(): void
+    {
+        $this->additionalVariables['classNamespace'] = $this->getClassNamespace($this->type);
+        $this->additionalVariables['shortClassName'] = $this->getShortClassName($this->name, $this->type);
+        $this->additionalVariables['shortInterfaceName'] = $this->getShortInterfaceName($this->name, $this->type);
+        $this->additionalVariables['shortEntityName'] = $this->getEntityName();
+        $this->additionalVariables['shortEntityInterfaceName'] = $this->getEntityName();
+
+        if (strpos($this->additionalVariables['shortEntityInterfaceName'], "Interface") === false)  {;
+            $this->additionalVariables['shortEntityInterfaceName'] .= "Interface";
+        }
+        $this->additionalVariables['shortValueObjectName'] = $this->getEntitValueObjectClassName();
+    }
+
+    /**
+     * Return main entity short class name.
+     */
+    protected function getEntityName(): string
+    {
+        return $this->getShortClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+    }
+
+    /**
+     * Return main entity short class name.
+     */
+    protected function getEntitValueObjectClassName(): string
+    {
+        return $this->getValueObjectShortClassName($this->domainName);
     }
 
     /**
@@ -177,7 +269,8 @@ abstract class AbstractGenerator
         array $implements,
         array $useTraits,
         array $properties,
-        array $methods
+        array $methods,
+        array $additionalVariables = []
     ): string {
         $template = new Template(
             sprintf(
@@ -200,19 +293,23 @@ abstract class AbstractGenerator
             $implements = " implements ".$implements;
         }
         $template->setVar(
-            [
-                "namespace" => $classNamespace,
-                "className" => $shortClassName,
-                "extends" => $extends,
-                "implements" => $implements,
-                "fullClassName" => $this->getClassName($this->name, $this->type),
-                "useStatement" => implode("", $useStatement),
-                "useTraits" => implode(" ,", $useTraits),
-                "properties" => implode("", $properties),
-                "methods" => implode("", $methods),
-                "date" => date("Y-m-d"),
-                "time" => date("H:i:s"),
-            ]
+            array_merge(
+                [
+                    "namespace" => $classNamespace,
+                    "className" => $shortClassName,
+                    "extends" => $extends,
+                    "implements" => $implements,
+                    "fullClassName" => $this->getClassName($this->name, $this->type),
+                    "useStatement" => implode("", $useStatement),
+                    "useTraits" => implode(" ,", $useTraits),
+                    "properties" => implode("", $properties),
+                    "methods" => implode("", $methods),
+                    "date" => date("Y-m-d"),
+                    "time" => date("H:i:s"),
+                ],
+                $this->additionalVariables,
+                $additionalVariables
+            )
         );
 
         return $template->render();
@@ -227,7 +324,8 @@ abstract class AbstractGenerator
         string $template,
         string $classNamespace,
         array $useStatement,
-        array $methods
+        array $methods,
+        array $additionalVariables = []
     ): string {
         $template = new Template(
             sprintf(
@@ -241,14 +339,18 @@ abstract class AbstractGenerator
         sort($useStatement);
         $shortInterfaceName = $this->getShortInterfaceName($this->name, $this->type);
         $template->setVar(
-            [
-                "namespace" => $classNamespace,
-                "interfaceName" => $shortInterfaceName,
-                "useStatement" => implode("", $useStatement),
-                "methods" => implode("", $methods),
-                "date" => date("Y-m-d"),
-                "time" => date("H:i:s"),
-            ]
+            array_merge(
+                [
+                    "namespace" => $classNamespace,
+                    "interfaceName" => $shortInterfaceName,
+                    "useStatement" => implode("", $useStatement),
+                    "methods" => implode("", $methods),
+                    "date" => date("Y-m-d"),
+                    "time" => date("H:i:s"),
+                ],
+                $this->additionalVariables,
+                $additionalVariables
+            )
         );
 
         return $template->render();
@@ -265,7 +367,8 @@ abstract class AbstractGenerator
         string $propertyVisibility,
         string $propertyType,
         string $propertyName,
-        string $defaultValue = ""
+        string $defaultValue = "",
+        array $additionalVariables = []
     ): string {
         if ($propertyType !== DataTypeInterface::PROPERTY_CONSTANT) {
             $propertyName = "$".$propertyName;
@@ -283,17 +386,22 @@ abstract class AbstractGenerator
         if ($defaultValue) {
             $defaultValue = " = ".$defaultValue;
         }
+
         if ($defaultValue === DataTypeInterface::DATA_TYPE_NULL) {
             $propertyType = "?".$propertyType;
         }
         $template->setVar(
-            [
-                "propertyComment" => $propertyComment,
-                "propertyVisibility" => $propertyVisibility,
-                "propertyName" => $propertyName,
-                "propertyType" => $propertyType,
-                "propertyDefault" => $defaultValue
-            ]
+            array_merge(
+                [
+                    "propertyComment" => $propertyComment,
+                    "propertyVisibility" => $propertyVisibility,
+                    "propertyName" => $propertyName,
+                    "propertyType" => $propertyType,
+                    "propertyDefault" => $defaultValue
+                ],
+                $this->additionalVariables,
+                $additionalVariables
+            )
         );
 
         return $template->render();
@@ -311,11 +419,12 @@ abstract class AbstractGenerator
         string $arguments,
         string $returnType,
         string $methodLogic,
-        string $return
+        string $return,
+        array $additionalVariables = []
     ): string {
         $template = new Template(
             sprintf(
-                "%s%stemplate%s%s.tpl",
+                "%s%stemplate/method%s%s.tpl",
                 realpath(__DIR__),
                 DIRECTORY_SEPARATOR,
                 DIRECTORY_SEPARATOR,
@@ -330,36 +439,45 @@ abstract class AbstractGenerator
         if ($returnType) {
             $returnType = ": ".$returnType;
         }
+
         if ($return) {
             $return = "return ".$return.";";
         }
-
+        
         if ($methodLogic && $returnType) {
             $methodLogic .= "\r\n";
         }
 
+        if (substr($methodName, 0, 2) !== '__') {
+            $methodName = $this->underscoreAndHyphenToCamelCase($methodName);
+        }
         $template->setVar(
-            [
-                "methodComment" => $methodComment,
-                "methodName" => $methodName,
-                "arguments" => $arguments,
-                "returnType" => $returnType,
-                "methodLogic" => $methodLogic,
-                "return" => $return,
-            ]
+            array_merge(
+                [
+                    "methodComment" => $methodComment,
+                    "methodName" => $methodName,
+                    "arguments" => $arguments,
+                    "returnType" => $returnType,
+                    "methodLogic" => $methodLogic,
+                    "return" => $return,
+                ],
+                $this->additionalVariables,
+                $additionalVariables
+            )
         );
 
         return $template->render();
     }
 
     /**
-     * Add new use statement to generator.
+     * Add new use statement to code generator process.
      */
     protected function addUseStatement(string $useStatement): void
     {
         if (!strpos($useStatement, "use ")) {
             $useStatement = "\r\nuse ".$useStatement;
         }
+
         if ($useStatement[-1] !== ";") {
             $useStatement .= ";";
         }
@@ -368,6 +486,30 @@ abstract class AbstractGenerator
             return;
         }
         $this->useStatement[] = $useStatement;
+    }
+
+    /**
+     * Add new rendered property to code generator process.
+     */
+    protected function addProperty(
+        string $name, 
+        string $type, 
+        string $comment = "",
+        string $defaultValue = "",
+        string $template = self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
+        string $visibility = DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED
+    ): void {
+        if (isset($this->properties[$name])) {
+            return;
+        }
+        $this->properties[$name] = $this->renderProperty(
+            $template,
+            $comment,
+            $visibility,
+            $type,
+            $name,
+            $defaultValue
+        );
     }
 
     /**

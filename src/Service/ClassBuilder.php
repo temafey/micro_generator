@@ -6,6 +6,7 @@ namespace MicroModule\MicroserviceGenerator\Service;
 
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
+use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\CodeHelper;
 use MicroModule\MicroserviceGenerator\Generator\Preprocessor\PreprocessorInterface;
 
@@ -73,17 +74,10 @@ class ClassBuilder
     /**
      * Generate test.
      *
-     * @param string $name
-     * @param string $type
-     * @param mixed[] $structure
-     * @param mixed[] $domainStructure
-     * @param string $layerPatternPath
-     *
-     * @return bool
-     *
      * @throws InvalidClassTypeException
      */
     public function generate(
+        string $domainName,
         string $layer,
         string $type,
         string $name,
@@ -93,34 +87,35 @@ class ClassBuilder
     ): bool {
         if (
             $type !== DataTypeInterface::STRUCTURE_TYPE_COMMAND &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_QUERY &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_EVENT &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER_TASK &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_SAGA &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_PROJECTOR &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY &&
-            $type !== DataTypeInterface::STRUCTURE_TYPE_ENTITY
+            $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_ENTITY &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_ENTITY_INTERFACE &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE
         ) {
             return false;
         }
 
-        return $this->generateFile($layer, $type, $name, $structure, $domainStructure, $layerPatternPath);
+        return $this->generateFile($domainName, $layer, $type, $name, $structure, $domainStructure, $layerPatternPath);
     }
 
     /**
      * Generate skeleton for source class.
-     *
-     * @param string $name
-     * @param string $type
-     * @param mixed[] $structure
-     * @param mixed[] $domainStructure
-     * @param string $layerPatternPath
-     *
+     * 
      * @throws InvalidClassTypeException
      */
     protected function generateFile(
+        string $domainName,
         string $layer,
         string $type,
         string $name,
@@ -128,11 +123,12 @@ class ClassBuilder
         array $domainStructure,
         string $layerPatternPath
     ): bool {
-        $generatorClassName = $this->getClassGenerator($type);
-        $generator = new $generatorClassName($layer, $type, $name, $this->projectNamespace, $structure, $domainStructure, $layerPatternPath);
+        $generatorClassName = $this->getClassGenerator($type, $name);
+        /** @var GeneratorInterface $generator */
+        $generator = new $generatorClassName($domainName, $layer, $type, $name, $this->projectNamespace, $structure, $domainStructure, $layerPatternPath);
         $className = $generator->getFullClassName();
 
-        if(class_exists($className)) {
+        if (class_exists($className)) {
             return false;
         }
         $preprocessor = $this->getPreprocessor($className);
@@ -174,8 +170,17 @@ class ClassBuilder
      *
      * @throws InvalidClassTypeException
      */
-    protected function getClassGenerator(string $type): string
+    protected function getClassGenerator(string $type, string $name): string
     {
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE) {
+            $classGenerator = 'MicroModule\MicroserviceGenerator\Generator\Type\Repository\\'.ucfirst($this->underscoreAndHyphenToCamelCase($name)).'InterfaceGenerator';
+        } else {
+            $classGenerator = 'MicroModule\MicroserviceGenerator\Generator\Type\\'.ucfirst($type).'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($name)).'Generator';
+        }
+
+        if (class_exists($classGenerator)) {
+            return $classGenerator;
+        }
         $classGenerator = 'MicroModule\MicroserviceGenerator\Generator\Type\\'.ucfirst($type).'Generator';
 
         if (!class_exists($classGenerator)) {

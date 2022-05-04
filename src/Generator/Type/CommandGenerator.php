@@ -42,61 +42,90 @@ class CommandGenerator extends AbstractGenerator
         if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
             throw new Exception(sprintf("Entity for command '%s' was not found!", $this->name));
         }
-        $useStatement = [];
         $implements = [];
         $useTraits = [];
-        $properties = [];
-        $constructArguments = [];
-        $constructArgumentsInitialize = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
-        $useStatement[] = "\r\nuse ".$classNamespace. "\\"."AbstractCommand;";
+
+        if ($this->useCommonComponent) {
+            $this->addUseStatement("MicroModule\Common\Domain\Command\AbstractCommand");
+        } else {
+            $this->addUseStatement($classNamespace."\\"."AbstractCommand");
+        }
         $extends = "AbstractCommand";
+        $addVar = [];
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $useStatement[] = sprintf("\r\nuse %s;", $this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $methodName = "get".$shortClassName;
-            $methodComment = sprintf("Return %s value object.", $shortClassName);
-            $propertyName = lcfirst($shortClassName);
-            $properties[] = $this->renderProperty(
-                self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-                $shortClassName,
-                $propertyName
-            );
-            $methods[] = $this->renderMethod(
-                self::METHOD_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                $methodName,
-                "",
-                $shortClassName,
-                "",
-                "\$this->".$propertyName
-            );
-            $constructArguments[] = $shortClassName." $".$propertyName;
-            $constructArgumentsInitialize[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $renderedMethod = $this->renderStructureMethod($arg, $addVar);
+
+            if (null === $renderedMethod) {
+                continue;
+            }
+            $methods[] = $renderedMethod;
         }
-        array_unshift($methods, $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
-            "Constructor",
-            "__construct",
-            implode(", ", $constructArguments),
-            "",
-            implode("", $constructArgumentsInitialize),
-            ""
-        ));
+
+        if (!empty($this->constructArgumentsAssignment)) {
+            $methodLogic = implode("", $this->constructArgumentsAssignment);
+            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid);";
+            array_unshift(
+                $methods, $this->renderMethod(
+                    self::METHOD_TEMPLATE_TYPE_DEFAULT,
+                    "Constructor",
+                    "__construct",
+                    implode(", ", $this->constructArguments),
+                    "",
+                    $methodLogic,
+                    ""
+                )
+            );
+        }
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_FULL,
             $classNamespace,
-            $useStatement,
+            $this->useStatement,
             $extends,
             $implements,
             $useTraits,
-            $properties,
+            $this->properties,
             $methods
+        );
+    }
+
+    public function renderStructureMethod(string $arg, array $addVar = []): ?string
+    {
+        if ($arg === self::UNIQUE_KEY_UUID) {
+            $this->addUseStatement("Ramsey\Uuid\UuidInterface");
+            $shortClassName = "UuidInterface";
+            $propertyName = self::UNIQUE_KEY_UUID;
+        } elseif ($arg === self::UNIQUE_KEY_PROCESS_UUID) {
+            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
+            $shortClassName = "ProcessUuid";
+            $propertyName = lcfirst($shortClassName);
+        } else {
+            $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $propertyName = lcfirst($shortClassName);
+            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        }
+        $methodComment = sprintf("Return %s value object.", $shortClassName);
+        $this->constructArguments[] = $shortClassName." $".$propertyName;
+
+        if ($this->useCommonComponent && in_array($arg, self::UNIQUE_KEYS)) {
+            return null;
+        }
+        $this->addProperty($propertyName, $shortClassName, $methodComment);
+        $methodName = "get".$shortClassName;
+
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            $methodComment,
+            $methodName,
+            "",
+            $shortClassName,
+            "",
+            "\$this->".$propertyName,
+            $addVar
         );
     }
 }

@@ -1,0 +1,16 @@
+
+    /**
+     * {methodComment}
+     */
+    public function {methodName}({arguments}){returnType}
+    {
+        try {
+            $this->readModelStore->{methodName}One({readModelArguments});
+        } catch (DBALEventStoreException $e) {
+            throw new {ReadModelException}(
+                '{arguments} was not {methodName} in read model.',
+                (int) $e->getCode(),
+                $e
+            );
+        }{return}
+    }

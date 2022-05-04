@@ -17,46 +17,36 @@ use RuntimeException;
  *
  * @SuppressWarnings(PHPMD)
  */
-class Template
+class Template implements TemplateInterface
 {
     /**
      * Template name.
-     *
-     * @var string
      */
-    protected $template = '';
+    protected string $template = '';
 
     /**
      * Template open tag delimiter.
-     *
-     * @var string
      */
-    protected $openDelimiter = '{';
+    protected string $openDelimiter;
 
     /**
      * Template close tag delimiter.
-     *
-     * @var string
      */
-    protected $closeDelimiter = '}';
+    protected string $closeDelimiter;
 
     /**
      * Template values.
      *
      * @var mixed[]
      */
-    protected $values = [];
+    protected array $values = [];
 
     /**
      * Template constructor.
      *
-     * @param string $file
-     * @param string $openDelimiter
-     * @param string $closeDelimiter
-     *
      * @throws Exception
      */
-    public function __construct(string $file = '', string $openDelimiter = '{', string $closeDelimiter = '}')
+    public function __construct(string $file, string $openDelimiter = '{', string $closeDelimiter = '}')
     {
         $this->setFile($file);
         $this->openDelimiter = $openDelimiter;
@@ -65,8 +55,6 @@ class Template
 
     /**
      * Sets the template file.
-     *
-     * @param string $file
      *
      * @throws Exception
      */
@@ -111,8 +99,6 @@ class Template
 
     /**
      * Renders the template and returns the result.
-     *
-     * @return string
      */
     public function render(): string
     {
@@ -127,8 +113,6 @@ class Template
 
     /**
      * Renders the template and writes the result to a file.
-     *
-     * @param string $target
      */
     public function renderTo(string $target): void
     {
@@ -143,7 +127,6 @@ class Template
             if (null === $error) {
                 $error = ['message' => sprintf('Error with writing into \'%s\' file.', $target)];
             }
-
             $pos = strpos($error['message'], ':');
 
             if (false !== $pos) {

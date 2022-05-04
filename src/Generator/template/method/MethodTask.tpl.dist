@@ -1,0 +1,13 @@
+
+    /**
+     * {methodComment}
+     */
+    public function {methodName}({arguments}): void
+    {
+		$this->produce(
+			{factoryCommandName},
+			[
+				{commandArguments}
+			]
+		);
+    }

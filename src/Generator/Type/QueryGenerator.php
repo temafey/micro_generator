@@ -42,30 +42,25 @@ class QueryGenerator extends AbstractGenerator
         if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
             throw new Exception(sprintf("Entity for query '%s' was not found!", $this->name));
         }
-        $useStatement = [];
         $implements = [];
         $useTraits = [];
-        $properties = [];
-        $constructArguments = [];
-        $constructArgumentsInitialize = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
-        $useStatement[] = "\r\nuse ".$classNamespace. "\\"."AbstractQuery;";
+        
+        if ($this->useCommonComponent) {
+            $this->addUseStatement("MicroModule\Common\Domain\AbstractQuery");
+        } else {
+            $this->addUseStatement($classNamespace. "\\"."AbstractQuery");
+        }
         $extends = "AbstractQuery";
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $useStatement[] = sprintf("\r\nuse %s;", $this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+            $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
             $methodComment = "";
             $propertyName = lcfirst($shortClassName);
-            $properties[] = $this->renderProperty(
-                self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-                $shortClassName,
-                $propertyName
-            );
+            $this->addProperty($propertyName, $shortClassName, $methodComment);            
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_DEFAULT,
                 $methodComment,
@@ -75,27 +70,27 @@ class QueryGenerator extends AbstractGenerator
                 "",
                 "\$this->".$propertyName
             );
-            $constructArguments[] = $shortClassName." $".$propertyName;
-            $constructArgumentsInitialize[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $this->constructArguments[] = $shortClassName." $".$propertyName;
+            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
         array_unshift($methods, $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $constructArguments),
+            implode(", ", $this->constructArguments),
             "",
-            implode("", $constructArgumentsInitialize),
+            implode("", $this->constructArgumentsAssignment),
             ""
         ));
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_FULL,
             $classNamespace,
-            $useStatement,
+            $this->useStatement,
             $extends,
             $implements,
             $useTraits,
-            $properties,
+            $this->properties,
             $methods
         );
     }

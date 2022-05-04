@@ -19,10 +19,6 @@ use ReflectionException;
  */
 class EntityGenerator extends AbstractGenerator
 {
-    public const UNIQUE_KEY_UUID = 'uuid';
-    public const UNIQUE_KEY_PROCESS_UUID = 'process_uuid';
-    public const UNIQUE_KEYS = [self::UNIQUE_KEY_PROCESS_UUID, self::UNIQUE_KEY_UUID];
-
     /**
      * Generate test class code.
      *
@@ -38,29 +34,22 @@ class EntityGenerator extends AbstractGenerator
     {
         $implements = [];
         $useTraits = [];
-        $properties = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
+        $shortClassName = $this->getShortClassName($this->name, $this->type);
         $this->addUseStatement("Assert\Assertion;");
         $this->addUseStatement("Broadway\EventSourcing\EventSourcedAggregateRoot;");
         $this->addUseStatement("Broadway\Serializer\Serializable;");
         $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\AggregateAssemblerInterface;");
-        $this->addUseStatement($classNamespace. "\\EntityInterface;");
-        $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\AggregateAssemblerInterface");
+        $this->addUseStatement("MicroModule\Common\Domain\Entity\EntityInterface");
+        $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
-        $implements[] = "AggregateAssemblerInterface";
+        $implements[] = $shortClassName."Interface";
         $implements[] = "EntityInterface";
+        $implements[] = "AggregateAssemblerInterface";
         $implements[] = "Serializable";
         $extends = "EventSourcedAggregateRoot";
-
-        $properties[] = $this->renderProperty(
-            self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-            "EventFactory object.",
-            DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-            "EventFactory",
-            "eventFactory",
-            ""
-        );
+        $this->addProperty("eventFactory", "EventFactory", "EventFactory object.");
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
@@ -80,60 +69,13 @@ class EntityGenerator extends AbstractGenerator
         array_unshift($entityValueObject, self::UNIQUE_KEY_PROCESS_UUID);
 
         foreach ($entityValueObject as $valueObject) {
-            $this->addUseStatement(sprintf("%s;", $this->getClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
-            $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $methodName = "get".$shortClassName;
-            $propertyComment = sprintf("%s value object.", $valueObject);
-            $methodComment = sprintf("Return %s value object.", $valueObject);
-            $propertyName = lcfirst($shortClassName);
-            $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
-            $properties[] = $this->renderProperty(
-                self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-                $propertyComment,
-                DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-                "?".$shortClassName,
-                $propertyName,
-                $defaultValue
-            );
-            $methods[] = $this->renderMethod(
-                self::METHOD_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                $methodName,
-                "",
-                "?".$shortClassName,
-                "",
-                "\$this->".$propertyName
-            );
+            $methods[] = $this->renderValueObjectGetMethod($valueObject);
         }
 
         foreach ($this->structure as $command) {
-            $commandEvents = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::STRUCTURE_TYPE_EVENT];
-            $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-            $methodName = $command;
-            $methodComment = sprintf("Execute %s command.", $command);
-            $commandArguments = [];
-            $commandProperties = [];
-
-            foreach ($commandArgs as $arg) {
-                if (in_array($arg, self::UNIQUE_KEYS)) {
-                    continue;
-                }
-                $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-                $propertyName = lcfirst($shortClassName);
-                $commandArguments[] = $shortClassName." $".$propertyName;
-                $commandProperties[] = "$".$propertyName;
-            }
-            [$applyEvents, $applyMethods] = $this->renderApplyMethods($commandEvents, $commandProperties);
-            $methods[] = $this->renderMethod(
-                self::METHOD_TEMPLATE_TYPE_VOID,
-                $methodComment,
-                $methodName,
-                implode(", ", $commandArguments),
-                "",
-                implode("", $applyEvents),
-                ""
-            );
-            $methods = array_merge($methods, $applyMethods);
+            [$commandMethod, $applyMethods] = $this->renderCommandMethodandApplyMethods($command);
+            $methods[] = $commandMethod;
+            array_push($methods,  ...$applyMethods);
         }
         $methods[] = $this->renderCreateMethod();
         $methods[] = $this->renderCreateActualMethod();
@@ -149,9 +91,69 @@ class EntityGenerator extends AbstractGenerator
             $extends,
             $implements,
             $useTraits,
-            $properties,
+            $this->properties,
             $methods
         );
+    }
+
+    protected function renderValueObjectGetMethod(string $valueObject): string
+    {
+        if ($valueObject === self::UNIQUE_KEY_UUID) {
+            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        } elseif ($valueObject === self::UNIQUE_KEY_PROCESS_UUID) {
+            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
+        } else {
+            $this->addUseStatement(sprintf("%s;", $this->getClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
+        }
+        $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $propertyName = lcfirst($shortClassName);
+        $methodName = "get".$shortClassName;
+        $propertyComment = sprintf("%s value object.", $valueObject);
+        $methodComment = sprintf("Return %s value object.", $valueObject);
+        $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
+        $this->addProperty($propertyName, "?".$shortClassName, $propertyComment, $defaultValue);
+
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            $methodComment,
+            $methodName,
+            "",
+            "?".$shortClassName,
+            "",
+            "\$this->".$propertyName
+        );
+    }
+
+    protected function renderCommandMethodandApplyMethods(string $command): array
+    {
+        $commandEvents = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::STRUCTURE_TYPE_EVENT];
+        $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
+        $methodName = $command;
+        $methodComment = sprintf("Execute %s command.", $command);
+        $commandArguments = [];
+        $commandProperties = [];
+
+        foreach ($commandArgs as $arg) {
+            if ($arg === self::UNIQUE_KEY_UUID) {
+                continue;
+            }
+            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $propertyName = lcfirst($shortClassName);
+            $commandArguments[] = $shortClassName." $".$propertyName;
+            $commandProperties[] = "$".$propertyName;
+        }
+        [$applyEvents, $applyMethods] = $this->renderApplyMethods($commandEvents, $commandProperties);
+        $commandMethod = $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_VOID,
+            $methodComment,
+            $methodName,
+            implode(", ", $commandArguments),
+            "",
+            implode("", $applyEvents),
+            ""
+        );
+
+        return [$commandMethod, $applyMethods];
     }
 
     protected function renderApplyMethods(array $events, array $commandProperties): array
@@ -192,7 +194,7 @@ class EntityGenerator extends AbstractGenerator
                 $methodLogic,
                 ""
             );
-            $applyEvents[] = sprintf("\r\n\t\t\$this->apply(\$this->eventFactory->make%s(\$this->processUuid, \$this->uuid, %s));", $eventShortName, implode(", ", $commandProperties));
+            $applyEvents[] = sprintf("\r\n\t\t\$this->apply(\$this->eventFactory->make%s(\$this->uuid, %s));", $eventShortName, implode(", ", $commandProperties));
         }
 
         return [$applyEvents, $applyMethods];
@@ -203,7 +205,7 @@ class EntityGenerator extends AbstractGenerator
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $varName = lcfirst($shortClassName);
         $methodLogic = "\r\n\t\t\$entity = new self(\$eventFactory);";
-        $methodLogic .= sprintf("\r\n\t\t\$entity->apply(\$entity->eventFactory->makeRemarkWasAddedEvent(\$processUuid, \$uuid, $%s, CreatedAt::now()));", $varName);
+        $methodLogic .= sprintf("\r\n\t\t\$entity->apply(\$entity->eventFactory->make%sCreatedEvent(\$processUuid, \$uuid, $%s, CreatedAt::now()));", $shortClassName, $varName);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_STATIC,

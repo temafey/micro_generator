@@ -6,14 +6,17 @@ namespace MicroModule\MicroserviceGenerator\Service;
 
 use Exception;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
+use MicroModule\MicroserviceGenerator\Generator\Helper\CodeHelper;
 
 /**
  * Class ProjectBuilder.
  *
  * @SuppressWarnings(PHPMD)
  */
-class ProjectBuilder
+class ProjectBuilder implements ProjectBuilderInterface
 {
+    use CodeHelper;
+    
     /**
      * Source path.
      */
@@ -56,7 +59,7 @@ class ProjectBuilder
         }
 
         foreach ($this->structure as $name => $domainStructure) {
-            $domainName = ucfirst(strtolower($name));
+            $domainName = ucfirst($this->underscoreAndHyphenToCamelCase($name));
             $this->generateDomain($domainName, $domainStructure);
         }
     }
@@ -83,7 +86,6 @@ class ProjectBuilder
         if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY])) {
             throw new Exception('no repositories section');
         }
-
         if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER])) {
             $domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] = [];
         }
@@ -118,10 +120,12 @@ class ProjectBuilder
 
         if (!file_exists($domainRootPath)) {
             //Create domain main directory
-            mkdir($domainRootPath, 0755);
+            if (!mkdir($domainRootPath, 0755) && !is_dir($domainRootPath)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $domainRootPath));
+            }
         }
         $domainStructure = $this->buildStructure($domainStructure);
-        $this->generateStructure($domainStructure, $domainRootPath);
+        $this->generateStructure($domainName, $domainStructure, $domainRootPath);
     }
 
     protected function buildStructure(array $structure): array
@@ -147,18 +151,21 @@ class ProjectBuilder
     {
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND] as $name => $command) {
             if (!isset($command[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
-                throw new Exception(sprintf("Entity for command '%s' was not found!", $this->name));
+                throw new Exception(sprintf("Entity for command '%s' was not found!", $name));
             }
             $entity = $command[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$name] = $command;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK][$name] = $command;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK][$entity][$name] = $command;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK][$entity][$name] = $command;
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_COMMAND][] = $name;
 
-            foreach ($command[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $name => $event) {
-                $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$name] = [
+            foreach ($command[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $eventName => $event) {
+                $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$eventName] = [
                     DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                     'args' => $event,
                 ];
-                $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_EVENT][] = $name;
+                $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_EVENT][] = $eventName;
             }
         }
 
@@ -169,6 +176,12 @@ class ProjectBuilder
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $name => $entity) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_ENTITY][$name] = $entity;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_ENTITY_INTERFACE][$name] = $entity;
+        }
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] as $name => $readModel) {
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL][$name] = $readModel;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE][$name] = $readModel;
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT] as $name => $valueObject) {
@@ -176,11 +189,19 @@ class ProjectBuilder
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY] as $name => $repository) {
-            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$name] = $repository;
+            if (
+                is_array($repository) &&
+                array_key_exists(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE, $repository) &&
+                $repository[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE] === false
+            ) {
+                continue;
+            }
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][$name] = $repository;
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_SERVICE] as $name => $service) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_SERVICE][$name] = $service;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_SERVICE_INTERFACE][$name] = $service;
         }
 
         return $domainStructure;
@@ -200,6 +221,10 @@ class ProjectBuilder
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] as $name => $handler) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$name] = $handler;
+        }
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER] as $name => $handler) {
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER_TASK][$name] = $handler;
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_SAGA] as $name => $event) {
@@ -259,20 +284,22 @@ class ProjectBuilder
         return $domainStructure;
     }
 
-    protected function generateStructure(array $domainStructure, string $domainRootPath): void
+    protected function generateStructure(string $domainName, array $domainStructure, string $domainRootPath): void
     {
-        $this->generateDomainLayerStructure(DataTypeInterface::STRUCTURE_LAYER_DOMAIN, $domainStructure, $domainRootPath);
-        $this->generateDomainLayerStructure(DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE, $domainStructure, $domainRootPath);
-        $this->generateDomainLayerStructure(DataTypeInterface::STRUCTURE_LAYER_APPLICATION, $domainStructure, $domainRootPath);
-        $this->generateDomainLayerStructure(DataTypeInterface::STRUCTURE_LAYER_PRESENTATION, $domainStructure, $domainRootPath);
+        $this->generateDomainLayerStructure($domainName, DataTypeInterface::STRUCTURE_LAYER_DOMAIN, $domainStructure, $domainRootPath);
+        $this->generateDomainLayerStructure($domainName, DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE, $domainStructure, $domainRootPath);
+        $this->generateDomainLayerStructure($domainName, DataTypeInterface::STRUCTURE_LAYER_APPLICATION, $domainStructure, $domainRootPath);
+        $this->generateDomainLayerStructure($domainName, DataTypeInterface::STRUCTURE_LAYER_PRESENTATION, $domainStructure, $domainRootPath);
     }
 
-    protected function generateDomainLayerStructure(string $domainLayer, array $domainStructure, string $domainRootPath): void
+    protected function generateDomainLayerStructure(string $domainName, string $domainLayer, array $domainStructure, string $domainRootPath): void
     {
         $domainLayerPath = $domainRootPath.DIRECTORY_SEPARATOR.ucfirst($domainLayer);
 
         if (!file_exists($domainLayerPath)) {
-            mkdir($domainLayerPath, 0755);
+            if (!mkdir($domainLayerPath, 0755) && !is_dir($domainLayerPath)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $domainLayerPath));
+            }
         }
         $classBuilder = new ClassBuilder($this->namespace, $domainLayerPath);
 
@@ -280,14 +307,28 @@ class ProjectBuilder
             if (empty($layer)) {
                 continue;
             }
-            $layerPatternPath =  $domainLayerPath.DIRECTORY_SEPARATOR.ucfirst($type);
+
+            if (
+                $type === DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK
+            ) {
+                $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK, DataTypeInterface::STRUCTURE_TYPE_COMMAND.DIRECTORY_SEPARATOR."Task", $type)));
+            } elseif (
+                $type === DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER_TASK
+            ) {
+                $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER_TASK, DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER.DIRECTORY_SEPARATOR."Task", $type)));
+            } else {
+                $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(["Interface", "interface"], "", $type)));
+            }
+            $layerPatternPath =  $domainLayerPath.DIRECTORY_SEPARATOR.$layerFolder;
 
             if (!file_exists($layerPatternPath)) {
-                mkdir($layerPatternPath, 0755);
+                if (!mkdir($layerPatternPath, 0755) && !is_dir($layerPatternPath)) {
+                    throw new \RuntimeException(sprintf('Directory "%s" was not created', $layerPatternPath));
+                }
             }
 
             foreach ($layer as $name => $layerStructure) {
-                $classBuilder->generate($domainLayer, $type, $name, $layerStructure, $domainStructure, $layerPatternPath);
+                $classBuilder->generate($domainName, $domainLayer, $type, $name, $layerStructure, $domainStructure, $layerPatternPath);
             }
         }
     }

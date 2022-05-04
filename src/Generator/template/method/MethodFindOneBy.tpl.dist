@@ -1,0 +1,25 @@
+
+    /**
+     * Find and return {entityName} Read Model by Uuid
+     *
+     * @throws Exception
+     */
+    public function {methodName}({arguments}): ?{entityName}ReadModelInterface
+    {
+        try {
+            $result = $this->dataMapper->mapFromStorage(
+                $this->readModelStore->findOneBy([
+                    {criteriaParams}
+                ])
+            );
+        } catch (NotFoundException) {
+            return null;
+        }
+        $uuid = $result[{entityName}ReadModelInterface::KEY_UUID];
+        unset($result[{entityName}ReadModelInterface::KEY_UUID]);
+
+        return $this->readModelFactory->makeActualInstance(
+            $this->{shortEntityName}ValueObjectFactory->make{entityName}($result),
+            $this->commonValueObjectFactory->makeUuid($uuid)
+        );
+    }

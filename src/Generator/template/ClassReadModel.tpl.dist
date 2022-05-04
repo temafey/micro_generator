@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{{useTraits}{properties}
+{methods}
+    /**
+     * Return entity primary key value
+     */
+    public function getPrimaryKeyValue(): string
+    {
+        return $this->uuid->toNative();
+    }
+	
+	/**
+     * Create {className} by {shortEntityName}
+     *
+     * @throws Exception
+     */
+    public static function createByEntity({shortEntityInterfaceName} $entity): {shortInterfaceName}
+    {
+        $readModel = new static();
+        $readModel->assembleFromValueObject($entity->assembleToValueObject(), $entity->getUuid());
+
+        return $readModel;
+    }
+
+    /**
+     * Create {className} by {shortValueObjectName} value object.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public static function createByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName}
+    {
+        return (new self())->assembleFromValueObject($entityValueObject, $uuid);
+    }
+
+    /**
+     * Update {className} by {shortValueObjectName} value object.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public function updateByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName}
+    {
+        return $this->assembleFromValueObject($entityValueObject, $uuid);
+    }
+
+    /**
+     * Convert entity object to array.
+     *
+     * @return array<string, mixed>
+     */
+    public function normalize(): array
+    {
+        return $this->toArray();
+    }
+}

@@ -35,49 +35,39 @@ class ProjectorGenerator extends AbstractGenerator
         if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT])) {
             throw new Exception(sprintf("Entity for query '%s' was not found!", $this->name));
         }
-        $useStatement = [];
         $implements = [];
         $useTraits = [];
-        $properties = [];
-        $constructArguments = [];
-        $constructArgumentsInitialize = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
-        $useStatement[] = "\r\nuse Broadway\ReadModel\Projector;";
+        $this->addUseStatement("Broadway\ReadModel\Projector");
         $extends = "Projector";
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
             if (is_string($arg)) {
                 $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getInterfaceName($arg, $type) : $this->getClassName($arg, $type);
-                $useStatement[] = sprintf("\r\nuse %s;", $className);
+                $this->addUseStatement($className);
                 $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
                 $propertyName = lcfirst($this->getShortClassName($arg, $type));
                 $propertyComment = "";
             } else {
                 $arg = $type;
-                $useStatement[] = sprintf("\r\nuse %s;", $arg);
+                $this->addUseStatement($arg);
                 $classNameArray = explode("\\", $arg);
                 $shortClassName = array_pop($classNameArray);
                 $propertyName = str_replace("Interface", "", lcfirst($shortClassName));
                 $propertyComment = "";
             }
-            $properties[] = $this->renderProperty(
-                self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-                $propertyComment,
-                DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-                $shortClassName,
-                $propertyName
-            );
-            $constructArguments[] = $shortClassName." $".$propertyName;
-            $constructArgumentsInitialize[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $this->addProperty($propertyName, $shortClassName, $propertyComment);
+            $this->constructArguments[] = $shortClassName." $".$propertyName;
+            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $constructArguments),
+            implode(", ", $this->constructArguments),
             "",
-            implode("", $constructArgumentsInitialize),
+            implode("", $this->constructArgumentsAssignment),
             ""
         );
         $methods = array_merge($methods, $this->renderApplyMethods());
@@ -85,11 +75,11 @@ class ProjectorGenerator extends AbstractGenerator
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_FULL,
             $classNamespace,
-            $useStatement,
+            $this->useStatement,
             $extends,
             $implements,
             $useTraits,
-            $properties,
+            $this->properties,
             $methods
         );
     }
@@ -102,7 +92,7 @@ class ProjectorGenerator extends AbstractGenerator
         foreach ($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $event) {
             $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$event][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             $entityShortName = lcfirst($this->getShortClassName($entity, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-            $useStatement[] = sprintf("\r\nuse %s;", $this->getClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT));
+            $this->addUseStatement($this->getClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT));
             $eventShortName = $this->getShortClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT);
             $methodName = sprintf("apply%s", $eventShortName);
             $methodComment = sprintf("Apply %s event.", $eventShortName);

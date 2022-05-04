@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MicroModule\MicroserviceGenerator\Generator\Type;
 
-use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use Exception;
+use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 
 /**
@@ -35,10 +35,8 @@ class ValueObjectGenerator extends AbstractGenerator
      */
     public function generate(): ?string
     {
-        $useStatement = [];
         $implements = [];
         $useTraits = [];
-        $properties = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
         $extends = "";
@@ -46,23 +44,24 @@ class ValueObjectGenerator extends AbstractGenerator
         if ($this->structure['type'] !== DataTypeInterface::VALUE_OBJECT_TYPE_ENTITY) {
             $extendsClassName = $this->getValueObjectClassName($this->structure['type']);
             $extendsShortClassName = "Base" . $this->getValueObjectShortClassName($this->structure['type']);
-            $useStatement[] = "\r\nuse " . $extendsClassName . " as $extendsShortClassName;";
+            $this->addUseStatement( $extendsClassName . " as $extendsShortClassName");
             $extends = $extendsShortClassName;
 
             return $this->renderClass(
                 self::CLASS_TEMPLATE_TYPE_DEFAULT,
                 $classNamespace,
-                $useStatement,
+                $this->useStatement,
                 $extends,
                 $implements,
                 $useTraits,
-                $properties,
+                $this->properties,
                 $methods
             );
         }
-
-        $useStatement[] = "\r\nuse Broadway\Serializer\Serializable;";
-        $useStatement[] = "\r\nuse MicroModule\ValueObject\ValueObjectInterface;";
+        $this->addUseStatement("Broadway\Serializer\Serializable");
+        $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
+        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidNativeValueException");
         $implements[] = "Serializable";
         $implements[] = "ValueObjectInterface";
         $comparedFieldsProperty = "[";
@@ -70,21 +69,14 @@ class ValueObjectGenerator extends AbstractGenerator
         $methods[] = $this->renderToArrayMethod();
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $useStatement[] = sprintf("\r\nuse %s;", $this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+            $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
             $methodComment = sprintf("Return %s value object.", $shortClassName);
             $propertyName = lcfirst($shortClassName);
             $defaultValue = "null";
             $comparedFieldsProperty .= sprintf("\r\n\t\t'%s',", $arg);
-            $properties[] = $this->renderProperty(
-                self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                DataTypeInterface::PROPERTY_VISIBILITY_PROTECTED,
-                "?".$shortClassName,
-                $propertyName,
-                $defaultValue
-            );
+            $this->addProperty($propertyName, "?".$shortClassName, $methodComment, $defaultValue);
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_DEFAULT,
                 $methodComment,
@@ -104,16 +96,16 @@ class ValueObjectGenerator extends AbstractGenerator
             "COMPARED_FIELDS",
             $comparedFieldsProperty
         );
-        array_unshift($properties, $comparedFieldsProperty);
+        array_unshift($this->properties, $comparedFieldsProperty);
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_VALUE_OBJECT,
             $classNamespace,
-            $useStatement,
+            $this->useStatement,
             $extends,
             $implements,
             $useTraits,
-            $properties,
+            $this->properties,
             $methods
         );
     }

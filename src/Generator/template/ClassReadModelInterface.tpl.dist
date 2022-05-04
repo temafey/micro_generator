@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @interface {interfaceName}
+ *
+ * @package {namespace}
+ */
+interface {interfaceName}
+{{methods}
+	/**
+     * Create {shortEntityName} by {shortEntityName}
+     *
+     * @throws Exception
+     */
+    public static function createByEntity({shortEntityInterfaceName} $entity): {shortInterfaceName};
+
+    /**
+     * Create {shortEntityName} by {shortValueObjectName} value object.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public static function createByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName};
+
+    /**
+     * Update {shortEntityName} by {shortValueObjectName} value object.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public function updateByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName};
+}

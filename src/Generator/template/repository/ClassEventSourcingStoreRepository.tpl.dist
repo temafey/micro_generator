@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{{useTraits}{properties}
+    /**
+     * @param EventStreamDecoratorInterface[] $eventStreamDecorators
+     */
+    public function __construct(
+        EventStoreInterface $eventStore,
+        EventBusInterface $eventBus,
+        array $eventStreamDecorators = []
+    ) {
+        parent::__construct(
+            $eventStore,
+            $eventBus,
+            {entityName}Entity::class,
+            new PublicConstructorAggregateFactory(),
+            $eventStreamDecorators
+        );
+    }
+}

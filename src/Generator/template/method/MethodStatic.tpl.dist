@@ -1,0 +1,8 @@
+
+    /**
+     * {methodComment}
+     */
+    public static function {methodName}({arguments}){returnType}
+    {{methodLogic}
+        {return}
+    }

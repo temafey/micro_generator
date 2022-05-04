@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{{useTraits}{properties}
+{methods}
+   /**
+     * Retrieve {shortEntityName} with applied events.
+     */
+    public function get(UuidInterface $uuid): {shortEntityInterfaceName}
+    {
+        $entity = $this->load($uuid->toString());
+        
+        if (!$entity instanceof {shortEntityInterfaceName}) {
+            throw new InvalidArgumentException('Return object should implement {shortEntityName}.');
+        }
+
+        return $entity;
+    }
+
+    /**
+     * Save {shortEntityName} last uncommitted events.
+     *
+     * @throws SnapshottingEventSourcingRepositoryException
+     */
+    public function store({shortEntityInterfaceName} $entity): void
+    {
+        $this->save($entity);
+    }
+}

@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{
+    protected const KEY_MESSAGE_TYPE = 'type';
+    protected const KEY_MESSAGE_ARGS = 'args';
+
+    protected ProducerInterface $taskProducer;
+
+    public function __construct(ProducerInterface $taskProducer)
+    {
+        $this->taskProducer = $taskProducer;
+    }
+
+    protected function produce(string $type, array $args): void
+    {
+        $this->taskProducer->sendCommand(
+            JobCommandBusProcessor::getRoute(),
+            [
+                self::KEY_MESSAGE_TYPE => $type,
+                self::KEY_MESSAGE_ARGS => $args,
+            ]
+        );
+    }
+{methods}
+}

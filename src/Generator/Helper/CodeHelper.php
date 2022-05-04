@@ -7,6 +7,7 @@ namespace MicroModule\MicroserviceGenerator\Generator\Helper;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Exception\CodeExtractException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\FileNotExistsException;
+use MicroModule\MicroserviceGenerator\Generator\Exception\GeneratorException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
 use Nette\Utils\Strings;
 use PhpParser\{Node\Stmt\ClassMethod, ParserFactory, Node, NodeFinder};
@@ -53,11 +54,11 @@ trait CodeHelper
      */
     protected function getCommandFactoryConst(string $name): string
     {
-        $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$name][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-        $entity = strtoupper($this->underscoreAndHyphenToCamelCase($entity, "_"));
+        //$entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$name][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+        //$entity = strtoupper($this->underscoreAndHyphenToCamelCase($entity, "_"));
         $name = strtoupper($this->underscoreAndHyphenToCamelCase($name, "_"));
 
-        return sprintf("%s_%s", $entity, $name);
+        return sprintf("%s_COMMAND", $name);
     }
 
     /**
@@ -76,10 +77,14 @@ trait CodeHelper
             $name .= ($name[-1] === 'e') ? 'd' : 'ed';
 
             if ($name) {
-                $name = sprintf("%sWas%s", $entity, $name);
+                $name = sprintf("%s%s", $entity, $name);
             }
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
+        }
+
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
+            $type = "taskRepository";
         }
 
         return $name.$this->getClassNameSuffix($type);
@@ -90,6 +95,12 @@ trait CodeHelper
      */
     protected function getShortInterfaceName(string $name, string $type): string
     {
+        $type = str_replace(["Interface", "interface"], "", $type);
+
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
+            $type = "taskRepository";
+        }
+
         return ucfirst($this->underscoreAndHyphenToCamelCase($name)).$this->getClassNameSuffix($type)."Interface";
     }
 
@@ -127,6 +138,7 @@ trait CodeHelper
     protected function getClassNamespace(string $type): string
     {
         $layerNamespace = $this->getLayerNamespace($type);
+        $type = str_replace(["Interface", "taskCommandHandler", "taskCommand"], ["", "commandHandler\Task", "command\Task"], $type);
         
         return $layerNamespace.'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($type));
     }
@@ -138,7 +150,13 @@ trait CodeHelper
     {
         $layerNamespace = $this->getLayerInterfaceNamespace($type);
 
-        return $layerNamespace.'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($type));
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
+            $layerFolder = ucfirst(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
+        } else {
+            $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(["Interface", "interface"], "", $type)));
+        }
+
+        return $layerNamespace.'\\'.$layerFolder;
     }
 
     /**
@@ -180,6 +198,18 @@ trait CodeHelper
     }
 
     /**
+     * Generate value object class short name by pattern type.
+     */
+    protected function getValueObjectScalarType(string $type): string
+    {
+        if (!isset(DataTypeInterface::DOMAIN_VALUE_OBJECT_TO_SCALAR_MAP[$type])) {
+            throw new GeneratorException(sprintf("ValueObject type '%s' was not found in DOMAIN_VALUE_OBJECT_TO_SCALAR_MAP", $type));
+        }
+
+        return DataTypeInterface::DOMAIN_VALUE_OBJECT_TO_SCALAR_MAP[$type];
+    }
+
+    /**
      * Return layer name by pattern type.
      *
      * @throws InvalidClassTypeException
@@ -188,9 +218,15 @@ trait CodeHelper
     {
         switch ($type) {
             case DataTypeInterface::STRUCTURE_TYPE_ENTITY:
+            case DataTypeInterface::STRUCTURE_TYPE_ENTITY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_READ_MODEL:
+            case DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_COMMAND:
+            case DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_QUERY:
             case DataTypeInterface::STRUCTURE_TYPE_EVENT:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT:
             case DataTypeInterface::STRUCTURE_TYPE_SERVICE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
@@ -198,6 +234,7 @@ trait CodeHelper
                 break;
 
             case DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER:
+            case DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER:
             case DataTypeInterface::STRUCTURE_TYPE_SAGA:
             case DataTypeInterface::STRUCTURE_TYPE_PROJECTOR:
@@ -206,6 +243,7 @@ trait CodeHelper
                 break;
 
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_MIGRATIONS:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE;
                 break;
@@ -227,21 +265,29 @@ trait CodeHelper
      *
      * @throws InvalidClassTypeException
      */
-    protected function getLayerInterface(string $type): string
+    protected function  getLayerInterface(string $type): string
     {
         switch ($type) {
             case DataTypeInterface::STRUCTURE_TYPE_ENTITY:
+            case DataTypeInterface::STRUCTURE_TYPE_ENTITY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_READ_MODEL:
+            case DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_COMMAND:
+            case DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_QUERY:
             case DataTypeInterface::STRUCTURE_TYPE_EVENT:
             case DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT:
             case DataTypeInterface::STRUCTURE_TYPE_SERVICE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
                 break;
 
             case DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER:
+            case DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER:
             case DataTypeInterface::STRUCTURE_TYPE_SAGA:
             case DataTypeInterface::STRUCTURE_TYPE_PROJECTOR:
@@ -265,7 +311,6 @@ trait CodeHelper
     }
 
     /**
-     * @var string
      * @see https://regex101.com/r/rl1nvl/1
      */
     protected string $BIG_LETTER_REGEX = '#([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]*)#';
@@ -291,6 +336,7 @@ trait CodeHelper
 
     /**
      * @param mixed[] $items
+     * 
      * @return mixed[]
      */
     public function camelCaseToUnderscoreInArrayKeys(array $items): array
@@ -299,12 +345,11 @@ trait CodeHelper
             if (! is_string($key)) {
                 continue;
             }
-
             $newKey = $this->camelCaseToUnderscore($key);
+            
             if ($key === $newKey) {
                 continue;
             }
-
             $items[$newKey] = $value;
             unset($items[$key]);
         }
@@ -315,8 +360,8 @@ trait CodeHelper
     protected function camelCaseToGlue(string $input, string $glue): string
     {
         $matches = Strings::matchAll($input, $this->BIG_LETTER_REGEX);
-
         $parts = [];
+        
         foreach ($matches as $match) {
             $parts[] = $match[0] === strtoupper($match[0]) ? strtolower($match[0]) : lcfirst($match[0]);
         }

@@ -19,7 +19,7 @@ class {className}{extends}{implements}
      *
      * @throws Exception
      */
-    public static function fromNative(): ValueObjectInterface
+    public static function fromNative(): static
     {
         $data = func_get_arg(0);
 

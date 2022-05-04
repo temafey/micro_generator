@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @interface {interfaceName}
+ *
+ * @package {namespace}
+ */
+interface {interfaceName}
+{{methods}
+   /**
+     * Retrieve {shortEntityName} with applied events
+     */
+    public function get(UuidInterface $uuid): {shortEntityInterfaceName};
+
+    /**
+     * Save {shortEntityName} last uncommitted events
+     *
+     * @throws SnapshottingEventSourcingRepositoryException
+     */
+    public function store({shortEntityInterfaceName} $entity): void;
+}

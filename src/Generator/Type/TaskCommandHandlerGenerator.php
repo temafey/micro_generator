@@ -17,13 +17,8 @@ use ReflectionException;
  *
  * @SuppressWarnings(PHPMD)
  */
-class RpcMethodGenerator extends AbstractGenerator
+class TaskCommandHandlerGenerator extends AbstractGenerator
 {
-    /**
-     * Is create type.
-     */
-    protected $typeCreate = false;
-
     /**
      * Generate test class code.
      *
@@ -50,34 +45,17 @@ class RpcMethodGenerator extends AbstractGenerator
         $useTraits = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
-        $this->addUseStatement($classNamespace. "\\"."CommandHandlerInterface");
+
+        if ($this->useCommonComponent) {
+            $this->addUseStatement("MicroModule\Common\Application\CommandHandler\CommandHandlerInterface");
+            $this->addUseStatement("MicroModule\Base\Domain\Command\CommandInterface");
+        } else {
+            $this->addUseStatement($classNamespace."\\"."CommandHandlerInterface");
+        }
         $extends = "";
         $implements[] = "CommandHandlerInterface";
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND));
-
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $type => $arg) {
-            $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getInterfaceName($arg, $type) : $this->getClassName($arg, $type);
-            $this->addUseStatement($className);
-            $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
-            $propertyName = lcfirst($this->getShortClassName($arg, $type));
-            $propertyComment = "";
-            $this->addProperty($className, $shortClassName, $propertyName);
-            $this->constructArguments[] = $shortClassName." $".$propertyName;
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
-
-            if ($type === DataTypeInterface::STRUCTURE_TYPE_FACTORY) {
-                $this->typeCreate = true;
-            }
-        }
-        $methods[] = $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
-            "Constructor",
-            "__construct",
-            implode(", ", $this->constructArguments),
-            "",
-            implode("", $this->constructArgumentsAssignment),
-            ""
-        );
+        $methods[] = $this->renderConstructMethod();
         $methods[] = $this->renderHandleMethod();
 
         return $this->renderClass(
@@ -92,41 +70,76 @@ class RpcMethodGenerator extends AbstractGenerator
         );
     }
 
+    protected function renderConstructMethod(): string
+    {
+        $className = $this->getInterfaceName(
+            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], 
+            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK
+        );
+        $this->addUseStatement($className);
+        $shortClassName = $this->getShortInterfaceName(
+            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], 
+            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK
+        );
+        $propertyName = lcfirst($this->getShortClassName(
+            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY],
+            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK)
+        );
+        $propertyComment = sprintf("%s object.", $shortClassName);;
+        $this->addProperty(
+            $propertyName,
+            $shortClassName,
+            $propertyComment
+        );
+        $this->constructArguments[] = $shortClassName." $".$propertyName;
+        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            "Constructor",
+            "__construct",
+            implode(", ", $this->constructArguments),
+            "",
+            implode("", $this->constructArgumentsAssignment),
+            ""
+        );
+    }
+
     protected function renderHandleMethod(): string
     {
         $commandStructure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$this->name];
         $commandShortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND);
         $commandPropertyName = lcfirst($commandShortClassName);
-        $entityShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], DataTypeInterface::STRUCTURE_TYPE_ENTITY));
         $repositoryShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY], DataTypeInterface::STRUCTURE_TYPE_REPOSITORY));
+        $propertyName = lcfirst($this->getShortClassName(
+            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY],
+            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK)
+        );
         $valueObjects = [];
         $methodBody = "";
 
         foreach ($commandStructure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            if (!$this->typeCreate && $arg === DataTypeInterface::DATA_TYPE_UUID) {
-                continue;
-            }
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $valueObjects[] = sprintf("\$%s->get%s()", $commandPropertyName, $shortClassName);
         }
+        $methodBody .= sprintf("\r\n\t\t\$this->%s->add%sTask(%s);", $propertyName, ucfirst($this->underscoreAndHyphenToCamelCase($this->name)), implode(", ", $valueObjects));
 
-        if ($this->typeCreate) {
-            $factoryShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_FACTORY], DataTypeInterface::STRUCTURE_TYPE_FACTORY));
-            $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->createInstance(%s);", $entityShortName, $factoryShortName, implode(", ", $valueObjects));
+        if ($this->useCommonComponent) {
+            $methodComment = sprintf("Handle %s command.\r\n\t *\r\n\t * @var CommandInterface|%s.", $commandShortClassName, $commandShortClassName);
+            $commandShortArgumentClassName = "CommandInterface";
         } else {
-            $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->get(\$%s->getUuid());", $entityShortName, $repositoryShortName, $commandPropertyName);
-            $methodBody .= sprintf("\r\n\t\t\$%s->%s(%s);", $entityShortName, $this->name, implode(", ", $valueObjects));
+            $methodComment = sprintf("Handle %s command.", $commandShortClassName);
+            $commandShortArgumentClassName= $commandShortClassName;
         }
-        $methodBody .= sprintf("\r\n\t\t\$this->%s->store(\$%s);", $repositoryShortName, $entityShortName);
-
+        
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_VOID,
-            sprintf("Handle %s command.", $commandShortClassName),
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            $methodComment,
             "handle",
-            $commandShortClassName." $".$commandPropertyName,
-            "void",
+            $commandShortArgumentClassName." $".$commandPropertyName,
+            "bool",
             $methodBody,
-            ""
+            "true"
         );
     }
 }
