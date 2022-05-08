@@ -10,5 +10,5 @@ namespace {namespace};
  *
  * @package {namespace}
  */
-class {className}{extends}
+class {className}{extends}{implements}
 {{methods}}

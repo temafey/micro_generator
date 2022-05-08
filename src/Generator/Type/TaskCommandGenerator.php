@@ -19,15 +19,6 @@ use ReflectionException;
  */
 class TaskCommandGenerator extends AbstractGenerator
 {
-
-    /**
-     * Set source file full path.
-     */
-    protected function setSourceFile(): void
-    {
-        $this->sourceFile = $this->layerPatternPath.DIRECTORY_SEPARATOR.$this->getShortClassName($this->name , $this->type).".php";
-    }
-
     /**
      * Generate test class code.
      *

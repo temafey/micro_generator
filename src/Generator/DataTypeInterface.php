@@ -37,7 +37,8 @@ interface DataTypeInterface
 
     public const DATA_SCALAR_TYPE_INT = "int";
     public const DATA_SCALAR_TYPE_FLOAT = "float";
-    public const DATA_SCALAR_TYPE_ARRAY = "mixed";
+    public const DATA_SCALAR_TYPE_MIXED = "mixed";
+    public const DATA_SCALAR_TYPE_ARRAY = "array";
     public const DATA_SCALAR_TYPE_STRING = "string";
     public const DATA_SCALAR_TYPE_BOOL = "bool";
     public const DATA_SCALAR_TYPE_DATETIME = "\DateTime";
@@ -124,6 +125,7 @@ interface DataTypeInterface
                 DataTypeInterface::STRUCTURE_TYPE_ENTITY => [],
                 DataTypeInterface::STRUCTURE_TYPE_COMMAND => [],
                 DataTypeInterface::STRUCTURE_TYPE_QUERY => [],
+                DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => [],
                 DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
                 DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT => [],
             ],
@@ -156,5 +158,6 @@ interface DataTypeInterface
          self::VALUE_OBJECT_TYPE_PERSON_AGE => self::DATA_SCALAR_TYPE_INT,
          self::VALUE_OBJECT_TYPE_PERSON_GENDER => self::DATA_SCALAR_TYPE_INT,
          self::VALUE_OBJECT_TYPE_PERSON_NAME => self::DATA_SCALAR_TYPE_STRING,
+         self::VALUE_OBJECT_TYPE_ENTITY => self::DATA_SCALAR_TYPE_ARRAY,
     ];
 }

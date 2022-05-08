@@ -11,4 +11,6 @@ namespace {namespace};
  * @package {namespace}
  */
 interface {interfaceName}{extends}
-{{methods}}
+{{commandConstants}
+{methods}
+}

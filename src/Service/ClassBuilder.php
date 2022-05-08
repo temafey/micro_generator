@@ -101,7 +101,9 @@ class ClassBuilder
             $type !== DataTypeInterface::STRUCTURE_TYPE_ENTITY &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_ENTITY_INTERFACE &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL &&
-            $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE
+            $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_FACTORY &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE
         ) {
             return false;
         }
@@ -174,6 +176,8 @@ class ClassBuilder
     {
         if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE) {
             $classGenerator = 'MicroModule\MicroserviceGenerator\Generator\Type\Repository\\'.ucfirst($this->underscoreAndHyphenToCamelCase($name)).'InterfaceGenerator';
+        } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE) {
+            $classGenerator = 'MicroModule\MicroserviceGenerator\Generator\Type\Factory\\'.ucfirst($this->underscoreAndHyphenToCamelCase($name)).'InterfaceGenerator';
         } else {
             $classGenerator = 'MicroModule\MicroserviceGenerator\Generator\Type\\'.ucfirst($type).'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($name)).'Generator';
         }

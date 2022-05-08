@@ -40,6 +40,7 @@ class ReadModelGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
+        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
         $implements[] = $shortClassName."Interface";
 
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
@@ -51,6 +52,9 @@ class ReadModelGenerator extends AbstractGenerator
         $methods[] = $this->renderValueObjectGetMethod(self::UNIQUE_KEY_UUID);
 
         foreach ($entityValueObject as $valueObject) {
+            if ($valueObject === self::UNIQUE_KEY_UUID) {
+                continue;
+            }
             $methods[] = $this->renderGetMethod($valueObject);
         }
         $methods[] = $this->renderAssembleFromValueObjectMethod();
@@ -122,6 +126,9 @@ class ReadModelGenerator extends AbstractGenerator
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
 
         foreach ($entityValueObject as $valueObject) {
+            if ($valueObject === self::UNIQUE_KEY_UUID) {
+                continue;
+            }
             $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
             $varName = lcfirst($shortClassName);
@@ -148,6 +155,9 @@ class ReadModelGenerator extends AbstractGenerator
         array_unshift($entityValueObject, self::UNIQUE_KEY_UUID);
 
         foreach ($entityValueObject as $valueObject) {
+            if ($valueObject === self::UNIQUE_KEY_UUID) {
+                continue;
+            }
             $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $propertyName = lcfirst($shortClassName);
             $methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s) {", $propertyName);

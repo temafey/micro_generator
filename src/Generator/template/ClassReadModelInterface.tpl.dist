@@ -10,7 +10,7 @@ namespace {namespace};
  *
  * @package {namespace}
  */
-interface {interfaceName}
+interface {interfaceName}{extends}
 {{methods}
 	/**
      * Create {shortEntityName} by {shortEntityName}

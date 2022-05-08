@@ -47,6 +47,9 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         $methods[] = $this->renderValueObjectGetMethod(self::UNIQUE_KEY_UUID);
 
         foreach ($entityValueObject as $valueObject) {
+            if ($valueObject === self::UNIQUE_KEY_UUID) {
+                continue;
+            }
             $methods[] = $this->renderGetMethod($valueObject);
         }
 

@@ -72,13 +72,10 @@ trait CodeHelper
             } else {
                 $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$name][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             }
-            $entity = ucfirst($this->underscoreAndHyphenToCamelCase($entity));
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
             $name .= ($name[-1] === 'e') ? 'd' : 'ed';
-
-            if ($name) {
-                $name = sprintf("%s%s", $entity, $name);
-            }
+            //$entity = ucfirst($this->underscoreAndHyphenToCamelCase($entity));
+            //$name = sprintf("%s%s", $entity, $name);
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
         }
@@ -230,6 +227,7 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT:
             case DataTypeInterface::STRUCTURE_TYPE_SERVICE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
                 break;
 
@@ -283,6 +281,8 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
                 break;
 

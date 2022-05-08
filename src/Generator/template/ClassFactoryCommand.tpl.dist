@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{
+    protected const ALLOWED_COMMANDS = [
+        {allowedCommands}
+    ];
+
+    public function isCommandAllowed(string $commandType): bool
+    {
+        return in_array($commandType, self::ALLOWED_COMMANDS);
+    }
+
+    /**
+     * Make command by command constant.
+     *
+     * @throws FactoryException
+     * @throws Exception
+     */
+    public function makeCommandInstanceByType(...$args): BaseCommandInterface
+    {
+        $type = (string)array_shift($args);
+
+        return match ($type) {
+            {makeCommandsInstanceByType}
+            default => throw new FactoryException(sprintf('Command for type `%s` not found!', $type)),
+        };
+    }
+{methods}
+}

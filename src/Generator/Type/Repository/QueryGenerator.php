@@ -35,6 +35,10 @@ class QueryGenerator extends AbstractGenerator
         if (!isset($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS])) {
             throw new Exception(sprintf("Methods for repository '%s' was not found!", $this->name));
         }
+
+        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
+            throw new Exception(sprintf("Entity for repository '%s' was not found!", $this->name));
+        }
         $extends = "";
         $implements = [];
         $useTraits = [];

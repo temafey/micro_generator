@@ -1,0 +1,10 @@
+
+    /**
+     * {methodComment}
+     */
+    public function {methodName}({arguments}): {shortFactoryClassName}
+    {
+        return new {shortFactoryClassName}(
+			{factoryArguments}
+		);
+    }

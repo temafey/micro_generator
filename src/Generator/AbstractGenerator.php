@@ -21,6 +21,10 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const CLASS_TEMPLATE_TYPE_DEFAULT             = "Class";
     protected const CLASS_TEMPLATE_TYPE_FULL                = "ClassFull";
     protected const CLASS_TEMPLATE_TYPE_ENTITY              = "ClassEntity";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_ENTITY      = "ClassFactoryEntity";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_ENTITY_INTERFACE = "ClassFactoryEntityInterface";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_COMMAND      = "ClassFactoryCommand";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_COMMAND_INTERFACE = "ClassFactoryCommandInterface";
     protected const CLASS_TEMPLATE_TYPE_READ_MODEL          = "ClassReadModel";
     protected const CLASS_TEMPLATE_TYPE_READ_MODEL_INTERFACE= "ClassReadModelInterface";
     protected const CLASS_TEMPLATE_TYPE_VALUE_OBJECT        = "ClassValueObject";
@@ -39,6 +43,7 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const METHOD_TEMPLATE_TYPE_FIND_BY_CRITERIA   = "MethodFindByCriteria";
     protected const METHOD_TEMPLATE_TYPE_READ_MODEL         = "MethodReadModel";
     protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY            = "MethodFactory";
     protected const PROPERTY_TEMPLATE_TYPE_DEFAULT          = "Property";
     protected const INTERFACE_TEMPLATE_TYPE_DEFAULT         = "Interface";
 
@@ -325,6 +330,7 @@ abstract class AbstractGenerator implements GeneratorInterface
         string $classNamespace,
         array $useStatement,
         array $methods,
+        string $extends = "",
         array $additionalVariables = []
     ): string {
         $template = new Template(
@@ -336,6 +342,10 @@ abstract class AbstractGenerator implements GeneratorInterface
                 $template
             )
         );
+
+        if ($extends) {
+            $extends = " extends ".$extends;
+        }
         sort($useStatement);
         $shortInterfaceName = $this->getShortInterfaceName($this->name, $this->type);
         $template->setVar(
@@ -344,6 +354,7 @@ abstract class AbstractGenerator implements GeneratorInterface
                     "namespace" => $classNamespace,
                     "interfaceName" => $shortInterfaceName,
                     "useStatement" => implode("", $useStatement),
+                    "extends" => $extends,
                     "methods" => implode("", $methods),
                     "date" => date("Y-m-d"),
                     "time" => date("H:i:s"),
@@ -460,6 +471,56 @@ abstract class AbstractGenerator implements GeneratorInterface
                     "returnType" => $returnType,
                     "methodLogic" => $methodLogic,
                     "return" => $return,
+                ],
+                $this->additionalVariables,
+                $additionalVariables
+            )
+        );
+
+        return $template->render();
+    }
+
+    /**
+     * Render interface method.
+     *
+     * @throws Exception
+     */
+    protected function renderMethodInterface(
+        string $methodComment,
+        string $methodName,
+        string $arguments,
+        string $returnType,
+        string $template = self::METHOD_TEMPLATE_TYPE_INTERFACE,
+        array $additionalVariables = []
+    ): string {
+        $template = new Template(
+            sprintf(
+                "%s%stemplate/method%s%s.tpl",
+                realpath(__DIR__),
+                DIRECTORY_SEPARATOR,
+                DIRECTORY_SEPARATOR,
+                $template
+            )
+        );
+
+        if ($this->preprocessor) {
+            //$this->preprocessor->process($class, $method, $methodName, $additional);
+        }
+
+        if ($returnType) {
+            $returnType = ": ".$returnType;
+        }
+
+        if (substr($methodName, 0, 2) !== '__') {
+            $methodName = $this->underscoreAndHyphenToCamelCase($methodName);
+        }
+        $template->setVar(
+            array_merge(
+                [
+                    "methodComment" => $methodComment,
+                    "methodName" => $methodName,
+                    "arguments" => $arguments,
+                    "returnType" => $returnType,
                 ],
                 $this->additionalVariables,
                 $additionalVariables

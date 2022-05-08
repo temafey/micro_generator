@@ -37,13 +37,15 @@ class EntityGenerator extends AbstractGenerator
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
-        $this->addUseStatement("Assert\Assertion;");
-        $this->addUseStatement("Broadway\EventSourcing\EventSourcedAggregateRoot;");
-        $this->addUseStatement("Broadway\Serializer\Serializable;");
-        $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\AggregateAssemblerInterface;");
+        $this->addUseStatement("Assert\Assertion");
+        $this->addUseStatement("Broadway\EventSourcing\EventSourcedAggregateRoot");
+        $this->addUseStatement("Broadway\Serializer\Serializable");
+        $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\AggregateAssemblerInterface");
         $this->addUseStatement("MicroModule\Common\Domain\Entity\EntityInterface");
+        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
+        $this->addUseStatement($this->getClassName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $shortClassName."Interface";
         $implements[] = "EntityInterface";
         $implements[] = "AggregateAssemblerInterface";
@@ -64,7 +66,7 @@ class EntityGenerator extends AbstractGenerator
             throw new Exception(sprintf("ValueObject '%s' for entity was not found!", $this->name));
         }
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        $this->addUseStatement(sprintf("%s;", $this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
+        $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         array_unshift($entityValueObject, self::UNIQUE_KEY_UUID);
         array_unshift($entityValueObject, self::UNIQUE_KEY_PROCESS_UUID);
 
@@ -205,13 +207,13 @@ class EntityGenerator extends AbstractGenerator
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $varName = lcfirst($shortClassName);
         $methodLogic = "\r\n\t\t\$entity = new self(\$eventFactory);";
-        $methodLogic .= sprintf("\r\n\t\t\$entity->apply(\$entity->eventFactory->make%sCreatedEvent(\$processUuid, \$uuid, $%s, CreatedAt::now()));", $shortClassName, $varName);
+        $methodLogic .= sprintf("\r\n\t\t\$entity->apply(\$entity->eventFactory->make%sCreatedEvent(\$processUuid, \$uuid, \$payload, $%s, CreatedAt::now()));", $shortClassName, $varName);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf('Factory method for creating a new %sEntity.', $shortClassName),
             "create",
-            sprintf('ProcessUuid $processUuid, Uuid $uuid, %s $%s, ?EventFactory $eventFactory = null', $shortClassName, $varName),
+            sprintf('ProcessUuid $processUuid, Uuid $uuid, %s $%s, ?Payload $payload = null, ?EventFactory $eventFactory = null', $shortClassName, $varName),
             "self",
             $methodLogic,
             "\$".$varName
