@@ -46,6 +46,11 @@ class ReadModelGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException");
         $this->addUseStatement("MicroModule\Common\Domain\Exception\ReadModelException");
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\DBALEventStoreException");
+
+        if ($this->useCommonComponent) {
+            $this->addUseStatement("MicroModule\Common\Domain\ReadModel\ReadModelInterface");
+            $implements[] = "ReadModelInterface";
+        }
         $implements[] = $interfaceShortName;
         $addVar = [
             "ReadModelException" => "ReadModelException",
@@ -78,9 +83,12 @@ class ReadModelGenerator extends AbstractGenerator
                 $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
                 $propertyType = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
                 $propertyName = lcfirst($propertyType);
-            } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
-                $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-                $propertyType = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+            }  elseif (
+                $type === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
+                $type === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            ) {
+                $this->addUseStatement($this->getClassName($arg, $type));
+                $propertyType = $this->getShortClassName($arg, $type);
                 $propertyName = lcfirst($propertyType);
             } elseif (strpos($type, "\\")) {
                 $this->addUseStatement($type);
@@ -131,9 +139,12 @@ class ReadModelGenerator extends AbstractGenerator
                 $methodArguments[] = $shortClassName." $".$propertyName;
                 $readModelArguments[] = "$".$propertyName;
                 $addVar["criteriaParams"][] = "\"".$arg."\" => $".$propertyName."->toNative(), ";
-            } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
-                $this->addUseStatement($this->getInterfaceName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-                $shortClassName = $this->getShortInterfaceName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+            } elseif (
+                $type === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
+                $type === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            ) {
+                $this->addUseStatement($this->getInterfaceName($arg, $type));
+                $shortClassName = $this->getShortInterfaceName($arg, $type);
                 $propertyName = lcfirst($shortClassName);
                 $methodArguments[] = $shortClassName." $".$propertyName;
                 $readModelArguments[] = "$".$propertyName;
@@ -160,9 +171,12 @@ class ReadModelGenerator extends AbstractGenerator
         if ($returnType === DataTypeInterface::DATA_TYPE_VOID) {
             $methodTemplate = self::METHOD_TEMPLATE_TYPE_VOID;
             $return = '';
-        } elseif ($returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
-            $this->addUseStatement($this->getClassName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-            $shortClassName = $this->getShortClassName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        } elseif (
+            $returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
+            $returnType === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+        ) {
+            $this->addUseStatement($this->getClassName($name, $returnTypeL));
+            $shortClassName = $this->getShortClassName($name, $returnType);
             $returnType = $shortClassName;
             $return = "$".lcfirst($shortClassName);
         } elseif (strpos($returnType, "\\")) {

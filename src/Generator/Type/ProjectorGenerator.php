@@ -19,6 +19,10 @@ use ReflectionException;
  */
 class ProjectorGenerator extends AbstractGenerator
 {
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_ADD = "add";
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE = "update";
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_DELETE = "delete";
+
     /**
      * Generate test class code.
      *
@@ -99,8 +103,9 @@ class ProjectorGenerator extends AbstractGenerator
             $methodArguments = sprintf("%s \$event", $eventShortName);
             $repositoryShortName = lcfirst($this->getShortClassName($entity, DataTypeInterface::STRUCTURE_TYPE_REPOSITORY));
             $methodLogic = sprintf("\r\n\t\t\$%s = \$this->%s->get(\$event->getUuid());", $entityShortName, "entityStoreRepository");
-            $methodLogic .= sprintf("\r\n\t\t\$this->readModelRepository->add(\$%s);", $entityShortName);
-
+            $readModelRepositoryMethodName = $this->getReadModelRepositoryMethodName($event);
+            $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->makeActualInstanceByEntity(\$%s);", $entityShortName);
+            $methodLogic .= sprintf("\r\n\t\t\$this->readModelRepository->%s(\$readModel);", $readModelRepositoryMethodName);
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_VOID,
                 $methodComment,
@@ -113,5 +118,23 @@ class ProjectorGenerator extends AbstractGenerator
         }
 
         return $methods;
+    }
+
+    /**
+     * Analize event name and return read model repository name.
+     */
+    protected function getReadModelRepositoryMethodName(string $eventName): string
+    {
+        $eventName = strtolower($eventName);
+
+        if (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD)) {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD;
+        } elseif (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE)) {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE;
+        } else {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE;
+        }
+
+        return $methodName;
     }
 }

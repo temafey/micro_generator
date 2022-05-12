@@ -72,9 +72,9 @@ class EventGenerator extends AbstractGenerator
 
         foreach ($structure as $arg) {
             if (!in_array($arg, self::UNIQUE_KEYS)) {
-                $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+                $this->addUseStatement($this->getValueObjectClassName($arg));
             }
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $shortClassName = $this->getValueObjectShortClassName($arg);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $shortClassName." $".$propertyName;
             $commandArguments[] = "$".$propertyName;

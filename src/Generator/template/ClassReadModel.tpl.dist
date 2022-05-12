@@ -49,9 +49,9 @@ class {className}{extends}{implements}
      *
      * @throws ValueObjectInvalidException
      */
-    public function updateByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName}
+    public function updateByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): void
     {
-        return $this->assembleFromValueObject($entityValueObject, $uuid);
+        $this->assembleFromValueObject($entityValueObject, $uuid);
     }
 
     /**

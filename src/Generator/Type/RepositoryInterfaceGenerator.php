@@ -58,9 +58,12 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
                     $shortClassName = $this->getValueObjectShortClassName($arg);
                     $propertyName = lcfirst($shortClassName);
                     $methodArguments[] = $shortClassName." $".$propertyName;
-                } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
-                    $this->addUseStatement($this->getInterfaceName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-                    $shortClassName = $this->getShortInterfaceName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+                } elseif (
+                    $type === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
+                    $type === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+                ) {
+                    $this->addUseStatement($this->getInterfaceName($arg, $type));
+                    $shortClassName = $this->getShortInterfaceName($arg, $type);
                     $propertyName = lcfirst($shortClassName);
                     $methodArguments[] = $shortClassName." $".$propertyName;
                 } elseif (strpos($type, "\\")) {
