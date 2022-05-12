@@ -76,7 +76,8 @@ interface DataTypeInterface
     public const STRUCTURE_LAYER_INFRASTRUCTURE = "infrastructure";
     public const STRUCTURE_LAYER_PRESENTATION = "presentation";
 
-    public const VALUE_OBJECT_NAMESPACE = "MicroModule\ValueObject\\";
+    public const VALUE_OBJECT_NAMESPACE = "MicroModule\ValueObject";
+    public const VALUE_OBJECT_NAMESPACE_COMMON = "MicroModule\Common\Domain\ValueObject";
     public const VALUE_OBJECT_TYPE_ENTITY = "value_object_entity";
     public const VALUE_OBJECT_TYPE_IDENTITY_UUID = "identity_uuid";
     public const VALUE_OBJECT_TYPE_STRING = "stringLiteral_stringLiteral";
@@ -85,7 +86,7 @@ interface DataTypeInterface
     public const VALUE_OBJECT_TYPE_STRUCTURE_COLLECTION = "structure_collection";
     public const VALUE_OBJECT_TYPE_STRUCTURE_DICTIONARY = "structure_dictionary";
     public const VALUE_OBJECT_TYPE_STRUCTURE_KEYVALUE = "structure_keyvalue";
-    public const VALUE_OBJECT_TYPE_DATETIME_DATETIME = "dateTime_datetime";
+    public const VALUE_OBJECT_TYPE_DATETIME_DATETIME = "dateTime_dateTime";
     public const VALUE_OBJECT_TYPE_DATETIME_DATE = "dateTime_date";
     public const VALUE_OBJECT_TYPE_DATETIME_TIME = "dateTime_time";
     public const VALUE_OBJECT_TYPE_PERSON_AGE = "person_age";

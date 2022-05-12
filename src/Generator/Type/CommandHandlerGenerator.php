@@ -78,13 +78,13 @@ class CommandHandlerGenerator extends AbstractGenerator
     protected function renderConstructMethod(): string
     {
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $type => $arg) {
-            $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY)
-                ? $this->getInterfaceName($arg, $type)
-                : $this->getClassName($arg, $type);
+            $className = ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)
+                ? $this->getClassName($arg, $type)
+                : $this->getInterfaceName($arg, $type);
             $this->addUseStatement($className);
-            $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY)
-                ? $this->getShortInterfaceName($arg, $type)
-                : $this->getShortClassName($arg, $type);
+            $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)
+                ? $this->getShortClassName($arg, $type)
+                : $this->getShortInterfaceName($arg, $type);
             $propertyName = lcfirst($this->getShortClassName($arg, $type));
             $propertyComment = sprintf("%s object.", $shortClassName);;
             $this->addProperty(
@@ -134,23 +134,22 @@ class CommandHandlerGenerator extends AbstractGenerator
             $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->createInstance(%s);", $entityShortName, $factoryShortName, implode(", ", $valueObjects));
         } else {
             $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->get(\$%s->getUuid());", $entityShortName, $repositoryShortName, $commandPropertyName);
-            $methodBody .= sprintf("\r\n\t\t\$%s->%s(%s);", $entityShortName, $this->name, implode(", ", $valueObjects));
+            $methodBody .= sprintf("\r\n\t\t\$%s->%s(%s);", $entityShortName, $this->underscoreAndHyphenToCamelCase($this->name), implode(", ", $valueObjects));
         }
         $methodBody .= sprintf("\r\n\t\t\$this->%s->store(\$%s);", $repositoryShortName, $entityShortName);
 
         if ($this->useCommonComponent) {
             $methodComment = sprintf("Handle %s command.\r\n\t *\r\n\t * @var CommandInterface|%s.", $commandShortClassName, $commandShortClassName);
-            $commandShortArgumentClassName = "CommandInterface";
+            $commandShortClassName = "CommandInterface";
         } else {
             $methodComment = sprintf("Handle %s command.", $commandShortClassName);
-            $commandShortArgumentClassName= $commandShortClassName;
         }
         
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_VOID,
             $methodComment,
             "handle",
-            $commandShortArgumentClassName." $".$commandPropertyName,
+            $commandShortClassName." $".$commandPropertyName,
             "void",
             $methodBody,
             ""

@@ -38,11 +38,12 @@ class ValueObjectInterfaceGenerator extends AbstractGenerator
         $extends = "";
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
         $shortInterfaceName = $this->getShortInterfaceName($this->name, $this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
 
         foreach ($this->structure as $name => $valueObject) {
+            if ($this->useCommonComponent && in_array($name, self::COMMON_VALUE_OBJECT_KEYS)) {
+                continue;
+            }
             $methods[] = $this->renderValueObjectMethod($name, $valueObject);
         }
 

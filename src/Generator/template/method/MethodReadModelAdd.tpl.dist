@@ -1,0 +1,29 @@
+	/**
+     * Apply TransactionAddedEvent event.
+     */
+    public function {methodName}({arguments}): void
+    {
+		$entity = $this->entityStoreRepository->get($event->getUuid());
+		
+		try {
+			$this->readModelRepository->insertOne($this->readModelFactory->makeActualInstance($entity));
+        } catch (DBALEventStoreException $e) {
+            throw new {ReadModelException}(
+                '{arguments} was not {methodName} in read model.',
+                (int) $e->getCode(),
+                $e
+            );
+        }
+        $entity = $this->queryRepository->findByUuid($event->getUuid());
+
+        if (null === $entity) {
+            throw new NotFoundException(sprintf('Entity not found with uuid \'%s\'.', $event->getUuid()->toNative()));
+        }
+        $command = $this->commandFactory->makeCommandInstanceByType(
+            CommandFactoryInterface::ADD_ID_COMMAND,
+            $event->getProcessUuid(),
+            $entity->getUuid(),
+            $entity->getId()
+        );
+        $this->commandBus->handle($command);
+    }

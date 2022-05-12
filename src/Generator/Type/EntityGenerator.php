@@ -67,8 +67,14 @@ class EntityGenerator extends AbstractGenerator
         }
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-        array_unshift($entityValueObject, self::UNIQUE_KEY_UUID);
-        array_unshift($entityValueObject, self::UNIQUE_KEY_PROCESS_UUID);
+
+        if (!in_array(self::KEY_UNIQUE_UUID, $entityValueObject)) {
+            array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
+        }
+
+        if (!in_array(self::KEY_UNIQUE_PROCESS_UUID, $entityValueObject)) {
+            array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
+        }
 
         foreach ($entityValueObject as $valueObject) {
             $methods[] = $this->renderValueObjectGetMethod($valueObject);
@@ -100,14 +106,9 @@ class EntityGenerator extends AbstractGenerator
 
     protected function renderValueObjectGetMethod(string $valueObject): string
     {
-        if ($valueObject === self::UNIQUE_KEY_UUID) {
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        } elseif ($valueObject === self::UNIQUE_KEY_PROCESS_UUID) {
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        } else {
-            $this->addUseStatement(sprintf("%s;", $this->getClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
-        }
-        $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $className = $this->getValueObjectClassName($valueObject);
+        $this->addUseStatement($className);
+        $shortClassName = $this->getValueObjectShortClassName($valueObject);
         $propertyName = lcfirst($shortClassName);
         $methodName = "get".$shortClassName;
         $propertyComment = sprintf("%s value object.", $valueObject);
@@ -136,7 +137,7 @@ class EntityGenerator extends AbstractGenerator
         $commandProperties = [];
 
         foreach ($commandArgs as $arg) {
-            if ($arg === self::UNIQUE_KEY_UUID) {
+            if ($arg === self::KEY_UNIQUE_UUID) {
                 continue;
             }
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
@@ -216,7 +217,7 @@ class EntityGenerator extends AbstractGenerator
             sprintf('ProcessUuid $processUuid, Uuid $uuid, %s $%s, ?Payload $payload = null, ?EventFactory $eventFactory = null', $shortClassName, $varName),
             "self",
             $methodLogic,
-            "\$".$varName
+            "\$entity"
         );
     }
 
@@ -235,7 +236,7 @@ class EntityGenerator extends AbstractGenerator
             sprintf('Uuid $uuid, %s $%s, ?EventFactory $eventFactory = null', $shortClassName, $varName),
             "self",
             $methodLogic,
-            "\$".$varName
+            "\$entity"
         );
     }
 
@@ -264,10 +265,13 @@ class EntityGenerator extends AbstractGenerator
         $methodLogic .= sprintf("\r\n\t\t\tthrow new ValueObjectInvalidException('%sEntity can be assembled only with %s value object');", $shortClassName, $shortClassName);
         $methodLogic .= "\r\n\t\t}";
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        array_unshift($entityValueObject, self::UNIQUE_KEY_UUID);
-        array_unshift($entityValueObject, self::UNIQUE_KEY_PROCESS_UUID);
+        array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
+        array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
 
         foreach ($entityValueObject as $valueObject) {
+            if (in_array($valueObject, self::UNIQUE_KEYS)) {
+                continue;
+            }
             $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
             $varName = lcfirst($shortClassName);
@@ -308,8 +312,8 @@ class EntityGenerator extends AbstractGenerator
     {
         $methodLogic = "\r\n\t\t\$data = [];";
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        array_unshift($entityValueObject, self::UNIQUE_KEY_UUID);
-        array_unshift($entityValueObject, self::UNIQUE_KEY_PROCESS_UUID);
+        array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
+        array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
 
         foreach ($entityValueObject as $valueObject) {
             $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);

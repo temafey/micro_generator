@@ -89,7 +89,7 @@ class ProjectorGenerator extends AbstractGenerator
         $methods = [];
         //$repositoryShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY], DataTypeInterface::STRUCTURE_TYPE_REPOSITORY));
 
-        foreach ($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $event) {
+        foreach ($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $event) {            
             $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$event][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             $entityShortName = lcfirst($this->getShortClassName($entity, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
             $this->addUseStatement($this->getClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT));
@@ -98,8 +98,8 @@ class ProjectorGenerator extends AbstractGenerator
             $methodComment = sprintf("Apply %s event.", $eventShortName);
             $methodArguments = sprintf("%s \$event", $eventShortName);
             $repositoryShortName = lcfirst($this->getShortClassName($entity, DataTypeInterface::STRUCTURE_TYPE_REPOSITORY));
-            $methodLogic = sprintf("\r\n\t\t\$%s = \$this->%s->get(\$event->getUuid());", $entityShortName, $repositoryShortName);
-            $methodLogic .= sprintf("\r\n\t\t\$this->commandRepository->add(\$%s);", $entityShortName);
+            $methodLogic = sprintf("\r\n\t\t\$%s = \$this->%s->get(\$event->getUuid());", $entityShortName, "entityStoreRepository");
+            $methodLogic .= sprintf("\r\n\t\t\$this->readModelRepository->add(\$%s);", $entityShortName);
 
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_VOID,

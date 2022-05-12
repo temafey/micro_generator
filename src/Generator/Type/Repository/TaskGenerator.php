@@ -80,19 +80,9 @@ class TaskGenerator extends AbstractGenerator
         $commandArguments = [];
 
         foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            if ($arg === self::UNIQUE_KEY_UUID) {
-                $this->addUseStatement("Ramsey\Uuid\UuidInterface");
-                $shortClassName = "UuidInterface";
-            } elseif ($this->useCommonComponent && $arg === self::UNIQUE_KEY_PROCESS_UUID) {
-                $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-                $shortClassName = "ProcessUuid";
-            } elseif ($this->useCommonComponent && $arg === self::UNIQUE_KEY_FIND_CRITERIA) {
-                $this->addUseStatement("MicroModule\Common\Domain\ValueObject\FindCriteria");
-                $shortClassName = "FindCriteria";
-            } else {
-                $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-                $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            }
+            $className = $this->getValueObjectClassName($arg);
+            $this->addUseStatement($className);
+            $shortClassName = $this->getValueObjectShortClassName($arg);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $shortClassName." $".$propertyName;
             $commandArguments[] = "$".$propertyName."->toNative()";

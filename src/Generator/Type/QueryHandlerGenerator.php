@@ -47,6 +47,7 @@ class QueryHandlerGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
  
         if ($this->useCommonComponent) {
+            $this->addUseStatement("MicroModule\Common\Domain\Query\QueryInterface");
             $this->addUseStatement("MicroModule\Common\Application\QueryHandler\QueryHandlerInterface");
         } else {
             $this->addUseStatement($classNamespace. "\\"."QueryHandlerInterface");
@@ -56,11 +57,19 @@ class QueryHandlerGenerator extends AbstractGenerator
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_QUERY));
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $type => $arg) {
-            $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getInterfaceName($arg, $type) : $this->getClassName($arg, $type);
+            if (is_numeric($type)) {
+                //$type = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type'];
+                $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
+                $className = $this->getValueObjectClassName($arg);
+                $shortClassName = $this->getValueObjectShortClassName($arg);
+                $propertyComment = sprintf("%s value object.", $shortClassName);
+            } else {
+                $className = $this->getInterfaceName($arg, $type);
+                $shortClassName = $this->getShortInterfaceName($arg, $type);
+                $propertyComment = sprintf("%s %s.", $shortClassName, $type);
+            }
             $this->addUseStatement($className);
-            $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
-            $propertyName = lcfirst($this->getShortClassName($arg, $type));
-            $propertyComment = "";
+            $propertyName = lcfirst($shortClassName);
             $this->addProperty($propertyName, $shortClassName, $propertyComment);
             $this->constructArguments[] = $shortClassName." $".$propertyName;
             $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
@@ -101,11 +110,18 @@ class QueryHandlerGenerator extends AbstractGenerator
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $valueObjects[] = sprintf("\$%s->get%s()", $queryPropertyName, $shortClassName);
         }
+
+        if ($this->useCommonComponent) {
+            $methodComment = sprintf("Handle %s query.\r\n\t *\r\n\t * @var QueryInterface|%s.", $queryShortClassName, $queryShortClassName);
+            $queryShortClassName = "QueryInterface";
+        } else {
+            $methodComment = sprintf("Handle %s query.", $queryShortClassName);
+        }
         $return = sprintf("\$this->%s->%s(%s)", $repositoryShortName, $this->underscoreAndHyphenToCamelCase($this->name), implode(", ", $valueObjects));
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
-            sprintf("Handle %s query.", $queryShortClassName),
+            $methodComment,
             "handle",
             $queryShortClassName." $".$queryPropertyName,
             "?array",

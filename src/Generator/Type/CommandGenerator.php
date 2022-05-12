@@ -20,13 +20,6 @@ use ReflectionException;
 class CommandGenerator extends AbstractGenerator
 {
     /**
-     * Is throw exception if return type was not found.
-     *
-     * @var bool
-     */
-    protected $returnTypeNotFoundThrowable = false;
-
-    /**
      * Generate test class code.
      *
      * @return string|null
@@ -53,10 +46,9 @@ class CommandGenerator extends AbstractGenerator
             $this->addUseStatement($classNamespace."\\"."AbstractCommand");
         }
         $extends = "AbstractCommand";
-        $addVar = [];
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $renderedMethod = $this->renderStructureMethod($arg, $addVar);
+            $renderedMethod = $this->renderStructureMethod($arg);
 
             if (null === $renderedMethod) {
                 continue;
@@ -94,20 +86,10 @@ class CommandGenerator extends AbstractGenerator
 
     public function renderStructureMethod(string $arg, array $addVar = []): ?string
     {
-        if ($arg === self::UNIQUE_KEY_UUID) {
-            $this->addUseStatement("Ramsey\Uuid\UuidInterface");
-            $shortClassName = "UuidInterface";
-            $propertyName = self::UNIQUE_KEY_UUID;
-        } elseif ($arg === self::UNIQUE_KEY_PROCESS_UUID) {
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-            $shortClassName = "ProcessUuid";
-            $propertyName = lcfirst($shortClassName);
-        } else {
-            $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $propertyName = lcfirst($shortClassName);
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
-        }
+        $this->addUseStatement($this->getValueObjectClassName($arg));
+        $shortClassName = $this->getValueObjectShortClassName($arg);
+        $propertyName = lcfirst($shortClassName);
+        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
         $this->constructArguments[] = $shortClassName." $".$propertyName;
 

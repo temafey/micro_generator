@@ -4,7 +4,7 @@
      *
      * @throws Exception
      */
-    public function findByUuid(UuidInterface $uuid): ?{entityName}ReadModelInterface
+    public function findByUuid(Uuid $uuid): ?{entityName}ReadModelInterface
     {
         try {
             $result = $this->dataMapper->mapFromStorage(
@@ -17,7 +17,7 @@
         unset($result[{entityName}ReadModelInterface::KEY_UUID]);
 
         return $this->readModelFactory->makeActualInstance(
-            $this->{shortEntityName}ValueObjectFactory->make{entityName}($result),
-            $this->commonValueObjectFactory->makeUuid($uuid)
+            $this->valueObjectFactory->make{entityName}($result),
+            $this->valueObjectFactory->makeUuid($uuid)
         );
     }

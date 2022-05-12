@@ -42,6 +42,7 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const METHOD_TEMPLATE_TYPE_FIND_ONE_BY        = "MethodFindOneBy";
     protected const METHOD_TEMPLATE_TYPE_FIND_BY_CRITERIA   = "MethodFindByCriteria";
     protected const METHOD_TEMPLATE_TYPE_READ_MODEL         = "MethodReadModel";
+    protected const METHOD_TEMPLATE_TYPE_READ_MODEL_ADD     = "MethodReadModelAdd";
     protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
     protected const METHOD_TEMPLATE_TYPE_FACTORY            = "MethodFactory";
     protected const PROPERTY_TEMPLATE_TYPE_DEFAULT          = "Property";
@@ -50,6 +51,7 @@ abstract class AbstractGenerator implements GeneratorInterface
     public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";
     public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";
     public const METHOD_TYPE_FIND_BY_CRITERIA               = "findByCriteria";
+    public const METHOD_TYPE_FIND_ALL                       = "findAll";
 
     /**
      * Domain name.

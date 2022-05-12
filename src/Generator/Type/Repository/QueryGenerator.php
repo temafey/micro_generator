@@ -79,8 +79,8 @@ class QueryGenerator extends AbstractGenerator
     {
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
             if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
-                $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-                $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+                $this->addUseStatement($this->getValueObjectClassName($arg));
+                $shortClassName = $this->getValueObjectShortClassName($arg);
                 $propertyName = lcfirst($shortClassName);
                 $this->constructArguments[] = $shortClassName." $".$propertyName;
             } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
@@ -129,19 +129,8 @@ class QueryGenerator extends AbstractGenerator
 
         foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
             if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
-                if ($arg === self::UNIQUE_KEY_UUID) {
-                    $this->addUseStatement("Ramsey\Uuid\UuidInterface");
-                    $shortClassName = "UuidInterface";
-                } elseif ($this->useCommonComponent && $arg === self::UNIQUE_KEY_PROCESS_UUID) {
-                    $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-                    $shortClassName = "ProcessUuid";
-                } elseif ($this->useCommonComponent && $arg === self::UNIQUE_KEY_FIND_CRITERIA) {
-                    $this->addUseStatement("MicroModule\Common\Domain\ValueObject\FindCriteria");
-                    $shortClassName = "FindCriteria";
-                } else {
-                    $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-                    $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-                }
+                $this->addUseStatement($this->getValueObjectClassName($arg));
+                $shortClassName = $this->getValueObjectShortClassName($arg);
                 $propertyName = lcfirst($shortClassName);
                 $methodArguments[] = $shortClassName." $".$propertyName;
                 $addVar["criteriaParams"][] = "\"".$arg."\" => $".$propertyName."->toNative(), ";
@@ -209,6 +198,7 @@ class QueryGenerator extends AbstractGenerator
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_BY_UUID;
                 break;
 
+            case self::METHOD_TYPE_FIND_BY_CRITERIA:
             case self::METHOD_TYPE_FIND_BY_CRITERIA:
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_BY_CRITERIA;
                 break;

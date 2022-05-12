@@ -44,10 +44,10 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->addUseStatement($this->getInterfaceName($this->name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-        $methods[] = $this->renderValueObjectGetMethod(self::UNIQUE_KEY_UUID);
+        $methods[] = $this->renderValueObjectGetMethod(self::KEY_UNIQUE_UUID);
 
         foreach ($entityValueObject as $valueObject) {
-            if ($valueObject === self::UNIQUE_KEY_UUID) {
+            if ($valueObject === self::KEY_UNIQUE_UUID) {
                 continue;
             }
             $methods[] = $this->renderGetMethod($valueObject);

@@ -9,6 +9,7 @@ use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeExcept
 use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\CodeHelper;
 use MicroModule\MicroserviceGenerator\Generator\Preprocessor\PreprocessorInterface;
+use PHPUnit\Exception;
 
 /**
  * Class ClassBuilder.
@@ -130,7 +131,13 @@ class ClassBuilder
         $generator = new $generatorClassName($domainName, $layer, $type, $name, $this->projectNamespace, $structure, $domainStructure, $layerPatternPath);
         $className = $generator->getFullClassName();
 
-        if (class_exists($className)) {
+        try {
+            if (class_exists($className)) {
+                return false;
+            }
+        } catch (\Throwable $e) {
+            trigger_error($e->getMessage(), E_USER_WARNING);
+
             return false;
         }
         $preprocessor = $this->getPreprocessor($className);

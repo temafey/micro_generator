@@ -9,6 +9,7 @@ use MicroModule\MicroserviceGenerator\Generator\Exception\CodeExtractException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\FileNotExistsException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\GeneratorException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
+use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use Nette\Utils\Strings;
 use PhpParser\{Node\Stmt\ClassMethod, ParserFactory, Node, NodeFinder};
 use ReflectionClass;
@@ -30,11 +31,13 @@ trait CodeHelper
      *
      * @throws InvalidClassTypeException
      */
-    protected function getClassName(string $name, string $type): string
+    protected function getClassName(string $name, string $type, bool $useName = true): string
     {
-        $classNamespace = $this->getClassNamespace($type);
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
+            return $this->getValueObjectClassName($name);
+        }
 
-        return $classNamespace.'\\'.$this->getShortClassName($name, $type);
+        return $this->getClassNamespace($type).'\\'.$this->getShortClassName($name, $type, $useName);
     }
 
     /**
@@ -42,11 +45,9 @@ trait CodeHelper
      *
      * @throws InvalidClassTypeException
      */
-    protected function getInterfaceName(string $name, string $type): string
+    protected function getInterfaceName(string $name, string $type, bool $useName = true): string
     {
-        $classNamespace = $this->getInterfaceNamespace($type);
-
-        return $classNamespace.'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($name)).$this->getClassNameSuffix($type)."Interface";
+        return $this->getInterfaceNamespace($type).'\\'.$this->getShortInterfaceName($name, $type, $useName);
     }
 
     /**
@@ -64,7 +65,7 @@ trait CodeHelper
     /**
      * Generate class name without namespace by pattern type.
      */
-    protected function getShortClassName(string $name, string $type): string
+    protected function getShortClassName(string $name, string $type, bool $useName = true): string
     {
         if ($type === DataTypeInterface::STRUCTURE_TYPE_EVENT) {
             if (isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
@@ -82,23 +83,36 @@ trait CodeHelper
 
         if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
             $type = "taskRepository";
+            $useName = false;
+        }
+        $shortClassName = $this->getClassNameSuffix($type);
+
+        if (!$useName) {
+            return $shortClassName;
         }
 
-        return $name.$this->getClassNameSuffix($type);
+
+        return $name.$shortClassName;
     }
 
     /**
      * Generate interface name without namespace by pattern type.
      */
-    protected function getShortInterfaceName(string $name, string $type): string
+    protected function getShortInterfaceName(string $name, string $type, bool $useName = true): string
     {
         $type = str_replace(["Interface", "interface"], "", $type);
 
         if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
             $type = "taskRepository";
+            $useName = false;
+        }
+        $shortInterfaceName = $this->getClassNameSuffix($type)."Interface";
+
+        if (!$useName) {
+            return $shortInterfaceName;
         }
 
-        return ucfirst($this->underscoreAndHyphenToCamelCase($name)).$this->getClassNameSuffix($type)."Interface";
+        return ucfirst($this->underscoreAndHyphenToCamelCase($name)).$shortInterfaceName;
     }
 
     /**
@@ -179,9 +193,20 @@ trait CodeHelper
     /**
      * Generate value object class name by pattern type.
      */
-    protected function getValueObjectClassName(string $type): string
+    protected function getValueObjectClassName(string $name, bool $forExtends = false, string $glue = ''): string
     {
-        return DataTypeInterface::VALUE_OBJECT_NAMESPACE.ucfirst($this->underscoreAndHyphenToCamelCase($type, "\\"));
+        $name = $this->camelCaseToUnderscore($name);
+
+        if ($this->useCommonComponent && in_array($name, GeneratorInterface::COMMON_VALUE_OBJECT_KEYS)) {
+            $namespace = DataTypeInterface::VALUE_OBJECT_NAMESPACE_COMMON;
+        } elseif ($forExtends) {
+            $glue = "\\";
+            $namespace = DataTypeInterface::VALUE_OBJECT_NAMESPACE;
+        } else {
+            $namespace = $this->getClassNamespace(DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        }
+        
+        return $namespace."\\".ucfirst($this->underscoreAndHyphenToCamelCase($name, $glue));
     }
 
     /**

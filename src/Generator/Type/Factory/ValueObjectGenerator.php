@@ -38,12 +38,18 @@ class ValueObjectGenerator extends AbstractGenerator
         $extends = "";
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
         $implements[] = $shortClassName."Interface";
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
 
+        if ($this->useCommonComponent) {
+            $extends = "CommonValueObjectFactory";
+            $this->addUseStatement("MicroModule\Common\Domain\Factory\CommonValueObjectFactory");
+        }
+
         foreach ($this->structure as $name => $valueObject) {
+            if ($this->useCommonComponent && in_array($name, self::COMMON_VALUE_OBJECT_KEYS)) {
+                continue;
+            }
             $methods[] = $this->renderValueObjectMethod($name, $valueObject);
         }
 

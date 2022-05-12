@@ -42,7 +42,7 @@ class ValueObjectGenerator extends AbstractGenerator
         $extends = "";
 
         if ($this->structure['type'] !== DataTypeInterface::VALUE_OBJECT_TYPE_ENTITY) {
-            $extendsClassName = $this->getValueObjectClassName($this->structure['type']);
+            $extendsClassName = $this->getValueObjectClassName($this->structure['type'], true);
             $extendsShortClassName = "Base" . $this->getValueObjectShortClassName($this->structure['type']);
             $this->addUseStatement( $extendsClassName . " as $extendsShortClassName");
             $extends = $extendsShortClassName;
@@ -124,7 +124,7 @@ class ValueObjectGenerator extends AbstractGenerator
         $shortClassName = $this->getShortClassName($this->name, $this->type);
 
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf("Build %s object from array.", $shortClassName),
             "fromArray",
             "array \$data",

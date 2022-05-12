@@ -39,49 +39,42 @@ class QueryGenerator extends AbstractGenerator
      */
     public function generate(): ?string
     {
-        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
-            throw new Exception(sprintf("Entity for query '%s' was not found!", $this->name));
-        }
         $implements = [];
         $useTraits = [];
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
         
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Domain\AbstractQuery");
+            $this->addUseStatement("MicroModule\Common\Domain\Query\AbstractQuery");
         } else {
             $this->addUseStatement($classNamespace. "\\"."AbstractQuery");
         }
         $extends = "AbstractQuery";
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $methodName = "get".$shortClassName;
-            $methodComment = "";
-            $propertyName = lcfirst($shortClassName);
-            $this->addProperty($propertyName, $shortClassName, $methodComment);            
-            $methods[] = $this->renderMethod(
-                self::METHOD_TEMPLATE_TYPE_DEFAULT,
-                $methodComment,
-                $methodName,
-                "",
-                $shortClassName,
-                "",
-                "\$this->".$propertyName
-            );
-            $this->constructArguments[] = $shortClassName." $".$propertyName;
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $renderedMethod = $this->renderStructureMethod($arg);
+
+            if (null === $renderedMethod) {
+                continue;
+            }
+            $methods[] = $renderedMethod;
         }
-        array_unshift($methods, $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
-            "Constructor",
-            "__construct",
-            implode(", ", $this->constructArguments),
-            "",
-            implode("", $this->constructArgumentsAssignment),
-            ""
-        ));
+
+        if (!empty($this->constructArgumentsAssignment)) {
+            $methodLogic = implode("", $this->constructArgumentsAssignment);
+            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid);";
+            array_unshift(
+                $methods, $this->renderMethod(
+                self::METHOD_TEMPLATE_TYPE_DEFAULT,
+                "Constructor",
+                "__construct",
+                implode(", ", $this->constructArguments),
+                "",
+                $methodLogic,
+                ""
+            )
+            );
+        }
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_FULL,
@@ -92,6 +85,34 @@ class QueryGenerator extends AbstractGenerator
             $useTraits,
             $this->properties,
             $methods
+        );
+    }
+
+    public function renderStructureMethod(string $arg, array $addVar = []): ?string
+    {
+        $className = $this->getValueObjectClassName($arg);
+        $this->addUseStatement($className);
+        $shortClassName = $this->getValueObjectShortClassName($arg);
+        $propertyName = lcfirst($shortClassName);
+        $methodComment = sprintf("Return %s value object.", $shortClassName);
+        $this->constructArguments[] = $shortClassName." $".$propertyName;
+
+        if ($this->useCommonComponent && in_array($arg, self::UNIQUE_KEYS)) {
+            return null;
+        }
+        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        $this->addProperty($propertyName, $shortClassName, $methodComment);
+        $methodName = "get".$shortClassName;
+
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            $methodComment,
+            $methodName,
+            "",
+            $shortClassName,
+            "",
+            "\$this->".$propertyName,
+            $addVar
         );
     }
 }

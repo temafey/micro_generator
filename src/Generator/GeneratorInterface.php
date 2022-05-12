@@ -11,10 +11,31 @@ use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeExcept
  */
 interface GeneratorInterface
 {
-    public const UNIQUE_KEY_UUID = 'uuid';
-    public const UNIQUE_KEY_PROCESS_UUID = 'process_uuid';
-    public const UNIQUE_KEY_FIND_CRITERIA = 'find_criteria';
-    public const UNIQUE_KEYS = [self::UNIQUE_KEY_PROCESS_UUID, self::UNIQUE_KEY_UUID];
+    public const KEY_UNIQUE_UUID = 'uuid';
+    public const KEY_UNIQUE_ID = 'id';
+    public const KEY_UNIQUE_PROCESS_UUID = 'process_uuid';
+    public const KEY_FIND_CRITERIA = 'find_criteria';
+    public const KEY_OFFSET = 'offset';
+    public const KEY_LIMIT = 'limit';
+    public const KEY_CREATED_AT = 'created_at';
+    public const KEY_UPDATED_AT = 'updated_at';
+    
+    public const UNIQUE_KEYS = [
+        self::KEY_UNIQUE_PROCESS_UUID,
+        self::KEY_UNIQUE_UUID,
+        self::KEY_UNIQUE_ID
+    ];
+
+    public const COMMON_VALUE_OBJECT_KEYS = [
+        self::KEY_UNIQUE_PROCESS_UUID, 
+        self::KEY_UNIQUE_UUID, 
+        self::KEY_UNIQUE_ID,
+        self::KEY_FIND_CRITERIA,
+        self::KEY_OFFSET,
+        self::KEY_LIMIT,
+        self::KEY_CREATED_AT,
+        self::KEY_UPDATED_AT,
+    ];
 
     /**
      * Return full name of class that could be generated.

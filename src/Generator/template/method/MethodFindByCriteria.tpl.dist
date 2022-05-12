@@ -5,7 +5,7 @@
 	 * @return {entityName}ReadModelInterface[]|null
      * @throws Exception
      */
-    public function findByCriteria(FindCriteria $findCriteria): ?array
+    public function {methodName}(FindCriteria $findCriteria): ?array
     {
         try {
             $result = $this->dataMapper->mapFromStorage(
@@ -20,8 +20,8 @@
             $uuid = $data[{entityName}ReadModelInterface::KEY_UUID];
             unset($data[{entityName}ReadModelInterface::KEY_UUID]);
             $collection[] = $this->readModelFactory->makeActualInstance(
-                $this->{shortEntityName}ValueObjectFactory->make{entityName}($data),
-                $this->commonValueObjectFactory->makeUuid($uuid)
+                $this->valueObjectFactory->make{entityName}($data),
+                $this->valueObjectFactory->makeUuid($uuid)
             );
         }
 

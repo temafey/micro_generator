@@ -96,24 +96,18 @@ class EventGenerator extends AbstractGenerator
 
     protected function renderValueObjectGetMethod(string $valueObjectName): ?string
     {
-        $shortClassName = $this->getShortClassName($valueObjectName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $className = $this->getValueObjectClassName($valueObjectName);
+        $this->addUseStatement($className);
+        $shortClassName = $this->getValueObjectShortClassName($valueObjectName);
         $propertyName = lcfirst($shortClassName);
         $methodName = "get".$shortClassName;
-
-        if ($valueObjectName === self::UNIQUE_KEY_UUID) {
-            $this->addUseStatement("Ramsey\Uuid\UuidInterface");
-            $shortClassName = "UuidInterface";
-        } elseif ($this->useCommonComponent && $valueObjectName === self::UNIQUE_KEY_PROCESS_UUID) {
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        } else {
-            $this->addUseStatement(sprintf("%s;", $this->getClassName($valueObjectName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
-        }
+        $this->addUseStatement($className);
         $this->constructArguments[] = $shortClassName." $".$propertyName;
 
         if ($this->useCommonComponent && in_array($valueObjectName, self::UNIQUE_KEYS)) {
             return null;
         }
+        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
         $this->addProperty($propertyName, $shortClassName, $methodComment);
 

@@ -42,8 +42,8 @@ class EntityInterfaceGenerator extends AbstractGenerator
         }
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
         $this->addUseStatement(sprintf("%s;", $this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
-        array_unshift($entityValueObject, self::UNIQUE_KEY_UUID);
-        array_unshift($entityValueObject, self::UNIQUE_KEY_PROCESS_UUID);
+        array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
+        array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
 
         foreach ($entityValueObject as $valueObject) {
             $renderedMethod = $this->renderValueObjectMethod($valueObject);
@@ -68,18 +68,13 @@ class EntityInterfaceGenerator extends AbstractGenerator
 
     protected function renderValueObjectMethod(string $valueObject): ?string
     {
-        if ($valueObject === self::UNIQUE_KEY_UUID) {
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        } elseif ($valueObject === self::UNIQUE_KEY_PROCESS_UUID) {
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        } else {
-            $this->addUseStatement(sprintf("%s;", $this->getClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)));
-        }
+        $className = $this->getValueObjectClassName($valueObject);
+        $this->addUseStatement($className);
+        $shortClassName = $this->getValueObjectShortClassName($valueObject);
 
         if (in_array($valueObject, self::UNIQUE_KEYS)) {
             return null;
         }
-        $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $methodName = "get".$shortClassName;
         $methodComment = sprintf("Return %s value object.", $valueObject);
         $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
@@ -103,7 +98,7 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $commandArguments = [];
 
         foreach ($commandArgs as $arg) {
-            if ($arg === self::UNIQUE_KEY_UUID) {
+            if ($arg === self::KEY_UNIQUE_UUID) {
                 continue;
             }
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
