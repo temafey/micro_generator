@@ -137,13 +137,15 @@ class EntityGenerator extends AbstractGenerator
         $commandProperties = [];
 
         foreach ($commandArgs as $arg) {
+            $shortClassName = $this->getValueObjectShortClassName($arg);
+            $propertyName = lcfirst($shortClassName);
+
             if ($arg === self::KEY_UNIQUE_UUID) {
+                $commandProperties[] = "\$this->".$propertyName;
                 continue;
             }
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-            $propertyName = lcfirst($shortClassName);
-            $commandArguments[] = $shortClassName." $".$propertyName;
             $commandProperties[] = "$".$propertyName;
+            $commandArguments[] = $shortClassName." $".$propertyName;
         }
         [$applyEvents, $applyMethods] = $this->renderApplyMethods($commandEvents, $commandProperties);
         $commandMethod = $this->renderMethod(
@@ -197,7 +199,7 @@ class EntityGenerator extends AbstractGenerator
                 $methodLogic,
                 ""
             );
-            $applyEvents[] = sprintf("\r\n\t\t\$this->apply(\$this->eventFactory->make%s(\$this->uuid, %s));", $eventShortName, implode(", ", $commandProperties));
+            $applyEvents[] = sprintf("\r\n\t\t\$this->apply(\$this->eventFactory->make%s(%s));", $eventShortName, implode(", ", $commandProperties));
         }
 
         return [$applyEvents, $applyMethods];
