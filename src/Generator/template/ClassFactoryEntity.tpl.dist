@@ -20,7 +20,7 @@ class {className}{extends}{implements}
         Uuid $uuid,
         {shortValueObjectName} ${propertyValueObjectName},
         ?Payload $payload = null,
-        ?EventFactory $eventFactory = null
+        ?EventFactoryInterface $eventFactory = null
     ): {shortEntityInterfaceName} {
         return (new {shortEntityName}())->create(
 			$processUuid, 
@@ -39,7 +39,7 @@ class {className}{extends}{implements}
     public function makeActualInstance(
         Uuid $uuid,
         {shortValueObjectName} ${propertyValueObjectName},
-        ?EventFactory $eventFactory = null
+        ?EventFactoryInterface $eventFactory = null
     ): {shortEntityInterfaceName} {
         return {shortEntityName}::createActual(
 			$uuid, 

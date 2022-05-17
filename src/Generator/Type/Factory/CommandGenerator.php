@@ -46,6 +46,7 @@ class CommandGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Base\Domain\Exception\FactoryException");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");
         $implements[] = $shortClassName."Interface";
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
@@ -88,9 +89,9 @@ class CommandGenerator extends AbstractGenerator
 
         foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
             if (!in_array($arg, self::UNIQUE_KEYS)) {
-                $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+                $this->addUseStatement($this->getValueObjectClassName($arg));
             }
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $shortClassName = $this->getValueObjectShortClassName($arg);
             $propertyType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $propertyType." $".$propertyName;

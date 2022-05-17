@@ -42,7 +42,6 @@ class EntityGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement($this->getClassName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $shortClassName."Interface";
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));

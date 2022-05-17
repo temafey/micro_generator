@@ -64,9 +64,12 @@ class EventGenerator extends AbstractGenerator
             }
             $methods[] = $methodLogic;
         }
+
         if (!empty($this->constructArgumentsAssignment)) {
+            $this->constructArguments[] = "?Payload \$payload = null";
+            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
             $methodLogic = implode("", $this->constructArgumentsAssignment);
-            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid);";
+            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid, \$payload);";
                 array_unshift(
                     $methods, $this->renderMethod(
                     self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -104,7 +107,11 @@ class EventGenerator extends AbstractGenerator
         $this->addUseStatement($className);
         $this->constructArguments[] = $shortClassName." $".$propertyName;
 
-        if ($this->useCommonComponent && in_array($valueObjectName, self::UNIQUE_KEYS)) {
+        if (
+            $this->useCommonComponent &&
+            $valueObjectName !== self::KEY_UNIQUE_ID &&
+            in_array($valueObjectName, self::UNIQUE_KEYS)
+        ) {
             return null;
         }
         $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
@@ -132,6 +139,11 @@ class EventGenerator extends AbstractGenerator
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $this->constructArguments[] = sprintf("\r\n\t\t\t$shortClassName::fromNative(\$data['%s'])", $arg);
         }
+        $methodLogic = implode("", $assertion);
+        $methodLogic .= "\r\n\t\t\$event = new static(".implode(",", $this->constructArguments)."\r\n\t\t);";
+        $methodLogic .= "\r\n\r\n\t\tif (isset(\$data['payload'])) {";
+        $methodLogic .= "\r\n\t\t\t\$event->setPayload(Payload::fromNative(\$data['payload']));";
+        $methodLogic .= "\r\n\t\t}";
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_STATIC,
@@ -139,8 +151,8 @@ class EventGenerator extends AbstractGenerator
             "deserialize",
             "array \$data",
             "static",
-            implode("", $assertion),
-            "new static(".implode(",", $this->constructArguments)."\r\n\t\t)"
+            $methodLogic,
+            "\$event"
         );
     }
 
@@ -153,6 +165,10 @@ class EventGenerator extends AbstractGenerator
             $methodName = "get".$shortClassName;
             $arguments[] = sprintf("\r\n\t\t\t'%s' => \$this->%s()->toNative()", $arg, $methodName);
         }
+        $methodLogic = "\r\n\t\t\$data = [".implode(",", $arguments)."\r\n\t\t];";
+        $methodLogic .= "\r\n\r\n\t\tif (\$this->payload !== null) {";
+        $methodLogic .= "\r\n\t\t\t\$data['payload'] = \$this->payload->toNative();";
+        $methodLogic .= "\r\n\t\t}";
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -160,8 +176,8 @@ class EventGenerator extends AbstractGenerator
             "serialize",
             "",
             "array",
-            "",
-            "[".implode(",", $arguments)."\r\n\t\t]"
+            $methodLogic,
+            "\$data"
         );
     }
 }

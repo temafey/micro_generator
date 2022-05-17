@@ -40,23 +40,25 @@ class EntityGenerator extends AbstractGenerator
         $this->addUseStatement("Assert\Assertion");
         $this->addUseStatement("Broadway\EventSourcing\EventSourcedAggregateRoot");
         $this->addUseStatement("Broadway\Serializer\Serializable");
+        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
         $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\AggregateAssemblerInterface");
         $this->addUseStatement("MicroModule\Common\Domain\Entity\EntityInterface");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
         $this->addUseStatement($this->getClassName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $this->addUseStatement($this->getInterfaceName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $shortClassName."Interface";
         $implements[] = "EntityInterface";
         $implements[] = "AggregateAssemblerInterface";
         $implements[] = "Serializable";
         $extends = "EventSourcedAggregateRoot";
-        $this->addProperty("eventFactory", "EventFactory", "EventFactory object.");
+        $this->addProperty("eventFactory", "EventFactoryInterface", "EventFactory object.");
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            "?EventFactory \$eventFactory = null",
+            "?EventFactoryInterface \$eventFactory = null",
             "",
             "\r\n\t\t\$this->eventFactory = \$eventFactory ?? new EventFactory();",
             ""
@@ -209,14 +211,33 @@ class EntityGenerator extends AbstractGenerator
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $varName = lcfirst($shortClassName);
-        $methodLogic = "\r\n\t\t\$entity = new self(\$eventFactory);";
-        $methodLogic .= sprintf("\r\n\t\t\$entity->apply(\$entity->eventFactory->make%sCreatedEvent(\$processUuid, \$uuid, \$payload, $%s, CreatedAt::now()));", $shortClassName, $varName);
+        $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
+        $firstCommand = array_key_first($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND]);
+        $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$firstCommand][DataTypeInterface::STRUCTURE_TYPE_EVENT][$firstCommand];
+        $eventShortClassName = $this->getShortClassName($firstCommand, DataTypeInterface::STRUCTURE_TYPE_EVENT);
+        $commandArguments = [];
+        $commandProperties = [];
+
+        foreach ($commandArgs as $arg) {
+            $shortClassName = $this->getValueObjectShortClassName($arg);
+            $commandArguments[] = "$".lcfirst($shortClassName);
+            $commandProperties[] = $shortClassName." $".lcfirst($shortClassName);
+        }
+        $varName = implode(", ", $commandProperties);
+        $methodLogic .= sprintf("\r\n\t\t\$event = \$entity->eventFactory->make%s(%s);",
+            $eventShortClassName,
+            implode(", ", $commandArguments)
+        );
+        $methodLogic .= "\r\n\r\n\t\tif (\$payload !== null) {";
+        $methodLogic .= "\r\n\t\t\t\$event->setPayload(\$payload);";
+        $methodLogic .= "\r\n\t\t}";
+        $methodLogic .= "\r\n\t\t\$entity->apply(\$event);";
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf('Factory method for creating a new %sEntity.', $shortClassName),
             "create",
-            sprintf('ProcessUuid $processUuid, Uuid $uuid, %s $%s, ?Payload $payload = null, ?EventFactory $eventFactory = null', $shortClassName, $varName),
+            sprintf('%s, ?Payload $payload = null, ?EventFactoryInterface $eventFactory = null', $varName),
             "self",
             $methodLogic,
             "\$entity"
@@ -227,7 +248,7 @@ class EntityGenerator extends AbstractGenerator
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $varName = lcfirst($shortClassName);
-        $methodLogic = "\r\n\t\t\$entity = new self(\$eventFactory);";
+        $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
         $methodLogic .= "\r\n\t\t\$entity->uuid = \$uuid;";
         $methodLogic .= sprintf("\r\n\t\t\$entity->assembleFromValueObject(\$%s);", $varName);
 
@@ -235,7 +256,7 @@ class EntityGenerator extends AbstractGenerator
             self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf('Factory method for creating a new %sEntity.', $shortClassName),
             "createActual",
-            sprintf('Uuid $uuid, %s $%s, ?EventFactory $eventFactory = null', $shortClassName, $varName),
+            sprintf('Uuid $uuid, %s $%s, ?EventFactoryInterface $eventFactory = null', $shortClassName, $varName),
             "self",
             $methodLogic,
             "\$entity"

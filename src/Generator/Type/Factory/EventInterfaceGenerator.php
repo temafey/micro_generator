@@ -39,6 +39,8 @@ class EventInterfaceGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");
+        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
 
         foreach ($this->structure as $name => $event) {
@@ -65,13 +67,17 @@ class EventInterfaceGenerator extends AbstractGenerator
         $methodName = sprintf("make%s", $shortEventClassName);
 
         foreach ($structure as $arg) {
-            if (!in_array($arg, self::UNIQUE_KEYS)) {
+            if (
+                $arg === self::KEY_UNIQUE_ID ||
+                !in_array($arg, self::UNIQUE_KEYS)
+            ) {
                 $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
             }
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $shortClassName." $".$propertyName;
         }
+        $methodArguments[] = "?Payload \$payload = null";
 
         return $this->renderMethodInterface(
             $methodComment,

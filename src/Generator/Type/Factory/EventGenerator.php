@@ -40,6 +40,7 @@ class EventGenerator extends AbstractGenerator
         $shortClassName = $this->getShortClassName($this->name, $this->type);
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $implements[] = $shortClassName."Interface";
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
@@ -71,7 +72,10 @@ class EventGenerator extends AbstractGenerator
         $methodName = sprintf("make%s", $shortEventClassName);
 
         foreach ($structure as $arg) {
-            if (!in_array($arg, self::UNIQUE_KEYS)) {
+            if (
+                $arg === self::KEY_UNIQUE_ID ||
+                !in_array($arg, self::UNIQUE_KEYS)
+            ) {
                 $this->addUseStatement($this->getValueObjectClassName($arg));
             }
             $shortClassName = $this->getValueObjectShortClassName($arg);
@@ -79,6 +83,8 @@ class EventGenerator extends AbstractGenerator
             $methodArguments[] = $shortClassName." $".$propertyName;
             $commandArguments[] = "$".$propertyName;
         }
+        $methodArguments[] = "?Payload \$payload = null";
+        $commandArguments[] = "\$payload";
         $additionalVariables["shortFactoryClassName"] = $shortEventClassName;
         $additionalVariables["factoryArguments"] = implode(", ", $commandArguments);
 

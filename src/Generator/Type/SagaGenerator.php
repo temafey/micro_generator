@@ -42,6 +42,7 @@ class SagaGenerator extends AbstractGenerator
         $this->addUseStatement("Broadway\Saga\Metadata\StaticallyConfiguredSagaInterface");
         $this->addUseStatement("Broadway\Saga\State");
         $this->addUseStatement("MicroModule\Saga\AbstractSaga");
+        //$this->addUseStatement($this->getInterfaceName("Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $extends = "AbstractSaga";
         $implements[] = "StaticallyConfiguredSagaInterface";
         $this->properties[] = "\r\n   protected const STATE_CRITERIA_KEY = 'processId';";
@@ -111,6 +112,8 @@ class SagaGenerator extends AbstractGenerator
 
     protected function renderHandleMethods(array &$methods): void
     {
+        $shortCommandFactoryInterfaceName = $this->getShortInterfaceName("Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY);
+
         foreach ($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $event => $command) {
             $this->addUseStatement($this->getClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT));
             $eventShortName = $this->getShortClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT);
@@ -123,7 +126,13 @@ class SagaGenerator extends AbstractGenerator
                 $methodLogic .= "\r\n\t\t\$state->setDone();";
             } else {
                 $commandFactoryConst = $this->getCommandFactoryConst($command);
-                $methodLogic .= sprintf("\r\n\t\t\$command = \$this->commandFactory->makeCommandInstanceByType(CommandFactory::%s, \$event->getUuid());", $commandFactoryConst);
+                $commandArguments = $this->getCommandArguments($command);
+                $methodLogic .= sprintf(
+                    "\r\n\t\t\$command = \$this->commandFactory->makeCommandInstanceByType(%s::%s, %s);",
+                    $shortCommandFactoryInterfaceName,
+                    $commandFactoryConst,
+                    "\r\n\t\t\t".implode(",\r\n\t\t\t", $commandArguments)."\r\n\t\t"
+                );
                 $methodLogic .= "\r\n\t\t\$this->commandBus->handle(\$command);";
             }
             $methods[] = $this->renderMethod(
@@ -136,5 +145,22 @@ class SagaGenerator extends AbstractGenerator
                 "\$state"
             );
         }
+    }
+
+    /**
+     * Generate command factory constant.
+     */
+    protected function getCommandArguments(string $command): array
+    {
+        $commandGetArgs = [];
+        $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
+
+        foreach ($commandArgs as $arg) {
+            $shortClassName = $this->getValueObjectShortClassName($arg);
+            $methodName = "get".$shortClassName;
+            $commandGetArgs[] = sprintf("\$event->%s()->toNative()", $methodName);
+        }
+
+        return $commandGetArgs;
     }
 }

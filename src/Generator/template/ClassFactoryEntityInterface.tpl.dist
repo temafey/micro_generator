@@ -20,7 +20,7 @@ interface {interfaceName}{extends}
         Uuid $uuid,
         {shortValueObjectName} ${propertyValueObjectName},
         ?Payload $payload = null,
-        ?EventFactory $eventFactory = null
+        ?EventFactoryInterface $eventFactory = null
     ): {shortEntityInterfaceName};
 
     /**
@@ -31,6 +31,6 @@ interface {interfaceName}{extends}
     public function makeActualInstance(
         Uuid $uuid,
         {shortValueObjectName} ${propertyValueObjectName},
-        ?EventFactory $eventFactory = null
+        ?EventFactoryInterface $eventFactory = null
     ): {shortEntityInterfaceName};
 }

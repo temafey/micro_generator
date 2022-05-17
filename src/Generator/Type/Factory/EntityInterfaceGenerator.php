@@ -38,7 +38,6 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement($this->getClassName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->addUseStatement($this->getInterfaceName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
