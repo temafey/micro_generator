@@ -47,7 +47,7 @@ class {className}{extends}{implements}
             return false;
         }
 
-        foreach (self::COMPARED_FIELDS as $field) {
+        foreach (static::COMPARED_FIELDS as $field) {
             $getMethodName = 'get' . ucfirst($field);
             $field = $this->{$getMethodName}();
             $property = $valueObject->{$getMethodName}();

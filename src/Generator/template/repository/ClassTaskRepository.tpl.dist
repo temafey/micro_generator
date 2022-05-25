@@ -27,8 +27,8 @@ class {className}{extends}{implements}
         $this->taskProducer->sendCommand(
             JobCommandBusProcessor::getRoute(),
             [
-                self::KEY_MESSAGE_TYPE => $type,
-                self::KEY_MESSAGE_ARGS => $args,
+                static::KEY_MESSAGE_TYPE => $type,
+                static::KEY_MESSAGE_ARGS => $args,
             ]
         );
     }

@@ -7,9 +7,7 @@
     public function findByUuid(Uuid $uuid): ?{entityName}ReadModelInterface
     {
         try {
-            $result = $this->dataMapper->mapFromStorage(
-                $this->readModelStore->findOne($uuid->toString())
-            );
+            $result = $this->readModelStore->findOne($uuid->toString());
         } catch (NotFoundException) {
             return null;
         }

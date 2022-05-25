@@ -116,7 +116,8 @@ class EventGenerator extends AbstractGenerator
         }
         $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
-        $this->addProperty($propertyName, $shortClassName, $methodComment);
+        $propertyComment = sprintf("%s value object.", $shortClassName);
+        $this->addProperty($propertyName, $shortClassName, $propertyComment);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,

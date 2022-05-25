@@ -18,7 +18,7 @@ class {className}{extends}{implements}
 
     public function isCommandAllowed(string $commandType): bool
     {
-        return in_array($commandType, self::ALLOWED_COMMANDS);
+        return in_array($commandType, static::ALLOWED_COMMANDS);
     }
 
     /**

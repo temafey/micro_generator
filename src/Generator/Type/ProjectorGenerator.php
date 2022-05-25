@@ -52,15 +52,14 @@ class ProjectorGenerator extends AbstractGenerator
                 $this->addUseStatement($className);
                 $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
                 $propertyName = lcfirst($this->getShortClassName($arg, $type));
-                $propertyComment = "";
             } else {
                 $arg = $type;
                 $this->addUseStatement($arg);
                 $classNameArray = explode("\\", $arg);
                 $shortClassName = array_pop($classNameArray);
                 $propertyName = str_replace("Interface", "", lcfirst($shortClassName));
-                $propertyComment = "";
             }
+            $propertyComment = sprintf("%s %s.", $shortClassName, $type);
             $this->addProperty($propertyName, $shortClassName, $propertyComment);
             $this->constructArguments[] = $shortClassName." $".$propertyName;
             $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);

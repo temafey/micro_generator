@@ -60,7 +60,7 @@ class RpcMethodGenerator extends AbstractGenerator
             $this->addUseStatement($className);
             $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
             $propertyName = lcfirst($this->getShortClassName($arg, $type));
-            $propertyComment = "";
+            $propertyComment = sprintf("%s %s.", ucfirst($propertyName), $type);
             $this->addProperty($className, $shortClassName, $propertyName);
             $this->constructArguments[] = $shortClassName." $".$propertyName;
             $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);

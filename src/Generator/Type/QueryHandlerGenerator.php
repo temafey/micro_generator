@@ -62,14 +62,15 @@ class QueryHandlerGenerator extends AbstractGenerator
                 $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
                 $className = $this->getValueObjectClassName($arg);
                 $shortClassName = $this->getValueObjectShortClassName($arg);
+                $propertyName = lcfirst($shortClassName);
                 $propertyComment = sprintf("%s value object.", $shortClassName);
             } else {
                 $className = $this->getInterfaceName($arg, $type);
                 $shortClassName = $this->getShortInterfaceName($arg, $type);
-                $propertyComment = sprintf("%s %s.", $shortClassName, $type);
+                $propertyName = lcfirst($this->getShortClassName($arg, $type));
+                $propertyComment = sprintf("%s %s.", ucfirst($propertyName), $type);
             }
             $this->addUseStatement($className);
-            $propertyName = lcfirst($shortClassName);
             $this->addProperty($propertyName, $shortClassName, $propertyComment);
             $this->constructArguments[] = $shortClassName." $".$propertyName;
             $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);

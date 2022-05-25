@@ -7,11 +7,9 @@
     public function {methodName}({arguments}): ?{entityName}ReadModelInterface
     {
         try {
-            $result = $this->dataMapper->mapFromStorage(
-                $this->readModelStore->findOneBy([
-                    {criteriaParams}
-                ])
-            );
+            $result = $this->readModelStore->findOneBy([
+                {criteriaParams}
+            ]);
         } catch (NotFoundException) {
             return null;
         }

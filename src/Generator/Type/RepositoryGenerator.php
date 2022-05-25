@@ -81,7 +81,7 @@ class RepositoryGenerator extends AbstractGenerator
             if ($fullClassName !== "" && !in_array($fullClassName, $useStatement)) {
                 $useStatement[] = $fullClassName;
             }
-            $propertyComment = "";
+            $propertyComment = sprintf("%s %s.", $shortClassName, $type);
             $properties[] = $this->renderProperty(
                 self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
                 $propertyComment,

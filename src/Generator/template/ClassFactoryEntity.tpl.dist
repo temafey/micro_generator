@@ -22,7 +22,7 @@ class {className}{extends}{implements}
         ?Payload $payload = null,
         ?EventFactoryInterface $eventFactory = null
     ): {shortEntityInterfaceName} {
-        return (new {shortEntityName}())->create(
+        return {shortEntityName}::create(
 			$processUuid, 
 			$uuid, 
 			${propertyValueObjectName}, 

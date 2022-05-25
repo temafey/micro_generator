@@ -41,7 +41,10 @@ class {className}{extends}{implements}
      */
     public static function createByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName}
     {
-        return (new self())->assembleFromValueObject($entityValueObject, $uuid);
+        $readModel = new static();
+        $readModel->assembleFromValueObject($entityValueObject, $uuid);
+
+        return $readModel;
     }
 
     /**

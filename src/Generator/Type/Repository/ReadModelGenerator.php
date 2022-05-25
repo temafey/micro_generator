@@ -46,11 +46,6 @@ class ReadModelGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException");
         $this->addUseStatement("MicroModule\Common\Domain\Exception\ReadModelException");
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\DBALEventStoreException");
-
-        if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Domain\ReadModel\ReadModelInterface");
-            $implements[] = "ReadModelInterface";
-        }
         $implements[] = $interfaceShortName;
         $addVar = [
             "ReadModelException" => "ReadModelException",
@@ -99,7 +94,7 @@ class ReadModelGenerator extends AbstractGenerator
                 $propertyName = $this->underscoreAndHyphenToCamelCase($arg);
                 $propertyType = $type;
             }
-            $propertyComment = "";
+            $propertyComment = sprintf("%s %s.", $propertyType, $type);
             $this->addProperty($propertyName, $propertyType, $propertyComment);
             $this->constructArguments[] = $propertyType." $".$propertyName;
             $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);

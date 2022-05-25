@@ -8,9 +8,7 @@
     public function {methodName}(FindCriteria $findCriteria): ?array
     {
         try {
-            $result = $this->dataMapper->mapFromStorage(
-                $this->readModelStore->findBy($findCriteria->toNative())
-            );
+            $result = $this->readModelStore->findBy($findCriteria->toNative());
         } catch (NotFoundException) {
             return null;
         }

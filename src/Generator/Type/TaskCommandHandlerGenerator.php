@@ -85,7 +85,7 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
             $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY],
             DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK)
         );
-        $propertyComment = sprintf("%s object.", $shortClassName);;
+        $propertyComment = sprintf("%s object.", ucfirst($propertyName));
         $this->addProperty(
             $propertyName,
             $shortClassName,

@@ -82,23 +82,26 @@ class QueryGenerator extends AbstractGenerator
                 $this->addUseStatement($this->getValueObjectClassName($arg));
                 $shortClassName = $this->getValueObjectShortClassName($arg);
                 $propertyName = lcfirst($shortClassName);
+                $propertyComment = sprintf("%s value object.", $shortClassName);
                 $this->constructArguments[] = $shortClassName." $".$propertyName;
             } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
                 $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
                 $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
                 $propertyName = lcfirst($shortClassName);
+                $propertyComment = sprintf("%s %s.", $shortClassName, $type);
                 $methodArguments[] = $shortClassName." $".$propertyName;
             } elseif (strpos($type, "\\")) {
                 $this->addUseStatement($type);
                 $classNameArray = explode("\\", $type);
                 $type = array_pop($classNameArray);
                 $propertyName = lcfirst(str_replace(["Interface", "interface"], "", $type));
+                $propertyComment = sprintf("%s service.", $type);
                 $this->constructArguments[] = $type." $".$propertyName;
             }  else {
                 $propertyName = lcfirst($arg);
+                $propertyComment = sprintf("%s %s value.", $arg, $type);
                 $this->constructArguments[] = $type." $".$this->underscoreAndHyphenToCamelCase($arg);
             }
-            $propertyComment = "";
             $this->addProperty($propertyName, $type, $propertyComment);
             $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
@@ -207,7 +210,6 @@ class QueryGenerator extends AbstractGenerator
             default:
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_ONE_BY;
                 break;
-
         }
 
         return $methodTemplate;

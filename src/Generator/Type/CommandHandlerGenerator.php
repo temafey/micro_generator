@@ -86,7 +86,7 @@ class CommandHandlerGenerator extends AbstractGenerator
                 ? $this->getShortClassName($arg, $type)
                 : $this->getShortInterfaceName($arg, $type);
             $propertyName = lcfirst($this->getShortClassName($arg, $type));
-            $propertyComment = sprintf("%s object.", $shortClassName);;
+            $propertyComment = sprintf("%s object.", ucfirst($propertyName));
             $this->addProperty(
                 $propertyName,
                 $shortClassName,
