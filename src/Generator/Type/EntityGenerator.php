@@ -213,7 +213,7 @@ class EntityGenerator extends AbstractGenerator
         $varName = lcfirst($shortClassName);
         $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
         $firstCommand = array_key_first($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND]);
-        $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$firstCommand][DataTypeInterface::STRUCTURE_TYPE_EVENT][$firstCommand];
+        $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$firstCommand][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
         $eventShortClassName = $this->getShortClassName($firstCommand, DataTypeInterface::STRUCTURE_TYPE_EVENT);
         $commandArguments = [];
         $commandProperties = [];
