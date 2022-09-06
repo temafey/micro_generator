@@ -210,7 +210,6 @@ class EntityGenerator extends AbstractGenerator
     protected function renderCreateMethod(): string
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-        $varName = lcfirst($shortClassName);
         $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
         $firstCommand = array_key_first($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND]);
         $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$firstCommand][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
@@ -231,6 +230,7 @@ class EntityGenerator extends AbstractGenerator
         $methodLogic .= "\r\n\r\n\t\tif (\$payload !== null) {";
         $methodLogic .= "\r\n\t\t\t\$event->setPayload(\$payload);";
         $methodLogic .= "\r\n\t\t}";
+        $methodLogic .= "\r\n\t\t\$entity->uuid = \$uuid;";
         $methodLogic .= "\r\n\t\t\$entity->apply(\$event);";
 
         return $this->renderMethod(
