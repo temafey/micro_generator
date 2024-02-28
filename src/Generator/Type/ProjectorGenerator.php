@@ -92,7 +92,10 @@ class ProjectorGenerator extends AbstractGenerator
         $methods = [];
         //$repositoryShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY], DataTypeInterface::STRUCTURE_TYPE_REPOSITORY));
 
-        foreach ($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $event) {            
+        foreach ($this->structure[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $event) {
+            if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$event]) {
+                throw new Exception(sprintf("Event '%' not found!", $event));
+            }
             $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$event][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             $entityShortName = lcfirst($this->getShortClassName($entity, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
             $this->addUseStatement($this->getClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT));

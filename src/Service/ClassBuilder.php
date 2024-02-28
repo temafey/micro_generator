@@ -132,7 +132,7 @@ class ClassBuilder
         $className = $generator->getFullClassName();
 
         try {
-            if (class_exists($className)) {
+            if (@class_exists($className)) {
                 return false;
             }
         } catch (\Throwable $e) {

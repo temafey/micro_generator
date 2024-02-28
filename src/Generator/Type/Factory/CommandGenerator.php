@@ -92,6 +92,10 @@ class CommandGenerator extends AbstractGenerator
                 $this->addUseStatement($this->getValueObjectClassName($arg));
             }
             $shortClassName = $this->getValueObjectShortClassName($arg);
+
+            if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]) {
+                throw new Exception(sprintf("Argument '%s' in ValueObjects structure not found!"));
+            }
             $propertyType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $propertyType." $".$propertyName;

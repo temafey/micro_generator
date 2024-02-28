@@ -71,7 +71,13 @@ trait CodeHelper
             if (isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
                 $entity = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             } else {
-                $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$name][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+                if (isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$name])) {
+                    $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$name][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+                } elseif (isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$name])) {
+                    $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$name][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+                } else {
+                    throw new \Exception(sprintf("ShortClassName '%s' not found in domain structure!", $name));
+                }
             }
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
             $name .= ($name[-1] === 'e') ? 'd' : 'ed';
@@ -195,8 +201,10 @@ trait CodeHelper
      */
     protected function getValueObjectClassName(string $name, bool $forExtends = false, string $glue = ''): string
     {
-        $name = $this->camelCaseToUnderscore($name);
-
+        if (!in_array($name, array_keys(DataTypeInterface::DOMAIN_VALUE_OBJECT_TO_SCALAR_MAP))) {
+            $name = $this->camelCaseToUnderscore($name);
+        }
+        
         if ($this->useCommonComponent && in_array($name, GeneratorInterface::COMMON_VALUE_OBJECT_KEYS)) {
             $namespace = DataTypeInterface::VALUE_OBJECT_NAMESPACE_COMMON;
         } elseif ($forExtends) {

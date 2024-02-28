@@ -90,7 +90,7 @@ class CommandGenerator extends AbstractGenerator
         $shortClassName = $this->getValueObjectShortClassName($arg);
         $propertyName = lcfirst($shortClassName);
         $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
-        $propertyComment = sprintf("%s value object.", $valueObject);
+        $propertyComment = sprintf("%s value object.", $shortClassName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
         $this->constructArguments[] = $shortClassName." $".$propertyName;
 

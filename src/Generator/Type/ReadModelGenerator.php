@@ -102,6 +102,10 @@ class ReadModelGenerator extends AbstractGenerator
         $methodComment = sprintf("Return %s value.", $valueObject);
         $propertyName = lcfirst($shortClassName);
         $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
+
+        if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]) {
+            throw new Exception(sprintf("ValueObject '%s' in structure not found"));
+        }
         $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
         $this->addProperty($propertyName, "?".$scalarType, $propertyComment, $defaultValue);
 
