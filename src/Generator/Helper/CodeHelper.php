@@ -314,7 +314,6 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE:
-            case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
                 break;

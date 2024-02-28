@@ -6,7 +6,7 @@ namespace MicroModule\MicroserviceGenerator\Generator\Type;
 
 use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
-use MicroModule\MicroserviceGenerator\Generator\Exception\CommandsNotFoundException;
+use MicroModule\MicroserviceGenerator\Generator\Exception\CommandNotFoundException;
 use MicroModule\MicroserviceGenerator\Generator\Helper\ReturnTypeNotFoundException;
 use Exception;
 use ReflectionException;
@@ -133,7 +133,7 @@ class EntityGenerator extends AbstractGenerator
     protected function renderCommandMethodandApplyMethods(string $command): array
     {
         if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command]) {
-            throw new CommandsNotFoundException(sprintf("Commands '%s' not found", $command));
+            throw new CommandNotFoundException(sprintf("Commands '%s' not found", $command));
         }
         $commandEvents = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::STRUCTURE_TYPE_EVENT];
         $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$command][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
