@@ -261,6 +261,7 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_SERVICE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
                 break;
 
@@ -315,6 +316,8 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
                 break;
 

@@ -36,5 +36,18 @@ class {className}{extends}{implements}
             default => throw new FactoryException(sprintf('Command for type `%s` not found!', $type)),
         };
     }
+
+    /**
+     * Make command from DTO.
+     *
+     * @throws FactoryException
+     * @throws Exception
+     */
+    public function makeCommandInstanceByTypeFromDto(string $commandType, NormalizableInterface $dto): BaseCommandInterface
+    {
+        $data = array_values($dto->normalize());
+
+        return $this->makeCommandInstanceByType($commandType, ...$data);
+    }
 {methods}
 }

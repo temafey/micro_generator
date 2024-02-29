@@ -104,7 +104,9 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
                 implode(", ", $methodArguments),
                 implode("|", $returnTypes),
                 "",
-                ""
+                "",
+                [],
+                true
             );
         }
 

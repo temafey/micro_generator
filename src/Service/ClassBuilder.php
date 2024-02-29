@@ -104,6 +104,8 @@ class ClassBuilder
             $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_FACTORY &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_DTO &&
+            $type !== DataTypeInterface::STRUCTURE_TYPE_DTO_INTERFACE &&
             $type !== DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE
         ) {
             return false;

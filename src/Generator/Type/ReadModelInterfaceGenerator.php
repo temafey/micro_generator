@@ -97,4 +97,20 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
             ""
         );
     }
+
+    /**
+     * Return main entity short class name.
+     */
+    protected function getEntityName(): string
+    {
+        return $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+    }
+
+    /**
+     * Return main entity short class name.
+     */
+    protected function getEntitValueObjectClassName(): string
+    {
+        return $this->getValueObjectShortClassName($this->name);
+    }
 }

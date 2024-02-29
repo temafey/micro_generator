@@ -44,6 +44,7 @@ class CommandGenerator extends AbstractGenerator
         $shortClassName = $this->getShortClassName($this->name, $this->type);
         $this->addUseStatement("MicroModule\Base\Domain\Command\CommandInterface as BaseCommandInterface");
         $this->addUseStatement("MicroModule\Base\Domain\Exception\FactoryException");
+        $this->addUseStatement("MicroModule\Common\Domain\Dto\NormalizableInterface");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");

@@ -192,14 +192,18 @@ class ProjectBuilder implements ProjectBuilderInterface
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] as $name => $readModel) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL][$name] = $readModel;
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE][$name] = $readModel;
-            //$domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL][$name] = $readModel;
-            //$domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL][$name] = $readModel;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL][$name] = $readModel;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL][$name] = $readModel;
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT] as $name => $valueObject) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$name] = $valueObject;
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$name] = $valueObject;
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$name] = $valueObject;
+        }
+        
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_DTO] as $name => $dto) {
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_DTO_INTERFACE][$name] = $dto;
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY] as $name => $repository) {

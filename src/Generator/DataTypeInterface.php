@@ -59,6 +59,7 @@ interface DataTypeInterface
     public const STRUCTURE_TYPE_SERVICE = "service";
     public const STRUCTURE_TYPE_SERVICE_INTERFACE = "serviceInterface";
     public const STRUCTURE_TYPE_DTO = "dto";
+    public const STRUCTURE_TYPE_DTO_INTERFACE = "dtoInterface";
     public const STRUCTURE_TYPE_VALUE_OBJECT = "valueObject";
     public const STRUCTURE_TYPE_SAGA = "saga";
     public const STRUCTURE_TYPE_PROJECTOR = "projector";

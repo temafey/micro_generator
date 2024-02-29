@@ -31,5 +31,5 @@ interface {interfaceName}{extends}
      *
      * @throws ValueObjectInvalidException
      */
-    public function updateByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): {shortInterfaceName};
+    public function updateByValueObject({shortValueObjectName} $entityValueObject, Uuid $uuid): void;
 }

@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{
+    /**
+     * Create {shortValueObjectName} read model.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public function makeActualInstance({shortValueObjectName} ${propertyValueObjectName}, Uuid $uuid): {shortReadModelInterfaceName}
+    {
+        return {shortReadModelName}::createByValueObject(${propertyValueObjectName}, $uuid);
+    }
+
+    /**
+     * Create {shortValueObjectName} read model from Entity.
+     */
+    public function makeActualInstanceByEntity({shortEntityNameInterfaceName} ${propertyValueObjectName}): {shortReadModelInterfaceName}
+    {
+        return {shortReadModelName}::createByEntity(${propertyValueObjectName});
+    }
+}

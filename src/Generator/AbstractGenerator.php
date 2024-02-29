@@ -25,8 +25,11 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const CLASS_TEMPLATE_TYPE_FACTORY_ENTITY_INTERFACE = "ClassFactoryEntityInterface";
     protected const CLASS_TEMPLATE_TYPE_FACTORY_COMMAND      = "ClassFactoryCommand";
     protected const CLASS_TEMPLATE_TYPE_FACTORY_COMMAND_INTERFACE = "ClassFactoryCommandInterface";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_READ_MODEL     = "ClassFactoryReadModel";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_READ_MODEL_INTERFACE = "ClassFactoryReadModelInterface";
     protected const CLASS_TEMPLATE_TYPE_READ_MODEL          = "ClassReadModel";
     protected const CLASS_TEMPLATE_TYPE_READ_MODEL_INTERFACE= "ClassReadModelInterface";
+    protected const CLASS_TEMPLATE_TYPE_DTO_INTERFACE = "ClassDtoInterface";
     protected const CLASS_TEMPLATE_TYPE_VALUE_OBJECT        = "ClassValueObject";
     protected const CLASS_TEMPLATE_REPOSITORY_ENTITY_STORE  = "repository/ClassEntityStoreRepository";
     protected const CLASS_TEMPLATE_REPOSITORY_ENTITY_STORE_INTERFACE  = "repository/ClassEntityStoreInterfaceRepository";
@@ -433,7 +436,8 @@ abstract class AbstractGenerator implements GeneratorInterface
         string $returnType,
         string $methodLogic,
         string $return,
-        array $additionalVariables = []
+        array $additionalVariables = [],
+        bool $returnNull = false
     ): string {
         $template = new Template(
             sprintf(
@@ -450,7 +454,7 @@ abstract class AbstractGenerator implements GeneratorInterface
         }
 
         if ($returnType) {
-            $returnType = ": ".$returnType;
+            $returnType = ": ".($returnNull && $returnType !== DataTypeInterface::DATA_TYPE_VOID ? "?" : "").$returnType;
         }
 
         if ($return) {
