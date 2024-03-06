@@ -178,8 +178,8 @@ class ProjectBuilder implements ProjectBuilderInterface
         unset($domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_QUERY]);
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY] as $name => $query) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$name] = $query;
-            //$domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_QUERY][$name] = $query;
-            //$domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_QUERY][$name] = $query;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_QUERY][$name] = $query;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_QUERY][$name] = $query;
         }
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $name => $entity) {
@@ -255,6 +255,8 @@ class ProjectBuilder implements ProjectBuilderInterface
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_DTO] as $name => $dto) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_DTO][$name] = $dto;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_FACTORY][DataTypeInterface::STRUCTURE_TYPE_DTO][$name] = $dto;
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_DTO][$name] = $dto;
         }
 
         return $domainStructure;
@@ -291,6 +293,10 @@ class ProjectBuilder implements ProjectBuilderInterface
      */
     protected function buildPresentationStructure(array $structure, array $domainStructure): array
     {
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_REST] as $name => $controller) {
+            $domainStructure[DataTypeInterface::STRUCTURE_LAYER_PRESENTATION][DataTypeInterface::STRUCTURE_TYPE_REST][$name] = $controller;
+        }
+        
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_RPC] as $name => $rpc) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_PRESENTATION][DataTypeInterface::STRUCTURE_TYPE_RPC][$name] = $rpc;
         }

@@ -139,9 +139,10 @@ class ReadModelGenerator extends AbstractGenerator
                 $type === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             ) {
                 $this->addUseStatement($this->getInterfaceName($arg, $type));
-                $shortClassName = $this->getShortInterfaceName($arg, $type);
+                $shortInterfaceName = $this->getShortInterfaceName($arg, $type);
+                $shortClassName = $this->getShortClassName($arg, $type);
                 $propertyName = lcfirst($shortClassName);
-                $methodArguments[] = $shortClassName." $".$propertyName;
+                $methodArguments[] = $shortInterfaceName." $".$propertyName;
                 $readModelArguments[] = "$".$propertyName;
             } elseif (strpos($type, "\\")) {
                 $this->addUseStatement($type);
@@ -185,9 +186,10 @@ class ReadModelGenerator extends AbstractGenerator
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
         $addVar["readModelArguments"] = implode("", $readModelArguments);
         $methodComment = sprintf("%s %s ReadModel in Storage.", ucfirst($methodName), $shortClassName);
-
+        $methodTemplate = self::METHOD_TEMPLATE_TYPE_READ_MODEL;
+        
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_READ_MODEL,
+            $methodTemplate,
             $methodComment,
             $methodName,
             implode(", ", $methodArguments),

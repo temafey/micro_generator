@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{
+    protected const ALLOWED_QUERIES = [
+        {allowedQueries}
+    ];
+
+    public function isQueryAllowed(string $queryType): bool
+    {
+        return in_array($queryType, static::ALLOWED_QUERIES);
+    }
+
+    /**
+     * Make query by query constant.
+     *
+     * @throws FactoryException
+     * @throws Exception
+     */
+    public function makeQueryInstanceByType(...$args): BaseQueryInterface
+    {
+        $type = (string)array_shift($args);
+
+        return match ($type) {
+            {makeQueriesInstanceByType}
+            default => throw new FactoryException(sprintf('Query for type `%s` not found!', $type)),
+        };
+    }
+
+    /**
+     * Make query from DTO.
+     *
+     * @throws FactoryException
+     * @throws Exception
+     */
+    public function makeQueryInstanceByTypeFromDto(string $queryType, DtoInterface $dto): BaseQueryInterface
+    {
+        $data = array_values($dto->normalize());
+
+        return $this->makeQueryInstanceByType($queryType, ...$data);
+    }
+{methods}
+}

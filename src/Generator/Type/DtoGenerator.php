@@ -19,6 +19,10 @@ use ReflectionException;
  */
 class DtoGenerator extends AbstractGenerator
 {
+    /**
+     * Render getter methods in dto.
+     */
+    protected bool $renderGetters = false;
 
     /**
      * Use common abstract component.
@@ -63,15 +67,17 @@ class DtoGenerator extends AbstractGenerator
             }
             $methods[] = $renderedMethod;
         }
+        $methods[] = $this->renderDenormalizeMethod();
+        $methods[] = $this->renderNormalizeMethod();
 
-        if (!empty($this->constructArgumentsAssignment)) {
+        if (!empty($this->constructArguments)) {
             $methodLogic = implode("", $this->constructArgumentsAssignment);
             array_unshift(
                 $methods, $this->renderMethod(
-                    self::METHOD_TEMPLATE_TYPE_DEFAULT,
+                    static::METHOD_TEMPLATE_TYPE_DEFAULT,
                     "Constructor",
                     "__construct",
-                    implode(", ", $this->constructArguments),
+                "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
                     "",
                     $methodLogic,
                     ""
@@ -80,7 +86,7 @@ class DtoGenerator extends AbstractGenerator
         }
 
         return $this->renderClass(
-            self::CLASS_TEMPLATE_TYPE_FULL,
+            static::CLASS_TEMPLATE_TYPE_FULL,
             $classNamespace,
             $this->useStatement,
             $extends,
@@ -93,23 +99,25 @@ class DtoGenerator extends AbstractGenerator
 
     public function renderStructureMethod(string $arg, array $addVar = []): ?string
     {
-        $shortClassName = $this->getValueObjectShortClassName($arg);
+        $property = lcfirst($this->underscoreAndHyphenToCamelCase($arg));
         $valueObjectType = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]["type"];
         $propertyType = $this->getValueObjectScalarType($valueObjectType);
-        $propertyName = lcfirst($shortClassName);
-        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
-        $propertyComment = sprintf("%s value object.", $shortClassName);
+        $propertyName = lcfirst($property);
+        $propertyComment = sprintf("%s %s value.", $property, $propertyType);
         $methodComment = sprintf("Return %s.", $propertyType);
-        $this->constructArguments[] = $propertyType." $".$propertyName;
+        $this->constructArguments[] = "public readonly ?".$propertyType." $".$propertyName;
 
-        if ($this->useCommonComponent && in_array($arg, self::UNIQUE_KEYS)) {
+        if (!$this->renderGetters) {
             return null;
         }
-        $this->addProperty($propertyName, $propertyType, $propertyComment);
-        $methodName = "get".$shortClassName;
+
+        if ($this->useCommonComponent && in_array($arg, static::UNIQUE_KEYS)) {
+            return null;
+        }
+        $methodName = "get".$property;
 
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            static::METHOD_TEMPLATE_TYPE_DEFAULT,
             $methodComment,
             $methodName,
             "",
@@ -117,6 +125,58 @@ class DtoGenerator extends AbstractGenerator
             "",
             "\$this->".$propertyName,
             $addVar
+        );
+    }
+
+    protected function renderNormalizeMethod(): string
+    {
+        $methodLogic = "\r\n\t\t\$data = [];";
+
+        foreach ($this->structure as $arg) {
+            $propertyName = lcfirst($this->underscoreAndHyphenToCamelCase($arg));
+            $argConstant  = strtoupper(str_replace("-", "_", $arg));
+            $methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s) {", $propertyName);
+            $methodLogic .= sprintf("\r\n\t\t\t\$data[static::%s] = \$this->%s;", $argConstant, $propertyName);
+            $methodLogic .= "\r\n\t\t}";
+        }
+
+        return $this->renderMethod(
+            static::METHOD_TEMPLATE_TYPE_DEFAULT,
+            "Convert dto object to array.",
+            "normalize",
+            "",
+            "array",
+            $methodLogic,
+            "\$data"
+        );
+    }
+
+    protected function renderDenormalizeMethod(): string
+    {
+        $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $methodLogic = "";
+        $args = [];
+
+        foreach ($this->structure as $arg) {
+            $varName = lcfirst($this->underscoreAndHyphenToCamelCase($arg));
+            $argConstant  = strtoupper(str_replace("-", "_", $arg));
+            $methodLogic .= sprintf("\r\n\r\n\t\t\$%s = null;", $varName);
+            $methodLogic .= sprintf("\r\n\t\tif (array_key_exists(static::%s, \$data)) {", $argConstant);
+            $methodLogic .= sprintf("\r\n\t\t\t\$%s = \$data[static::%s];", $varName, $argConstant);
+            $methodLogic .= "\r\n\t\t}";
+            $args[] = "$".$varName;
+        }
+        $return = "new static(\r\n\t\t\t".implode(", \r\n\t\t\t", $args)."\r\n\t\t)";
+        $interfaceNamespace = $this->getShortInterfaceName($this->name, DataTypeInterface::STRUCTURE_TYPE_DTO);
+
+        return $this->renderMethod(
+            static::METHOD_TEMPLATE_TYPE_STATIC,
+            "Convert array to DTO object.",
+            "denormalize",
+            "array \$data",
+            "static",
+            $methodLogic,
+            $return
         );
     }
 }

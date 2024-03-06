@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+{useStatement}
+
+/**
+ * @class {className}
+ *
+ * @package {namespace}
+ */
+class {className}{extends}{implements}
+{
+    /**
+     * Make command by command constant.
+     *
+     * @throws FactoryException
+     * @throws Exception
+     */
+    public function makeDtoByType(...$args): DtoInterface
+    {
+        $type = (string)array_shift($args);
+
+        return match ($type) {
+            {makeDtosInstanceByType}
+            default => throw new FactoryException(sprintf('Dto for type `%s` not found!', $type)),
+        };
+    }
+{methods}
+}

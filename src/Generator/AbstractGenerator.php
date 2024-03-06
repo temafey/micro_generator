@@ -25,8 +25,12 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const CLASS_TEMPLATE_TYPE_FACTORY_ENTITY_INTERFACE = "ClassFactoryEntityInterface";
     protected const CLASS_TEMPLATE_TYPE_FACTORY_COMMAND      = "ClassFactoryCommand";
     protected const CLASS_TEMPLATE_TYPE_FACTORY_COMMAND_INTERFACE = "ClassFactoryCommandInterface";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_QUERY      = "ClassFactoryQuery";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_QUERY_INTERFACE = "ClassFactoryQueryInterface";
     protected const CLASS_TEMPLATE_TYPE_FACTORY_READ_MODEL     = "ClassFactoryReadModel";
     protected const CLASS_TEMPLATE_TYPE_FACTORY_READ_MODEL_INTERFACE = "ClassFactoryReadModelInterface";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_DTO      = "ClassFactoryDto";
+    protected const CLASS_TEMPLATE_TYPE_FACTORY_DTO_INTERFACE = "ClassFactoryDtoInterface";
     protected const CLASS_TEMPLATE_TYPE_READ_MODEL          = "ClassReadModel";
     protected const CLASS_TEMPLATE_TYPE_READ_MODEL_INTERFACE= "ClassReadModelInterface";
     protected const CLASS_TEMPLATE_TYPE_DTO_INTERFACE = "ClassDtoInterface";
@@ -48,6 +52,8 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const METHOD_TEMPLATE_TYPE_READ_MODEL_ADD     = "MethodReadModelAdd";
     protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
     protected const METHOD_TEMPLATE_TYPE_FACTORY            = "MethodFactory";
+    protected const METHOD_TEMPLATE_TYPE_CONTROLLER_ACTION  = "MethodControllerAction";
+    protected const METHOD_TEMPLATE_TYPE_CONTROLLER_QA_PARAMETR  = "MethodControllerQaParametr";
     protected const PROPERTY_TEMPLATE_TYPE_DEFAULT          = "Property";
     protected const INTERFACE_TEMPLATE_TYPE_DEFAULT         = "Interface";
 

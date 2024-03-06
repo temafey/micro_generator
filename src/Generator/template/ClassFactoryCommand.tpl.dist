@@ -43,7 +43,7 @@ class {className}{extends}{implements}
      * @throws FactoryException
      * @throws Exception
      */
-    public function makeCommandInstanceByTypeFromDto(string $commandType, NormalizableInterface $dto): BaseCommandInterface
+    public function makeCommandInstanceByTypeFromDto(string $commandType, DtoInterface $dto): BaseCommandInterface
     {
         $data = array_values($dto->normalize());
 

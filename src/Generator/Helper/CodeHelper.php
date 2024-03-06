@@ -27,6 +27,26 @@ trait CodeHelper
     protected string $projectNamespace;
 
     /**
+     * Generate di container service name.
+     *
+     * @throws InvalidClassTypeException
+     */
+    protected function getContainerServiceName(string $name, string $type, bool $useName = true): string
+    {
+        switch ($type) {
+            case DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS:
+                $containerServiceName = sprintf("tactician.commandbus.%s.%s", $name, strtolower($this->domainName));
+                break;
+
+            default:
+                throw new \Exception(sprintf("Container service type '%s' was not found!", $type));
+                break;
+        }
+
+        return $containerServiceName;
+    }
+
+    /**
      * Generate class name with namespace by class pattern type.
      *
      * @throws InvalidClassTypeException
@@ -34,6 +54,8 @@ trait CodeHelper
     protected function getClassName(string $name, string $type, bool $useName = true): string
     {
         if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
+            return $this->getValueObjectClassName($name);
+        } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_REST) {
             return $this->getValueObjectClassName($name);
         }
 
@@ -141,6 +163,10 @@ trait CodeHelper
                 $suffix = 'Method';
                 break;
 
+            case DataTypeInterface::STRUCTURE_TYPE_REST:
+                $suffix = 'Controller';
+                break;
+
             default:
                 $suffix = ucfirst($type);
                 break;
@@ -155,7 +181,11 @@ trait CodeHelper
     protected function getClassNamespace(string $type): string
     {
         $layerNamespace = $this->getLayerNamespace($type);
-        $type = str_replace(["Interface", "taskCommandHandler", "taskCommand"], ["", "commandHandler\Task", "command\Task"], $type);
+        $type = str_replace(
+            ["Interface", "taskCommandHandler", "taskCommand", "dtoFactory"], 
+            ["", "commandHandler\Task", "command\Task", "Factory"], 
+            $type
+        );
         
         return $layerNamespace.'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($type));
     }
@@ -170,7 +200,11 @@ trait CodeHelper
         if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
             $layerFolder = ucfirst(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
         } else {
-            $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(["Interface", "interface"], "", $type)));
+            $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(
+                ["Interface", "interface", "dtoFactory"], 
+                ["", "", "Factory"], 
+                $type)
+            ));
         }
 
         return $layerNamespace.'\\'.$layerFolder;
@@ -271,6 +305,8 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_SAGA:
             case DataTypeInterface::STRUCTURE_TYPE_PROJECTOR:
             case DataTypeInterface::STRUCTURE_TYPE_DTO:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_APPLICATION;
                 break;
 
@@ -281,6 +317,7 @@ trait CodeHelper
                 break;
 
             case DataTypeInterface::STRUCTURE_TYPE_RPC:
+            case DataTypeInterface::STRUCTURE_TYPE_REST:
             case DataTypeInterface::STRUCTURE_TYPE_CLI:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_PRESENTATION;
                 break;
@@ -326,6 +363,8 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER:
             case DataTypeInterface::STRUCTURE_TYPE_SAGA:
             case DataTypeInterface::STRUCTURE_TYPE_PROJECTOR:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY:
+            case DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_APPLICATION;
                 break;
 
@@ -335,6 +374,7 @@ trait CodeHelper
 
             case DataTypeInterface::STRUCTURE_TYPE_RPC:
             case DataTypeInterface::STRUCTURE_TYPE_CLI:
+            case DataTypeInterface::STRUCTURE_TYPE_REST:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_PRESENTATION;
                 break;
 

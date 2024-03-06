@@ -60,6 +60,8 @@ interface DataTypeInterface
     public const STRUCTURE_TYPE_SERVICE_INTERFACE = "serviceInterface";
     public const STRUCTURE_TYPE_DTO = "dto";
     public const STRUCTURE_TYPE_DTO_INTERFACE = "dtoInterface";
+    public const STRUCTURE_TYPE_DTO_FACTORY = "dtoFactory";
+    public const STRUCTURE_TYPE_DTO_FACTORY_INTERFACE = "dtoFactoryInterface";
     public const STRUCTURE_TYPE_VALUE_OBJECT = "valueObject";
     public const STRUCTURE_TYPE_SAGA = "saga";
     public const STRUCTURE_TYPE_PROJECTOR = "projector";
@@ -71,6 +73,8 @@ interface DataTypeInterface
     public const STRUCTURE_TYPE_MIGRATIONS = "migrations";
     public const STRUCTURE_TYPE_RPC = "rpc";
     public const STRUCTURE_TYPE_CLI = "cli";
+    public const STRUCTURE_TYPE_REST = "rest";
+    public const STRUCTURE_TYPE_COMMAND_BUS = "commandBus";
 
     public const STRUCTURE_LAYER_APPLICATION = "application";
     public const STRUCTURE_LAYER_DOMAIN = "domain";

@@ -1,0 +1,19 @@
+
+    /**
+     * {methodComment}
+     */
+     #[Route('{methodRoute}', methods: ['{methodRouteType}'])]
+     #[OA\Response(
+         response: 200,
+         description: '{methodResponseDesc}',
+         content: new OA\JsonContent(
+             type: '{methodResponseType}',
+             items: new OA\Items(ref: new Model(type: {methodResponseClass}::class, groups: ['full']))
+         )
+    )]
+    #[OA\Tag(name: '{methodTag}')]
+{methodQaParameters}
+    public function {methodName}({arguments}){returnType}
+    {{methodLogic}
+        {return}
+    }

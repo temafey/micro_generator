@@ -37,17 +37,20 @@ class DtoInterfaceGenerator extends AbstractGenerator
         $useTraits = [];
         $methods = [];
         $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
-        $this->addUseStatement("MicroModule\Common\Domain\Dto\NormalizableInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
 
         foreach ($this->structure as $arg) {
             if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg])) {
                 throw new Exception(sprintf("Value object for dto '%s' was not found!", $arg));
             }
-            $methods[] = $this->renderGetMethod($arg);
+
+            if ($methodBody = $this->renderGetMethod($arg)) {
+                continue;
+            }
+            $methods[] = $methodBody;
         }
         $this->additionalVariables['dtoConstants'] = "\r\n\t".implode("; \r\n\t", $this->dtoConstants).";";
-        $extends = "DtoInterface, NormalizableInterface";
+        $extends = "DtoInterface";
 
         return $this->renderInterface(
             self::CLASS_TEMPLATE_TYPE_DTO_INTERFACE,
@@ -58,7 +61,7 @@ class DtoInterfaceGenerator extends AbstractGenerator
         );
     }
 
-    protected function renderGetMethod(string $arg): string
+    protected function renderGetMethod(string $arg): ?string
     {
         $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
@@ -67,6 +70,8 @@ class DtoInterfaceGenerator extends AbstractGenerator
         $methodComment = sprintf("Return %s value.", $scalarType);
         $argConstant  = strtoupper(str_replace("-", "_", $arg));
         $this->dtoConstants[] = sprintf("public const %s = \"%s\"", $argConstant, $arg);
+
+        return null;
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_INTERFACE,

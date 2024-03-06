@@ -51,7 +51,7 @@ class QueryGenerator extends AbstractGenerator
         }
         $extends = "AbstractQuery";
 
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
+        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) { 
             $renderedMethod = $this->renderStructureMethod($arg);
 
             if (null === $renderedMethod) {
@@ -62,7 +62,7 @@ class QueryGenerator extends AbstractGenerator
 
         if (!empty($this->constructArgumentsAssignment)) {
             $methodLogic = implode("", $this->constructArgumentsAssignment);
-            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid);";
+            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid);";
             array_unshift(
                 $methods, $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -97,7 +97,7 @@ class QueryGenerator extends AbstractGenerator
         $methodComment = sprintf("Return %s value object.", $shortClassName);
         $this->constructArguments[] = $shortClassName." $".$propertyName;
 
-        if ($this->useCommonComponent && in_array($arg, self::UNIQUE_KEYS)) {
+        if ($this->useCommonComponent && $arg === static::KEY_UNIQUE_PROCESS_UUID) {
             return null;
         }
         $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);

@@ -17,11 +17,11 @@ use ReflectionException;
  *
  * @SuppressWarnings(PHPMD)
  */
-class CommandGenerator extends AbstractGenerator
+class QueryGenerator extends AbstractGenerator
 {
     protected $allowedMethods = [];
 
-    protected $makeCommandsInstanceByType = [];
+    protected $makeQueriesInstanceByType = [];
 
     /**
      * Generate test class code.
@@ -42,24 +42,23 @@ class CommandGenerator extends AbstractGenerator
         $extends = "";
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
-        $this->addUseStatement("MicroModule\Base\Domain\Command\CommandInterface as BaseCommandInterface");
+        $this->addUseStatement("MicroModule\Common\Domain\Query\QueryInterface as BaseQueryInterface");
         $this->addUseStatement("MicroModule\Base\Domain\Exception\FactoryException");
         $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");
+        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
+        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");
         $implements[] = $shortClassName."Interface";
-        $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
 
-        foreach ($this->structure as $command) {
-            $methods[] = $this->renderCommandMethod($command);
+        foreach ($this->structure as $name => $query) {
+            $methods[] = $this->renderQueryMethod($name, $query);
         }
-        $this->additionalVariables['allowedCommands'] = implode(", \r\n\t\t", $this->allowedMethods).",";
-        $this->additionalVariables['makeCommandsInstanceByType'] = implode(", \r\n\t\t\t", $this->makeCommandsInstanceByType).",";
+        $this->additionalVariables['allowedQueries'] = implode(", \r\n\t\t", $this->allowedMethods).",";
+        $this->additionalVariables['makeQueriesInstanceByType'] = implode(", \r\n\t\t\t", $this->makeQueriesInstanceByType).",";
 
         return $this->renderClass(
-            self::CLASS_TEMPLATE_TYPE_FACTORY_COMMAND,
+            self::CLASS_TEMPLATE_TYPE_FACTORY_QUERY,
             $classNamespace,
             $this->useStatement,
             $extends,
@@ -70,28 +69,22 @@ class CommandGenerator extends AbstractGenerator
         );
     }
 
-    protected function renderCommandMethod(array $structure): string
+    protected function renderQueryMethod(string $queryName, array $structure): string
     {
-        $commandName = $structure['name'];
-        $shortCommandClassName = $this->getShortClassName($commandName, $structure['type']);
-        $this->addUseStatement($this->getClassName($commandName, $structure['type']));
-        $methodComment = sprintf("Create %s Command.", $shortCommandClassName);
+        $shortQueryClassName = $this->getShortClassName($queryName, DataTypeInterface::STRUCTURE_TYPE_QUERY);
+        $this->addUseStatement($this->getClassName($queryName, DataTypeInterface::STRUCTURE_TYPE_QUERY));
+        $methodComment = sprintf("Create %s Query.", $shortQueryClassName);
         $methodArguments = [];
-        $commandArguments = [];
+        $queryArguments = [];
         $additionalVariables = [];
-
-        if ($structure['type'] === DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK) {
-            $commandName .= "-task";
-        }
-        $commandConstant  = strtoupper(str_replace("-", "_", $commandName))."_COMMAND";
-        $methodName = sprintf("make%s", $shortCommandClassName);
-        $this->allowedMethods[] = sprintf("self::%s", $commandConstant);
-        $this->makeCommandsInstanceByType[] = sprintf("self::%s => \$this->make%s(...\$args)", $commandConstant, $shortCommandClassName);
+        
+        $queryConstant  = strtoupper(str_replace("-", "_", $queryName))."_QUERY";
+        $methodName = sprintf("make%s", $shortQueryClassName);
+        $this->allowedMethods[] = sprintf("self::%s", $queryConstant);
+        $this->makeQueriesInstanceByType[] = sprintf("self::%s => \$this->make%s(...\$args)", $queryConstant, $shortQueryClassName);
 
         foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            if (!in_array($arg, self::UNIQUE_KEYS)) {
-                $this->addUseStatement($this->getValueObjectClassName($arg));
-            }
+            $this->addUseStatement($this->getValueObjectClassName($arg));
             $shortClassName = $this->getValueObjectShortClassName($arg);
 
             if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]) {
@@ -100,17 +93,17 @@ class CommandGenerator extends AbstractGenerator
             $propertyType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $propertyType." $".$propertyName;
-            $commandArguments[] = sprintf("%s::fromNative($%s)", $shortClassName, $propertyName);
+            $queryArguments[] = sprintf("%s::fromNative($%s)", $shortClassName, $propertyName);
         }
-        $additionalVariables["shortFactoryClassName"] = $shortCommandClassName;
-        $additionalVariables["factoryArguments"] = implode(", \r\n\t\t\t", $commandArguments);
+        $additionalVariables["shortFactoryClassName"] = $shortQueryClassName;
+        $additionalVariables["factoryArguments"] = implode(", \r\n\t\t\t", $queryArguments);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_FACTORY,
             $methodComment,
             $methodName,
             implode(", ", $methodArguments),
-            $shortCommandClassName,
+            $shortQueryClassName,
             "",
             "",
             $additionalVariables
