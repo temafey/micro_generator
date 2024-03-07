@@ -19,7 +19,13 @@ use ReflectionException;
  */
 class DtoInterfaceGenerator extends AbstractGenerator
 {
-    protected $dtoConstants = [];
+    protected array $dtoConstants = [];
+
+    /**
+     * Render getter methods in dto.
+     */
+    protected bool $renderGetters = false;
+
     /**
      * Generate test class code.
      *
@@ -33,8 +39,6 @@ class DtoInterfaceGenerator extends AbstractGenerator
      */
     public function generate(): ?string
     {
-        $implements = [];
-        $useTraits = [];
         $methods = [];
         $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
@@ -63,15 +67,16 @@ class DtoInterfaceGenerator extends AbstractGenerator
 
     protected function renderGetMethod(string $arg): ?string
     {
-        $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-        $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
-        $methodName = "get".$shortClassName;
-        $propertyComment = sprintf("%s value.", $scalarType);
-        $methodComment = sprintf("Return %s value.", $scalarType);
         $argConstant  = strtoupper(str_replace("-", "_", $arg));
         $this->dtoConstants[] = sprintf("public const %s = \"%s\"", $argConstant, $arg);
 
-        return null;
+        if (!$this->renderGetters) {
+            return null;
+        }
+        $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
+        $methodName = "get".$shortClassName;
+        $methodComment = sprintf("Return %s value.", $scalarType);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_INTERFACE,

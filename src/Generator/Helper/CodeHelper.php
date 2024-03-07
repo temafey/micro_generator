@@ -40,7 +40,6 @@ trait CodeHelper
 
             default:
                 throw new \Exception(sprintf("Container service type '%s' was not found!", $type));
-                break;
         }
 
         return $containerServiceName;

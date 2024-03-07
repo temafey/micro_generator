@@ -103,7 +103,6 @@ class DtoGenerator extends AbstractGenerator
         $valueObjectType = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]["type"];
         $propertyType = $this->getValueObjectScalarType($valueObjectType);
         $propertyName = lcfirst($property);
-        $propertyComment = sprintf("%s %s value.", $property, $propertyType);
         $methodComment = sprintf("Return %s.", $propertyType);
         $this->constructArguments[] = "public readonly ?".$propertyType." $".$propertyName;
 

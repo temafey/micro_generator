@@ -171,7 +171,7 @@ class ReadModelGenerator extends AbstractGenerator
             $returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
             $returnType === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
         ) {
-            $this->addUseStatement($this->getClassName($name, $returnTypeL));
+            $this->addUseStatement($this->getClassName($name, $returnType));
             $shortClassName = $this->getShortClassName($name, $returnType);
             $returnType = $shortClassName;
             $return = "$".lcfirst($shortClassName);

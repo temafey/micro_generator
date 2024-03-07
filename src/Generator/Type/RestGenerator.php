@@ -54,14 +54,9 @@ class RestGenerator extends AbstractGenerator
                 throw new Exception(sprintf("Dto '%s' was not found!", $action[DataTypeInterface::STRUCTURE_TYPE_DTO]));
             }
             if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$action[DataTypeInterface::STRUCTURE_TYPE_DTO]])) {
-                throw new Exception(sprintf("Value object for dto '%s' was not found!", $arg));
+                throw new Exception(sprintf("Value object for dto '%s' was not found!", $action[DataTypeInterface::STRUCTURE_TYPE_DTO]));
             }
-            $renderedMethod = $this->renderActionMethod($name, $action);
-
-            if (null === $renderedMethod) {
-                continue;
-            }
-            $methods[] = $renderedMethod;
+            $methods[] = $this->renderActionMethod($name, $action);
         }
 
         if (!empty($this->constructArguments)) {
