@@ -19,7 +19,9 @@ use ReflectionException;
  */
 class DtoGenerator extends AbstractGenerator
 {
-    protected $makeDtosInstanceByType = [];
+    protected array $makeDtosInstanceByType = [];
+
+    protected array $allowedDtos = [];
 
     /**
      * Generate test class code.
@@ -50,7 +52,7 @@ class DtoGenerator extends AbstractGenerator
             $methods[] = $this->renderCreateNewDtoMethod($name, $dto);
             $methods[] = $this->renderCreateDtoFromDataMethod($name, $dto);
         }
-        $this->additionalVariables["allowedDtos"] = implode(", \r\n\t\t", $this->allowedMethods).",";
+        $this->additionalVariables["allowedDtos"] = implode(", \r\n\t\t", $this->allowedDtos).",";
         $this->additionalVariables["makeDtosInstanceByType"] = implode(", \r\n\t\t\t", $this->makeDtosInstanceByType).",";
 
         return $this->renderClass(
@@ -74,7 +76,7 @@ class DtoGenerator extends AbstractGenerator
         $additionalVariables = [];
         $dtoConstant  = strtoupper(str_replace("-", "_", $dtoName))."_DTO";
         $methodName = sprintf("make%s", $shortDtoClassName);
-        $this->allowedMethods[] = sprintf("self::%s", $dtoConstant);
+        $this->allowedDtos[] = sprintf("self::%s", $dtoConstant);
         $this->makeDtosInstanceByType[] = sprintf("self::%s => \$this->make%s(...\$args)", $dtoConstant, $shortDtoClassName);
 
         foreach ($structure as $arg) {
