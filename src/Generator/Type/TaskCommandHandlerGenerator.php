@@ -125,7 +125,7 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
         $methodBody .= sprintf("\r\n\t\t\$this->%s->add%sTask(%s);", $propertyName, ucfirst($this->underscoreAndHyphenToCamelCase($this->name)), implode(", ", $valueObjects));
 
         if ($this->useCommonComponent) {
-            $methodComment = sprintf("Handle %s command.\r\n\t *\r\n\t * @var CommandInterface|%s.", $commandShortClassName, $commandShortClassName);
+            $methodComment = sprintf("Handle %s command.\r\n\t *\r\n\t * @param CommandInterface|%s $%s", $commandShortClassName, $commandShortClassName, $commandPropertyName);
             $commandShortArgumentClassName = "CommandInterface";
         } else {
             $methodComment = sprintf("Handle %s command.", $commandShortClassName);

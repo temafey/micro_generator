@@ -74,14 +74,14 @@ class DtoGenerator extends AbstractGenerator
             $methodLogic = implode("", $this->constructArgumentsAssignment);
             array_unshift(
                 $methods, $this->renderMethod(
-                    static::METHOD_TEMPLATE_TYPE_DEFAULT,
-                    "Constructor",
-                    "__construct",
+                static::METHOD_TEMPLATE_TYPE_DEFAULT,
+                "Constructor",
+                "__construct",
                 "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
-                    "",
-                    $methodLogic,
-                    ""
-                )
+                "",
+                $methodLogic,
+                ""
+            )
             );
         }
 

@@ -139,7 +139,7 @@ class CommandHandlerGenerator extends AbstractGenerator
         $methodBody .= sprintf("\r\n\t\t\$this->%s->store(\$%s);", $repositoryShortName, $entityShortName);
 
         if ($this->useCommonComponent) {
-            $methodComment = sprintf("Handle %s command.\r\n\t *\r\n\t * @var CommandInterface|%s.", $commandShortClassName, $commandShortClassName);
+            $methodComment = sprintf("Handle %s command.\r\n\t *\r\n\t * @param CommandInterface|%s $%s", $commandShortClassName, $commandShortClassName, $commandPropertyName);
             $commandShortClassName = "CommandInterface";
         } else {
             $methodComment = sprintf("Handle %s command.", $commandShortClassName);

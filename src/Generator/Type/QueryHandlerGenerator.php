@@ -113,7 +113,7 @@ class QueryHandlerGenerator extends AbstractGenerator
         }
 
         if ($this->useCommonComponent) {
-            $methodComment = sprintf("Handle %s query.\r\n\t *\r\n\t * @var QueryInterface|%s.", $queryShortClassName, $queryShortClassName);
+            $methodComment = sprintf("Handle %s query.\r\n\t *\r\n\t * @param QueryInterface|%s $%s", $queryShortClassName, $queryShortClassName, $queryPropertyName);
             $queryShortClassName = "QueryInterface";
         } else {
             $methodComment = sprintf("Handle %s query.", $queryShortClassName);
