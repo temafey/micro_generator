@@ -144,15 +144,16 @@ class CommandHandlerGenerator extends AbstractGenerator
         } else {
             $methodComment = sprintf("Handle %s command.", $commandShortClassName);
         }
+        $return = sprintf("\$%s->getUuid()->toString()", $entityShortName);
         
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_VOID,
+            self::METHOD_TEMPLATE_TYPE_DEFAULT,
             $methodComment,
             "handle",
             $commandShortClassName." $".$commandPropertyName,
-            "void",
+            "string",
             $methodBody,
-            ""
+            $return
         );
     }
 }
