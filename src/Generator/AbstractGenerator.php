@@ -53,8 +53,10 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
     protected const METHOD_TEMPLATE_TYPE_FACTORY            = "MethodFactory";
     protected const METHOD_TEMPLATE_TYPE_CONTROLLER_ACTION  = "MethodControllerAction";
+    protected const METHOD_TEMPLATE_TYPE_ORM_COLUMN         = "MethodOrmColumn";
     protected const METHOD_TEMPLATE_TYPE_CONTROLLER_QA_PARAMETR  = "MethodControllerQaParametr";
     protected const PROPERTY_TEMPLATE_TYPE_DEFAULT          = "Property";
+    protected const PROPERTY_TEMPLATE_TYPE_ANNOTATION       = "PropertyAnnotation";
     protected const INTERFACE_TEMPLATE_TYPE_DEFAULT         = "Interface";
 
     public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";

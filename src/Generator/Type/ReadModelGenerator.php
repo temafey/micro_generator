@@ -41,6 +41,13 @@ class ReadModelGenerator extends AbstractGenerator
         $shortClassName = $this->getShortClassName($this->name, $this->type);
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
+
+        $this->addUseStatement("Doctrine\ORM\Mapping\Column");
+        $this->addUseStatement("Doctrine\ORM\Mapping\Entity");
+        $this->addUseStatement("Doctrine\ORM\Mapping\Id");
+        $this->addUseStatement("Doctrine\ORM\Mapping\Table");
+        $additionalVariables = [];
+        $additionalVariables["tableName"] = $this->name;
         $implements[] = $shortClassName."Interface";
 
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
@@ -68,7 +75,8 @@ class ReadModelGenerator extends AbstractGenerator
             $implements,
             $useTraits,
             $this->properties,
-            $methods
+            $methods,
+            $additionalVariables
         );
     }
 
@@ -81,7 +89,9 @@ class ReadModelGenerator extends AbstractGenerator
         $methodComment = sprintf("Return %s value object.", $valueObject);
         $propertyName = lcfirst($shortClassName);
         $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
-        $this->addProperty($propertyName, "?".$shortClassName, $propertyComment, $defaultValue);
+        $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
+        $propertyComment = $this->renderOrmColumnType($valueObject, $scalarType, $defaultValue);
+        $this->addProperty($propertyName, "?".$shortClassName, $propertyComment, $defaultValue, self::PROPERTY_TEMPLATE_TYPE_ANNOTATION);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -98,7 +108,6 @@ class ReadModelGenerator extends AbstractGenerator
     {
         $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $methodName = "get".$shortClassName;
-        $propertyComment = sprintf("%s value.", $valueObject);
         $methodComment = sprintf("Return %s value.", $valueObject);
         $propertyName = lcfirst($shortClassName);
         $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
@@ -107,7 +116,8 @@ class ReadModelGenerator extends AbstractGenerator
             throw new Exception(sprintf("ValueObject '%s' in structure not found", $valueObject));
         }
         $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
-        $this->addProperty($propertyName, "?".$scalarType, $propertyComment, $defaultValue);
+        $propertyComment = $this->renderOrmColumnType($valueObject, $scalarType, $defaultValue);
+        $this->addProperty($propertyName, "?".$scalarType, $propertyComment, $defaultValue, self::PROPERTY_TEMPLATE_TYPE_ANNOTATION);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -118,6 +128,69 @@ class ReadModelGenerator extends AbstractGenerator
             "",
             "\$this->".$propertyName
         );
+    }
+
+    protected function renderOrmColumnType(
+        string $name, 
+        string $type, 
+        mixed $defaultValue = null, 
+        ?int $length = null
+    ): string {
+        $options = [
+            "name",
+            "type",
+            "unique",
+            "nullable",
+            "length",
+            "insertable",
+            "generated",
+            "scale",
+            "precision",
+            "columnDefinition",
+            "enumType",
+            "options" => ["default" => false]
+        ];
+        $idFlag = false;
+        $options = [];
+        $options["name"] = $name;
+        $options["type"] = DataTypeInterface::DATA_ORM_TYPE_SCALAR_MAPPING[$type];
+        
+        if (
+            $name === self::KEY_UNIQUE_PROCESS_UUID ||
+            $name === self::KEY_UNIQUE_UUID
+        ) {
+            $type = "guid";
+        }
+        
+        if (in_array($name, self::UNIQUE_KEYS)) {
+            $options["unique"] = true;
+            $idFlag = true;
+        }
+        if ($defaultValue === null || $defaultValue === DataTypeInterface::DATA_TYPE_NULL) {
+            $options["nullable"] = true;
+        } else {
+            $options["options"] = ["default" => $defaultValue];
+        }
+        $optionArray = [];
+
+        foreach ($options as $key => $option) {
+            if  (is_array($option)) {
+                $optionArray[] = sprintf("%s : %s", $key, json_encode($option));
+                continue;
+            }
+            $option = is_bool($option)
+                ? ($option === true) ? "true" : "false"
+                : "'$option'";
+            $optionArray[] = sprintf("%s : %s", $key, $option);
+        }
+        $propertyAnnotation = "";
+
+        if ($idFlag) {
+            $propertyAnnotation = "#[Id]\n\t";
+        }
+        $propertyAnnotation .= sprintf("#[Column(\n\t\t%s\n\t)]", implode(",\n\t\t", $optionArray));
+        
+        return $propertyAnnotation;
     }
     
     protected function renderAssembleFromValueObjectMethod(): string

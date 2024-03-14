@@ -1,0 +1,3 @@
+
+    {propertyComment}
+    {propertyVisibility} {propertyType} {propertyName}{propertyDefault};

@@ -43,6 +43,13 @@ interface DataTypeInterface
     public const DATA_SCALAR_TYPE_BOOL = "bool";
     public const DATA_SCALAR_TYPE_DATETIME = "\DateTime";
 
+    public const DATA_ORM_TYPE_INT = "integer";
+    public const DATA_ORM_TYPE_FLOAT = "float";
+    public const DATA_ORM_TYPE_JSON = "json";
+    public const DATA_ORM_TYPE_STRING = "string";
+    public const DATA_ORM_TYPE_BOOL = "bool";
+    public const DATA_ORM_TYPE_TIME = "time";
+
     public const STRUCTURE_TYPE_COMMAND = "command";
     public const STRUCTURE_TYPE_COMMAND_HANDLER = "commandHandler";
     public const STRUCTURE_TYPE_COMMAND_TASK = "taskCommand";
@@ -165,5 +172,15 @@ interface DataTypeInterface
          self::VALUE_OBJECT_TYPE_PERSON_GENDER => self::DATA_SCALAR_TYPE_INT,
          self::VALUE_OBJECT_TYPE_PERSON_NAME => self::DATA_SCALAR_TYPE_STRING,
          self::VALUE_OBJECT_TYPE_ENTITY => self::DATA_SCALAR_TYPE_ARRAY,
+    ];
+
+    public const DATA_ORM_TYPE_SCALAR_MAPPING = [
+         self::DATA_SCALAR_TYPE_INT => self::DATA_ORM_TYPE_INT,
+         self::DATA_SCALAR_TYPE_FLOAT => self::DATA_ORM_TYPE_FLOAT,
+         self::DATA_SCALAR_TYPE_MIXED => self::DATA_ORM_TYPE_STRING,
+         self::DATA_SCALAR_TYPE_ARRAY => self::DATA_ORM_TYPE_JSON,
+         self::DATA_SCALAR_TYPE_STRING => self::DATA_ORM_TYPE_STRING,
+         self::DATA_SCALAR_TYPE_BOOL => self::DATA_ORM_TYPE_BOOL,
+         self::DATA_SCALAR_TYPE_DATETIME => self::DATA_ORM_TYPE_TIME,
     ];
 }
