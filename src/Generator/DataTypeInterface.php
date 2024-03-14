@@ -48,7 +48,7 @@ interface DataTypeInterface
     public const DATA_ORM_TYPE_JSON = "json";
     public const DATA_ORM_TYPE_STRING = "string";
     public const DATA_ORM_TYPE_BOOL = "bool";
-    public const DATA_ORM_TYPE_TIME = "time";
+    public const DATA_ORM_TYPE_DATETIME = "datetime";
 
     public const STRUCTURE_TYPE_COMMAND = "command";
     public const STRUCTURE_TYPE_COMMAND_HANDLER = "commandHandler";
@@ -181,6 +181,6 @@ interface DataTypeInterface
          self::DATA_SCALAR_TYPE_ARRAY => self::DATA_ORM_TYPE_JSON,
          self::DATA_SCALAR_TYPE_STRING => self::DATA_ORM_TYPE_STRING,
          self::DATA_SCALAR_TYPE_BOOL => self::DATA_ORM_TYPE_BOOL,
-         self::DATA_SCALAR_TYPE_DATETIME => self::DATA_ORM_TYPE_TIME,
+         self::DATA_SCALAR_TYPE_DATETIME => self::DATA_ORM_TYPE_DATETIME,
     ];
 }

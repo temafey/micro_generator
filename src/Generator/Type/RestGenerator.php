@@ -115,7 +115,8 @@ class RestGenerator extends AbstractGenerator
         $additionalVariables["methodResponseClass"] = $dtoShortClassName;
         $additionalVariables["methodTag"] = $this->name;
         $additionalVariables["methodQaParameters"] = implode("", $qaParametrs);
-        $return = $this->renderReturnAction($action);
+        $methodLogic = $this->renderActionLogic($action);
+        $return = "new JsonResponse([\"uuid\" => \$result])";
         $arguments = sprintf("#[MapRequestPayload] %s \$%s", $dtoShortClassName, lcfirst($dtoShortClassName));
 
         return $this->renderMethod(
@@ -124,7 +125,7 @@ class RestGenerator extends AbstractGenerator
             lcfirst($this->underscoreAndHyphenToCamelCase($actionName))."Action",
             $arguments,
             "JsonResponse",
-            "",
+            $methodLogic,
             $return,
             $additionalVariables
         );
@@ -155,7 +156,7 @@ class RestGenerator extends AbstractGenerator
         );
     }
 
-    protected function renderReturnAction(array $action): string
+    protected function renderActionLogic(array $action): string
     {
         if (isset($action[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
             $returnType = DataTypeInterface::STRUCTURE_TYPE_COMMAND;
@@ -199,12 +200,12 @@ class RestGenerator extends AbstractGenerator
         $argConstant  = $this->getCommandFactoryConst($busType);
 
         return sprintf(
-            "\$this->%sBus->handle(
+            "\n\t\t\$result = \$this->%sBus->handle(
             \$this->%sFactory->make%sInstanceByTypeFromDto(
                 %sFactoryInterface::%s,
                 \$%s
             )
-        )",
+        );",
             $returnType,
             $returnType,
             ucfirst($returnType),
