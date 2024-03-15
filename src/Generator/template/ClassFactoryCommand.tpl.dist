@@ -45,9 +45,20 @@ class {className}{extends}{implements}
      */
     public function makeCommandInstanceByTypeFromDto(string $commandType, DtoInterface $dto): BaseCommandInterface
     {
-        $data = array_values($dto->normalize());
+        $data = $dto->normalize();
+        $arguments = [];
 
-        return $this->makeCommandInstanceByType($commandType, ...$data);
+        if (array_key_exists(DtoInterface::KEY_PROCESS_UUID, $data)) {
+            $arguments[] = $data[DtoInterface::KEY_PROCESS_UUID];
+            unset($data[DtoInterface::KEY_PROCESS_UUID]);
+        }
+        if (array_key_exists(DtoInterface::KEY_UUID, $data)) {
+            $arguments[] = $data[DtoInterface::KEY_UUID];
+            unset($data[DtoInterface::KEY_UUID]);
+        }
+        $arguments[] = $data;
+
+        return $this->makeCommandInstanceByType($commandType, ...$arguments);
     }
 {methods}
 }
