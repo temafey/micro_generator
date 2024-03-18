@@ -1,0 +1,9 @@
+
+    /**
+     * Create {shortEntityName} instance from value object with Uuid & ProcessId.
+     */
+    public function create{entityName}Instance(
+        ProcessUuid $processUuid,
+        {shortValueObjectName} ${propertyValueObjectName},
+        ?EventFactoryInterface $eventFactory = null
+    ){returnType};

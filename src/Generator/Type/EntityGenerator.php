@@ -141,17 +141,32 @@ class EntityGenerator extends AbstractGenerator
         $methodComment = sprintf("Execute %s command.", $command);
         $commandArguments = [];
         $commandProperties = [];
+        $processUuidExists = false;
+        $uuidExists = false;
 
         foreach ($commandArgs as $arg) {
             $shortClassName = $this->getValueObjectShortClassName($arg);
             $propertyName = lcfirst($shortClassName);
 
+            if ($shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID) {
+                $processUuidExists = true;
+            }
             if ($arg === self::KEY_UNIQUE_UUID) {
+                $uuidExists = true;
                 $commandProperties[] = "\$this->".$propertyName;
                 continue;
             }
             $commandProperties[] = "$".$propertyName;
             $commandArguments[] = $shortClassName." $".$propertyName;
+        }
+        if (!$uuidExists) {
+            $uuid = "\$this->".self::KEY_UNIQUE_UUID;
+            
+            if ($processUuidExists) {
+                $commandProperties = array_merge(array_slice($commandProperties, 0, 1), [$uuid], array_slice($commandProperties, 1));
+            } else {
+                array_unshift($commandProperties, $uuid);
+            }
         }
         [$applyEvents, $applyMethods] = $this->renderApplyMethods($commandEvents, $commandProperties);
         $commandMethod = $this->renderMethod(
@@ -215,33 +230,45 @@ class EntityGenerator extends AbstractGenerator
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
-        $firstCommand = array_key_first($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND]);
+        $firstCommand = $this->structure[0];
         $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$firstCommand][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        $eventShortClassName = $this->getShortClassName($firstCommand, DataTypeInterface::STRUCTURE_TYPE_EVENT);
-        $commandArguments = [];
         $commandProperties = [];
+        $processUuidExists = false;
+        $uuidExists = false;
 
         foreach ($commandArgs as $arg) {
             $shortClassName = $this->getValueObjectShortClassName($arg);
-            $commandArguments[] = "$".lcfirst($shortClassName);
             $commandProperties[] = $shortClassName." $".lcfirst($shortClassName);
+            
+            if ($shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID) {
+                $processUuidExists = true;
+            }
+            if ($shortClassName === self::VALUE_OBJECT_UNIQUE_UUID) {
+                $uuidExists = true;
+            }
         }
-        $varName = implode(", ", $commandProperties);
-        $methodLogic .= sprintf("\r\n\t\t\$event = \$entity->eventFactory->make%s(%s);",
-            $eventShortClassName,
-            implode(", ", $commandArguments)
-        );
-        $methodLogic .= "\r\n\r\n\t\tif (\$payload !== null) {";
-        $methodLogic .= "\r\n\t\t\t\$event->setPayload(\$payload);";
-        $methodLogic .= "\r\n\t\t}";
         $methodLogic .= "\r\n\t\t\$entity->uuid = \$uuid;";
-        $methodLogic .= "\r\n\t\t\$entity->apply(\$event);";
+        $firstMethodName = $this->underscoreAndHyphenToCamelCase($firstCommand);
+        $methodLogic .= "\r\n\t\t".sprintf("\$entity->%s(\$processUuid, \$%s);", $firstMethodName, lcfirst($shortClassName));
+
+        if (!$uuidExists) {
+            $shortClassName = $this->getValueObjectShortClassName(self::KEY_UNIQUE_UUID);
+            $argumentName = "$".lcfirst($shortClassName);
+            $commandProperty = $shortClassName." $".lcfirst($shortClassName);
+
+            if ($processUuidExists) {
+                $commandProperties = array_merge(array_slice($commandProperties, 0, 1), [$commandProperty], array_slice($commandProperties, 1));
+            } else {
+                array_unshift($commandProperties, $commandProperty);
+            }
+        }
+        $varName = implode(",\n\t\t", $commandProperties);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf('Factory method for creating a new %sEntity.', $shortClassName),
             "create",
-            sprintf('%s, ?Payload $payload = null, ?EventFactoryInterface $eventFactory = null', $varName),
+            sprintf("\n\t\t%s,\n\t\t?EventFactoryInterface \$eventFactory = null\n\t", $varName),
             "self",
             $methodLogic,
             "\$entity"

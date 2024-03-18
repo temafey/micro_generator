@@ -134,6 +134,14 @@ class ClassBuilder
         $generatorClassName = $this->getClassGenerator($type, $name);
         /** @var GeneratorInterface $generator */
         $generator = new $generatorClassName($domainName, $layer, $type, $name, $this->projectNamespace, $structure, $domainStructure, $layerPatternPath);
+//        if (in_array(
+//            $type, [
+//            DataTypeInterface::STRUCTURE_TYPE_,
+//            DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
+//        ])
+//        ) {
+//            $className = $generator->getFullClassName();
+//        }
         $className = $generator->getFullClassName();
 
         try {
@@ -141,7 +149,7 @@ class ClassBuilder
                 return false;
             }
         } catch (\Throwable $e) {
-            trigger_error($e->getMessage(), E_USER_WARNING);
+            trigger_error(sprintf("Error: '%s' in file %s line %s", $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_WARNING);
 
             return false;
         }

@@ -19,6 +19,21 @@ use ReflectionException;
  */
 class ReadModelGenerator extends AbstractGenerator
 {
+    public const READ_MODEL_STORE_METHOD_KEYS = [
+        "insertOne" => [
+            "add", "insert", "create", "save",
+        ],
+        "updateOne" => [
+            "update",
+        ],
+        "deleteOne" => [
+            "delete", "remove",
+        ],
+        "findOne" => [
+          "findOne", "fetch",
+        ],
+    ];
+
     /**
      * Generate test class code.
      *
@@ -185,6 +200,7 @@ class ReadModelGenerator extends AbstractGenerator
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
         $addVar["readModelArguments"] = implode("", $readModelArguments);
+        $addVar["readModelStoreMethodName"] = $this->getReadModelMethodName($methodName);
         $methodComment = sprintf("%s %s ReadModel in Storage.", ucfirst($methodName), $shortClassName);
         $methodTemplate = self::METHOD_TEMPLATE_TYPE_READ_MODEL;
         
@@ -198,5 +214,18 @@ class ReadModelGenerator extends AbstractGenerator
             $return,
             $addVar
         );
+    }
+
+    protected function getReadModelMethodName(string $methodName): ?string
+    {
+        foreach (self::READ_MODEL_STORE_METHOD_KEYS as $readModelStoreMethodName => $keys) {
+            foreach ($keys as $key) {
+                if (strpos($methodName, $key) !== false) {
+                    return $readModelStoreMethodName;
+                }
+            }
+        }
+        
+        return null;
     }
 }

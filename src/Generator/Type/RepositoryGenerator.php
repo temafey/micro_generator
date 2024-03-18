@@ -67,21 +67,23 @@ class RepositoryGenerator extends AbstractGenerator
                 $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
                 $propertyName = lcfirst($shortClassName);
                 $constructArguments[] = $shortClassName." $".$propertyName;
+                $propertyComment = sprintf("%s %s.", $shortClassName, $type);
             } elseif (strpos($type, "\\")) {
                 $fullClassName = sprintf("\r\nuse %s;", $type);
                 $classNameArray = explode("\\", $type);
                 $type = array_pop($classNameArray);
                 $propertyName = lcfirst($type);
                 $constructArguments[] = $type." $".$propertyName;
+                $propertyComment = sprintf("%s %s.", $propertyName, $type);
             }  else {
                 $propertyName = $arg;
                 $constructArguments[] = $type." $".$arg;
+                $propertyComment = sprintf("%s %s.", $arg, $type);
             }
 
             if ($fullClassName !== "" && !in_array($fullClassName, $useStatement)) {
                 $useStatement[] = $fullClassName;
             }
-            $propertyComment = sprintf("%s %s.", $shortClassName, $type);
             $properties[] = $this->renderProperty(
                 self::PROPERTY_TEMPLATE_TYPE_DEFAULT,
                 $propertyComment,

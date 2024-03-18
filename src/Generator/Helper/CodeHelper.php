@@ -104,6 +104,16 @@ trait CodeHelper
             $name .= ($name[-1] === 'e') ? 'd' : 'ed';
             //$entity = ucfirst($this->underscoreAndHyphenToCamelCase($entity));
             //$name = sprintf("%s%s", $entity, $name);
+        } elseif (
+            $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY &&
+            $name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+        ) {
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+        }  elseif (
+            $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
+            $name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+        ) {
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
         }
@@ -139,7 +149,16 @@ trait CodeHelper
             return $shortInterfaceName;
         }
 
-        return ucfirst($this->underscoreAndHyphenToCamelCase($name)).$shortInterfaceName;
+        if (
+            $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY &&
+            $name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+        ) {
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+        } else {
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
+        }
+
+        return $name.$shortInterfaceName;
     }
 
     /**

@@ -12,25 +12,5 @@ namespace {namespace};
  */
 interface {interfaceName}{extends}
 {
-    /**
-     * Create {shortEntityName} instance from value object with Uuid & ProcessId.
-     */
-    public function createInstance(
-        ProcessUuid $processUuid,
-        Uuid $uuid,
-        {shortValueObjectName} ${propertyValueObjectName},
-        ?Payload $payload = null,
-        ?EventFactoryInterface $eventFactory = null
-    ): {shortEntityInterfaceName};
-
-    /**
-     * Create {shortEntityName} instance from value object with Uuid.
-     *
-     * @throws ValueObjectInvalidException
-     */
-    public function makeActualInstance(
-        Uuid $uuid,
-        {shortValueObjectName} ${propertyValueObjectName},
-        ?EventFactoryInterface $eventFactory = null
-    ): {shortEntityInterfaceName};
+{methods}
 }

@@ -35,18 +35,64 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         $methods = [];
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-        $this->addUseStatement($this->getInterfaceName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-        $this->addUseStatement($this->getInterfaceName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL));
-        $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
-        $this->additionalVariables['shortReadModelInterfaceName'] = $this->getShortInterfaceName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
-        $this->additionalVariables['shortEntityNameInterfaceName'] = $this->getShortInterfaceName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+
+        foreach ($this->structure as $name => $structure) {
+            $this->addUseStatement($this->getClassName($name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+            $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+            $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL));
+            $methods[] = $this->renderCreateInstanceMethod($name);
+            $methods[] = $this->renderMakeActualInstanceMethod($name);
+        }
 
         return $this->renderInterface(
             self::CLASS_TEMPLATE_TYPE_FACTORY_READ_MODEL_INTERFACE,
             $interfaceNamespace,
             $this->useStatement,
             $methods
+        );
+    }
+
+    protected function renderCreateInstanceMethod(string $modelName): string
+    {
+        $shortEntityClassName = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables = [];
+        $additionalVariables['modelName'] = ucfirst($modelName);
+        $additionalVariables['shortValueObjectName'] = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $additionalVariables['propertyValueObjectName'] = lcfirst($additionalVariables['shortValueObjectName']);
+        $additionalVariables['shortReadModelInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+        $additionalVariables['shortEntityNameInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables['shortReadModelInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+        $shortEntityInterfaceName = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+
+        return $this->renderMethodInterface(
+            "",
+            "",
+            "",
+            $additionalVariables['shortReadModelInterfaceName'],
+            self::METHOD_TEMPLATE_TYPE_FACTORY_MODEL_CREATE_INSTANCE_INTERFACE,
+            $additionalVariables
+        );
+    }
+
+    protected function renderMakeActualInstanceMethod(string $modelName): string
+    {
+        $shortEntityClassName = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables = [];
+        $additionalVariables['modelName'] = ucfirst($modelName);
+        $additionalVariables['shortValueObjectName'] = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $additionalVariables['propertyValueObjectName'] = lcfirst($additionalVariables['shortValueObjectName']);
+        $additionalVariables['shortEntityNameInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables['shortReadModelInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+        $additionalVariables['shortEntityName'] = $shortEntityClassName;
+        $shortEntityInterfaceName = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+
+        return $this->renderMethodInterface(
+            "",
+            "",
+            "",
+            $additionalVariables['shortReadModelInterfaceName'],
+            self::METHOD_TEMPLATE_TYPE_FACTORY_MODEL_MAKE_ACTUAL_INSTANCE_INTERFACE,
+            $additionalVariables
         );
     }
 }

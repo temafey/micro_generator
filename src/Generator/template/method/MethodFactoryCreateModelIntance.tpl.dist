@@ -1,0 +1,10 @@
+
+    /**
+     * Create {shortValueObjectName} read model.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public function make{modelName}ActualInstance({shortValueObjectName} ${propertyValueObjectName}, Uuid $uuid): {shortReadModelInterfaceName}
+    {
+        return {shortReadModelName}::createByValueObject(${propertyValueObjectName}, $uuid);
+    }

@@ -1,0 +1,17 @@
+
+    /**
+     * Create {shortEntityName} instance from value object with Uuid.
+     *
+     * @throws ValueObjectInvalidException
+     */
+    public function makeActual{entityName}Instance(
+        Uuid $uuid,
+        {shortValueObjectName} ${propertyValueObjectName},
+        ?EventFactoryInterface $eventFactory = null
+    ): {shortEntityInterfaceName} {
+        return {shortEntityName}::createActual(
+            $uuid,
+            ${propertyValueObjectName},
+            $eventFactory
+        );
+    }

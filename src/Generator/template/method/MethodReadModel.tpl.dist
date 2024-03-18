@@ -5,7 +5,7 @@
     public function {methodName}({arguments}){returnType}
     {
         try {
-            $this->readModelStore->{methodName}One({readModelArguments});
+            $this->readModelStore->{readModelStoreMethodName}({readModelArguments});
         } catch (DBALEventStoreException $e) {
             throw new {ReadModelException}(
                 '{arguments} was not {methodName} in read model.',

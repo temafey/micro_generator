@@ -19,6 +19,8 @@ use ReflectionException;
  */
 class CommandGenerator extends AbstractGenerator
 {
+    protected bool $constructArgumentUuidExists = false;
+
     /**
      * Generate test class code.
      *
@@ -58,7 +60,8 @@ class CommandGenerator extends AbstractGenerator
 
         if (!empty($this->constructArgumentsAssignment)) {
             $methodLogic = implode("", $this->constructArgumentsAssignment);
-            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid);";
+            $uuidArgument = $this->constructArgumentUuidExists ? "\$uuid" : "null";
+            $methodLogic .= sprintf("\r\n\t\tparent::__construct(\$processUuid, %s);", $uuidArgument);
             array_unshift(
                 $methods, $this->renderMethod(
                     self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -86,6 +89,9 @@ class CommandGenerator extends AbstractGenerator
 
     public function renderStructureMethod(string $arg, array $addVar = []): ?string
     {
+        if ($arg === self::KEY_UNIQUE_UUID) {
+            $this->constructArgumentUuidExists = true;
+        }
         $this->addUseStatement($this->getValueObjectClassName($arg));
         $shortClassName = $this->getValueObjectShortClassName($arg);
         $propertyName = lcfirst($shortClassName);

@@ -1,0 +1,8 @@
+
+    /**
+     * Create {shortValueObjectName} read model from Entity.
+     */
+    public function make{modelName}ActualInstanceByEntity({shortEntityNameInterfaceName} ${propertyValueObjectName}): {shortReadModelInterfaceName}
+    {
+        return {shortReadModelName}::createByEntity(${propertyValueObjectName});
+    }

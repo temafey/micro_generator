@@ -1,0 +1,18 @@
+
+    /**
+     * Create {shortEntityName} instance from value object with Uuid & ProcessId.
+     */
+    public function create{entityName}Instance(
+        ProcessUuid $processUuid,
+        {shortValueObjectName} ${propertyValueObjectName},
+        ?EventFactoryInterface $eventFactory = null
+    ): {shortEntityInterfaceName} {
+        $uuid = new Uuid();
+
+        return {shortEntityName}::create(
+            $processUuid,
+            $uuid,
+            ${propertyValueObjectName},
+            $eventFactory
+        );
+    }

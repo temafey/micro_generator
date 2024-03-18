@@ -1,0 +1,6 @@
+
+    /**
+      * Create {shortValueObjectName} read model.
+      */
+     public function make{modelName}ActualInstance({shortValueObjectName} ${propertyValueObjectName}, Uuid $uuid){returnType};
+

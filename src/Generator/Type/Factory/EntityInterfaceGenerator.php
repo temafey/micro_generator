@@ -38,15 +38,60 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-        $this->addUseStatement($this->getInterfaceName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-        $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
 
+        foreach ($this->structure as $name => $structure) {
+            $this->addUseStatement($this->getClassName($name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+            $this->addUseStatement($this->getClassName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+            $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+            $methods[] = $this->renderCreateInstanceMethod($name);
+            $methods[] = $this->renderMakeActualInstanceMethod($name);
+        }
+        
         return $this->renderInterface(
             self::CLASS_TEMPLATE_TYPE_FACTORY_ENTITY_INTERFACE,
             $interfaceNamespace,
             $this->useStatement,
             $methods
+        );
+    }
+
+    protected function renderCreateInstanceMethod(string $entityName): string
+    {
+        $shortEntityClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables = [];
+        $additionalVariables['entityName'] = ucfirst($entityName);
+        $additionalVariables['shortValueObjectName'] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
+        $additionalVariables['shortEntityName'] = $shortEntityClassName;
+        $shortEntityInterfaceName = $this->getShortInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+
+        return $this->renderMethodInterface(
+            "",
+            "",
+            "",
+            $shortEntityInterfaceName,
+            self::METHOD_TEMPLATE_TYPE_FACTORY_CREATE_INSTANCE_INTERFACE,
+            $additionalVariables
+        );
+    }
+
+    protected function renderMakeActualInstanceMethod(string $entityName): string
+    {
+        $shortEntityClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables = [];
+        $additionalVariables['entityName'] = ucfirst($entityName);
+        $additionalVariables['shortValueObjectName'] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
+        $additionalVariables['shortEntityName'] = $shortEntityClassName;
+        $shortEntityInterfaceName = $this->getShortInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+
+        return $this->renderMethodInterface(
+            "",
+            "",
+            "",
+            $shortEntityInterfaceName,
+            self::METHOD_TEMPLATE_TYPE_FACTORY_MAKE_ACTUAL_INSTANCE_INTERFACE,
+            $additionalVariables
         );
     }
 }

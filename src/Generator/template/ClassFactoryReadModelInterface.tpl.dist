@@ -12,14 +12,5 @@ namespace {namespace};
  */
 interface {interfaceName}{extends}
 {
-
-     /**
-      * Create {shortValueObjectName} read model.
-      */
-     public function makeActualInstance({shortValueObjectName} ${propertyValueObjectName}, Uuid $uuid): {shortReadModelInterfaceName};
-
-     /**
-      * Create {shortValueObjectName} read model from Entity.
-      */
-     public function makeActualInstanceByEntity({shortEntityNameInterfaceName} ${propertyValueObjectName}): {shortReadModelInterfaceName};
+{methods}
 }

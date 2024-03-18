@@ -35,7 +35,8 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
+        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Common\Domain\ReadModel\ReadModelInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
     
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
@@ -57,7 +58,8 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
             self::CLASS_TEMPLATE_TYPE_READ_MODEL_INTERFACE,
             $interfaceNamespace,
             $this->useStatement,
-            $methods
+            $methods,
+            "ReadModelInterface"
         );
     }
 

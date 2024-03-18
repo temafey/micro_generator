@@ -19,6 +19,9 @@ interface GeneratorInterface
     public const KEY_LIMIT = 'limit';
     public const KEY_CREATED_AT = 'created_at';
     public const KEY_UPDATED_AT = 'updated_at';
+    public const VALUE_OBJECT_UNIQUE_UUID = 'Uuid';
+    public const VALUE_OBJECT_UNIQUE_ID = 'Id';
+    public const VALUE_OBJECT_UNIQUE_PROCESS_UUID = 'ProcessUuid';
     
     public const UNIQUE_KEYS = [
         self::KEY_UNIQUE_PROCESS_UUID,

@@ -57,8 +57,8 @@ class QueryGenerator extends AbstractGenerator
         ];
         $methods[] = $this->renderConstructMethod();
 
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName => $structure) {
-            $methods[] = $this->renderStructureMethod($methodName, $structure, $addVar);
+        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName) {
+            $methods[] = $this->renderStructureMethod($methodName);
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
 
@@ -117,23 +117,34 @@ class QueryGenerator extends AbstractGenerator
         );
     }
 
-    public function renderStructureMethod(string $methodName, array $structure, array $addVar = []): string
+    public function renderStructureMethod(string $methodName): string
     {
+        $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$methodName];
+        $addVar = [];
         $addVar["criteriaParams"] = [];
 
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
             throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $methodName));
         }
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-            throw new Exception(sprintf("Return type for repository method '%s' was not found!", $methodName));
+            //throw new Exception(sprintf("Return type for repository method '%s' was not found!", $methodName));
         }
         $methodArguments = [];
         $methodComment = "";
 
         foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
+            if (is_numeric($arg)) {
+                $arg = $type;
+                $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
+            }
+            
             if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
-                $this->addUseStatement($this->getValueObjectClassName($arg));
                 $shortClassName = $this->getValueObjectShortClassName($arg);
+
+                if ($shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID) {
+                    continue;
+                }
+                $this->addUseStatement($this->getValueObjectClassName($arg));
                 $propertyName = lcfirst($shortClassName);
                 $methodArguments[] = $shortClassName." $".$propertyName;
                 $addVar["criteriaParams"][] = "\"".$arg."\" => $".$propertyName."->toNative(), ";
@@ -151,6 +162,11 @@ class QueryGenerator extends AbstractGenerator
             }  else {
                 $methodArguments[] = $type." $".$this->underscoreAndHyphenToCamelCase($arg);;
             }
+        }
+        if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
+            $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
+            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
         }
         $returnType = $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
 

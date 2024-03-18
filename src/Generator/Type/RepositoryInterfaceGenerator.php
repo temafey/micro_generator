@@ -41,10 +41,18 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName => $structure) {
+            if (is_numeric($methodName)) {
+                $methodName = $structure;
+                $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$methodName];
+            }
             if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
                 throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $methodName));
             }
-
+            if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
+                $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+                $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
+                $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
+            }
             if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
                 throw new Exception(sprintf("Return type for repository method '%s' was not found!", $methodName));
             }
@@ -52,10 +60,22 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
             $methodComment = "";
 
             foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
+                if (is_numeric($arg)) {
+                    $arg = $type;
+                    $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
+                }
                 if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
+                    $shortClassName = $this->getValueObjectShortClassName($arg);
+
+                    if (
+                        $this->type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
+                        $this->name === DataTypeInterface::STRUCTURE_TYPE_QUERY &&
+                        $shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID
+                    ) {
+                        continue;
+                    }
                     $className = $this->getValueObjectClassName($arg);
                     $this->addUseStatement($className);
-                    $shortClassName = $this->getValueObjectShortClassName($arg);
                     $propertyName = lcfirst($shortClassName);
                     $methodArguments[] = $shortClassName." $".$propertyName;
                 } elseif (

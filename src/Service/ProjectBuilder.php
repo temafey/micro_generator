@@ -216,6 +216,7 @@ class ProjectBuilder implements ProjectBuilderInterface
             }
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][$name] = $repository;
         }
+        $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_QUERY] = $this->buildQueryRepositoryStructure($structure);
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_SERVICE] as $name => $service) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_SERVICE][$name] = $service;
@@ -271,6 +272,10 @@ class ProjectBuilder implements ProjectBuilderInterface
     protected function buildInfrastructureStructure(array $structure, array $domainStructure): array
     {
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY] as $name => $repository) {
+            if ($name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
+                $domainStructure[DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$name] = $this->buildQueryRepositoryStructure($structure);
+                continue;
+            }
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$name] = $repository;
         }
 
@@ -283,6 +288,30 @@ class ProjectBuilder implements ProjectBuilderInterface
         }
 
         return $domainStructure;
+    }
+
+    protected function buildQueryRepositoryStructure(array $structure): array
+    {
+        $queryRepositoryStructure = [];
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] as $name => $queryHandler) {
+            $entity = $queryHandler[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+
+            if (!isset($queryRepositoryStructure[$entity])) {
+                $queryRepositoryStructure[$entity] = [
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                        $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
+                        $this->namespace."\Domain\Factory\ValueObjectFactoryInterface",
+                    ],
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
+                ];
+            }
+            $queryRepositoryStructure[$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][] = $name;
+        }
+
+        return $queryRepositoryStructure;
     }
 
     /**
@@ -348,6 +377,12 @@ class ProjectBuilder implements ProjectBuilderInterface
             }
 
             foreach ($layer as $name => $layerStructure) {
+                if ($name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
+                    foreach ($layerStructure as $queryName => $queryStructure) {
+                        $classBuilder->generate($domainName, $domainLayer, $type, $name, $queryStructure, $domainStructure, $layerPatternPath);
+                    }
+                    continue;
+                }
                 $classBuilder->generate($domainName, $domainLayer, $type, $name, $layerStructure, $domainStructure, $layerPatternPath);
             }
         }

@@ -131,7 +131,7 @@ class CommandHandlerGenerator extends AbstractGenerator
 
         if ($this->typeCreate) {
             $factoryShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_FACTORY], DataTypeInterface::STRUCTURE_TYPE_FACTORY));
-            $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->createInstance(%s);", $entityShortName, $factoryShortName, implode(", ", $valueObjects));
+            $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->create%sInstance(%s);", $entityShortName, $factoryShortName, $shortClassName, implode(", ", $valueObjects));
         } else {
             $methodBody .= sprintf("\r\n\t\t\$%s = \$this->%s->get(\$%s->getUuid());", $entityShortName, $repositoryShortName, $commandPropertyName);
             $methodBody .= sprintf("\r\n\t\t\$%s->%s(%s);", $entityShortName, $this->underscoreAndHyphenToCamelCase($this->name), implode(", ", $valueObjects));

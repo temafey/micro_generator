@@ -12,39 +12,5 @@ namespace {namespace};
  */
 class {className}{extends}{implements}
 {
-    /**
-     * Create {shortEntityName} instance from value object with Uuid & ProcessId.
-     */
-    public function createInstance(
-        ProcessUuid $processUuid,
-        Uuid $uuid,
-        {shortValueObjectName} ${propertyValueObjectName},
-        ?Payload $payload = null,
-        ?EventFactoryInterface $eventFactory = null
-    ): {shortEntityInterfaceName} {
-        return {shortEntityName}::create(
-			$processUuid, 
-			$uuid, 
-			${propertyValueObjectName}, 
-			$payload, 
-			$eventFactory
-		);
-    }
-
-    /**
-     * Create {shortEntityName} instance from value object with Uuid.
-     *
-     * @throws ValueObjectInvalidException
-     */
-    public function makeActualInstance(
-        Uuid $uuid,
-        {shortValueObjectName} ${propertyValueObjectName},
-        ?EventFactoryInterface $eventFactory = null
-    ): {shortEntityInterfaceName} {
-        return {shortEntityName}::createActual(
-			$uuid, 
-			${propertyValueObjectName}, 
-			$eventFactory
-		);
-    }
+{methods}
 }

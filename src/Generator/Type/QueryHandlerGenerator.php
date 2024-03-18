@@ -109,6 +109,10 @@ class QueryHandlerGenerator extends AbstractGenerator
 
         foreach ($queryStructure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
             $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            
+            if ($shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID) {
+                continue;
+            }
             $valueObjects[] = sprintf("\$%s->get%s()", $queryPropertyName, $shortClassName);
         }
 

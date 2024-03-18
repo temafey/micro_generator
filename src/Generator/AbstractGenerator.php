@@ -8,6 +8,7 @@ use Exception;
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
 use MicroModule\MicroserviceGenerator\Generator\Preprocessor\PreprocessorInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\CodeHelper;
+use phpDocumentor\Reflection\Types\Static_;
 
 /**
  * Generator for skeletons.
@@ -41,9 +42,9 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const CLASS_TEMPLATE_REPOSITORY_READ_MODEL    = "repository/ClassEventSourcingStoreRepository";
     protected const CLASS_TEMPLATE_REPOSITORY_TASK          = "repository/ClassTaskRepository";
     protected const METHOD_TEMPLATE_TYPE_DEFAULT            = "Method";
+    protected const METHOD_TEMPLATE_TYPE_INTERFACE          = "MethodInterface";
     protected const METHOD_TEMPLATE_TYPE_STATIC             = "MethodStatic";
     protected const METHOD_TEMPLATE_TYPE_BOOL               = "MethodBool";
-    protected const METHOD_TEMPLATE_TYPE_INTERFACE          = "MethodInterface";
     protected const METHOD_TEMPLATE_TYPE_VOID               = "MethodVoid";
     protected const METHOD_TEMPLATE_TYPE_FIND_BY_UUID       = "MethodFindByUuid";
     protected const METHOD_TEMPLATE_TYPE_FIND_ONE_BY        = "MethodFindOneBy";
@@ -52,6 +53,14 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const METHOD_TEMPLATE_TYPE_READ_MODEL_ADD     = "MethodReadModelAdd";
     protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
     protected const METHOD_TEMPLATE_TYPE_FACTORY            = "MethodFactory";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_CREATE_INSTANCE = "MethodFactoryCreateIntance";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_CREATE_INSTANCE_INTERFACE = "MethodFactoryCreateIntanceInterface";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_MAKE_ACTUAL_INSTANCE = "MethodFactoryMakeActualIntance";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_MAKE_ACTUAL_INSTANCE_INTERFACE = "MethodFactoryMakeActualIntanceInterface";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_MODEL_CREATE_INSTANCE = "MethodFactoryCreateModelIntance";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_MODEL_CREATE_INSTANCE_INTERFACE = "MethodFactoryCreateModelIntanceInterface";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_MODEL_MAKE_ACTUAL_INSTANCE = "MethodFactoryMakeActualModelIntance";
+    protected const METHOD_TEMPLATE_TYPE_FACTORY_MODEL_MAKE_ACTUAL_INSTANCE_INTERFACE = "MethodFactoryMakeActualModelIntanceInterface";
     protected const METHOD_TEMPLATE_TYPE_CONTROLLER_ACTION  = "MethodControllerAction";
     protected const METHOD_TEMPLATE_TYPE_ORM_COLUMN         = "MethodOrmColumn";
     protected const METHOD_TEMPLATE_TYPE_CONTROLLER_QA_PARAMETR  = "MethodControllerQaParametr";
@@ -265,7 +274,7 @@ abstract class AbstractGenerator implements GeneratorInterface
         }
 
         if (file_put_contents($this->sourceFile, $code)) {
-            echo "Class '".$this->sourceFile."' created.".PHP_EOL;
+            echo sprintf("Class '%s' created by %s.".PHP_EOL, $this->sourceFile, static::class);
 
             return true;
         }
