@@ -69,6 +69,17 @@ class ReadModelGenerator extends AbstractGenerator
         $methods[] = $this->renderConstructMethod();
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName => $structure) {
+            if (is_numeric($methodName)) {
+                $methodName = $structure;
+                $structure = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]  => DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
+                    ],
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_VOID,
+                ];
+                $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
+            }
+            $methodName = $this->getReadModelRepositoryMethodName($methodName);
             $methods[] = $this->renderStructureMethod($methodName, $structure, $addVar);
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
@@ -109,17 +120,17 @@ class ReadModelGenerator extends AbstractGenerator
                 $propertyName = $this->underscoreAndHyphenToCamelCase($arg);
                 $propertyType = $type;
             }
-            $propertyComment = sprintf("%s %s.", $propertyType, $type);
-            $this->addProperty($propertyName, $propertyType, $propertyComment);
-            $this->constructArguments[] = $propertyType." $".$propertyName;
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            //$propertyComment = sprintf("%s %s.", $propertyType, $type);
+            //$this->addProperty($propertyName, $propertyType, $propertyComment);
+            $this->constructArguments[] = "protected ".$propertyType." $".$propertyName;
+            //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $this->constructArguments),
+            "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
             implode("", $this->constructArgumentsAssignment),
             ""

@@ -68,6 +68,10 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const PROPERTY_TEMPLATE_TYPE_ANNOTATION       = "PropertyAnnotation";
     protected const INTERFACE_TEMPLATE_TYPE_DEFAULT         = "Interface";
 
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_ADD = "add";
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE = "update";
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_DELETE = "delete";
+
     public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";
     public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";
     public const METHOD_TYPE_FIND_BY_CRITERIA               = "findByCriteria";
@@ -297,7 +301,8 @@ abstract class AbstractGenerator implements GeneratorInterface
         array $useTraits,
         array $properties,
         array $methods,
-        array $additionalVariables = []
+        array $additionalVariables = [],
+        array $attributes = []
     ): string {
         $template = new Template(
             sprintf(
@@ -331,6 +336,7 @@ abstract class AbstractGenerator implements GeneratorInterface
                     "useTraits" => implode(" ,", $useTraits),
                     "properties" => implode("", $properties),
                     "methods" => implode("", $methods),
+                    "attributes" => implode("\n", $attributes),
                     "date" => date("Y-m-d"),
                     "time" => date("H:i:s"),
                 ],

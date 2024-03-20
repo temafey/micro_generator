@@ -83,9 +83,9 @@ class ProjectBuilder implements ProjectBuilderInterface
         if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
             throw new Exception('no commands section');
         }
-        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY])) {
-            throw new Exception('no repositories section');
-        }
+//        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY])) {
+//            throw new Exception('no repositories section');
+//        }
         if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER])) {
             $domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] = [];
         }
@@ -131,12 +131,44 @@ class ProjectBuilder implements ProjectBuilderInterface
     protected function buildStructure(array $structure): array
     {
         $domainStructure = DataTypeInterface::DOMAIN_BASE_STRUCTURE;
+        $structure = $this->buildDefaultStructure($structure);
         $domainStructure = $this->buildDomainStructure($structure, $domainStructure);
         $domainStructure = $this->buildApplicationStructure($structure, $domainStructure);
         $domainStructure = $this->buildInfrastructureStructure($structure, $domainStructure);
         $domainStructure = $this->buildPresentationStructure($structure, $domainStructure);
 
         return $domainStructure;
+    }
+
+    /**
+     * Analyze and build full DDD structure for all patterns.
+     *
+     * @param mixed[] $structure
+     *
+     * @return mixed[]
+     */
+    protected function buildDefaultStructure(array $structure): array
+    {
+        if (!$structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR]) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR] = $this->buildProjectorStructure($structure);
+        }
+        if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY] = [];
+        }
+        if (empty($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE] = $this->buildEventStoreRepositoryStructure($structure);
+        }
+        if (empty($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE] = $this->buildEventSourcingStoreRepositoryStructure($structure);
+        }
+        if (empty($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_QUERY])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_QUERY] = $this->buildQueryRepositoryStructure($structure);
+        }
+        if (empty($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] = $this->buildReadModelRepositoryStructure($structure);
+        }
+
+        return $structure;
     }
 
     /**
@@ -216,7 +248,8 @@ class ProjectBuilder implements ProjectBuilderInterface
             }
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][$name] = $repository;
         }
-        $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_QUERY] = $this->buildQueryRepositoryStructure($structure);
+        //$domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_QUERY] = $this->buildQueryRepositoryStructure($structure);
+        //$domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE][DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] = $this->buildReadModelRepositoryStructure($structure);
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_SERVICE] as $name => $service) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_SERVICE][$name] = $service;
@@ -250,6 +283,9 @@ class ProjectBuilder implements ProjectBuilderInterface
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_SAGA][$name] = $event;
         }
 
+        if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR] = $this->buildProjectorStructure($structure);
+        }
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR] as $name => $projector) {
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_PROJECTOR][$name] = $projector;
         }
@@ -272,10 +308,6 @@ class ProjectBuilder implements ProjectBuilderInterface
     protected function buildInfrastructureStructure(array $structure, array $domainStructure): array
     {
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY] as $name => $repository) {
-            if ($name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
-                $domainStructure[DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$name] = $this->buildQueryRepositoryStructure($structure);
-                continue;
-            }
             $domainStructure[DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$name] = $repository;
         }
 
@@ -312,6 +344,97 @@ class ProjectBuilder implements ProjectBuilderInterface
         }
 
         return $queryRepositoryStructure;
+    }
+
+    protected function buildReadModelRepositoryStructure(array $structure): array
+    {
+        $commandRepositoryStructure = [];
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER] as $name => $commandHandler) {
+            $entity = $commandHandler[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+
+            if (!isset($commandRepositoryStructure[$entity])) {
+                $commandRepositoryStructure[$entity] = [
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                    ],
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
+                ];
+            }
+            $commandRepositoryStructure[$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$name] = [
+                DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                    $entity => DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
+                ],
+                DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_VOID,
+            ];
+        }
+
+        return $commandRepositoryStructure;
+    }
+
+    protected function buildProjectorStructure(array $structure): array
+    {
+        $projectorStructure = [];
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND] as $name => $command) {
+            $entity = $command[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+
+            if (!isset($projectorStructure[$entity])) {
+                $projectorStructure[$entity] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE."-".$entity => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY,
+                        DataTypeInterface::STRUCTURE_TYPE_READ_MODEL."-".$entity => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY,
+                        $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
+                        DataTypeInterface::STRUCTURE_TYPE_QUERY."-".$entity => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY,
+                        "League\Tactician\CommandBus",
+                        $this->namespace."\Domain\Factory\CommandFactoryInterface",
+                    ],
+                    DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
+                ];
+            }
+
+            foreach ($command[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $eventName => $event) {
+                $projectorStructure[$entity][DataTypeInterface::STRUCTURE_TYPE_EVENT][] = $eventName;
+            }
+        }
+
+        return $projectorStructure;
+    }
+
+    protected function buildEventStoreRepositoryStructure(array $structure): array
+    {
+        $eventStoreStructure = [];
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $name => $entity) {
+            $eventStoreStructure[$name] = [
+                DataTypeInterface::STRUCTURE_TYPE_ENTITY => $name,
+                DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                    "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                ],
+            ];
+        }
+
+        return $eventStoreStructure;
+    }
+
+    protected function buildEventSourcingStoreRepositoryStructure(array $structure): array
+    {
+        $eventSourcingStoreStructure = [];
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $name => $entity) {
+            $eventSourcingStoreStructure[$name] = [
+                DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE => false,
+                DataTypeInterface::STRUCTURE_TYPE_ENTITY => $name,
+                DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                    "Broadway\EventStore\EventStore",
+                    "Broadway\EventHandling\EventBus",
+                    "eventStreamDecorators" => DataTypeInterface::DATA_TYPE_ARRAY,
+                ],
+            ];
+        }
+
+        return $eventSourcingStoreStructure;
     }
 
     /**
@@ -377,9 +500,20 @@ class ProjectBuilder implements ProjectBuilderInterface
             }
 
             foreach ($layer as $name => $layerStructure) {
-                if ($name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
-                    foreach ($layerStructure as $queryName => $queryStructure) {
-                        $classBuilder->generate($domainName, $domainLayer, $type, $name, $queryStructure, $domainStructure, $layerPatternPath);
+                if (
+                    (
+                        $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY ||
+                        $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE
+                    ) &&
+                    (
+                        $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                        $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE ||
+                        $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE ||
+                        $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+                    )
+                ) {
+                    foreach ($layerStructure as $layerName => $structure) {
+                        $classBuilder->generate($domainName, $domainLayer, $type, $name, $structure, $domainStructure, $layerPatternPath);
                     }
                     continue;
                 }

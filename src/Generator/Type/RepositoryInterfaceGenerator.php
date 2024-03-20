@@ -35,6 +35,7 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         $this->sourceFile = $this->layerPatternPath.DIRECTORY_SEPARATOR.$this->getShortInterfaceName($this->name, $this->type).".php";
         
         if (!isset($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS])) {
+            return null;
             throw new Exception(sprintf("Methods for repository '%s' was not found!", $this->name));
         }
         $methods = [];
@@ -43,7 +44,15 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName => $structure) {
             if (is_numeric($methodName)) {
                 $methodName = $structure;
-                $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$methodName];
+                
+                if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
+                    $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$methodName];
+                } else {
+                    $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$methodName];
+                }
+            }
+            if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
+                $methodName = $this->getReadModelRepositoryMethodName($methodName);
             }
             if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
                 throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $methodName));

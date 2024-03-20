@@ -73,6 +73,8 @@ interface DataTypeInterface
     public const STRUCTURE_TYPE_SAGA = "saga";
     public const STRUCTURE_TYPE_PROJECTOR = "projector";
     public const STRUCTURE_TYPE_REPOSITORY = "repository";
+    public const STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE = "entityStore";
+    public const STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE = "eventSourcingStore";
     public const STRUCTURE_TYPE_REPOSITORY_TASK = "task";
     public const STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE = "taskInterface";
     public const STRUCTURE_TYPE_REPOSITORY_INTERFACE = "repositoryInterface";

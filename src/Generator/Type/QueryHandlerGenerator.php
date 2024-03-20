@@ -55,8 +55,43 @@ class QueryHandlerGenerator extends AbstractGenerator
         $extends = "";
         $implements[] = "QueryHandlerInterface";
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_QUERY));
+        $methods[] = $this->renderConstructMethod();
+        $methods[] = $this->renderHandleMethod();
+        $attributes = $this->renderAutowiringAttributes();
 
+        return $this->renderClass(
+            self::CLASS_TEMPLATE_TYPE_FULL,
+            $classNamespace,
+            $this->useStatement,
+            $extends,
+            $implements,
+            $useTraits,
+            $this->properties,
+            $methods,
+            [],
+            $attributes
+        );
+    }
+
+    protected function renderAutowiringAttributes(): array
+    {
+        $attributes = [];
+        $attributes[] = sprintf("#[AutoconfigureTag(%s: '%s', attributes: [\n\t'command' => '%s',\n\t'bus' => '%s'\n])]",
+            "name",
+            "tactician.handler",
+            $this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_QUERY),
+            "query.".lcfirst($this->domainName)
+        );
+
+        return $attributes;
+    }
+
+    protected function renderConstructMethod(): string
+    {
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $type => $arg) {
+            if ($arg === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE) {
+                $arg .= "-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+            }
             if (is_numeric($type)) {
                 //$type = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type'];
                 $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
@@ -71,30 +106,18 @@ class QueryHandlerGenerator extends AbstractGenerator
                 $propertyComment = sprintf("%s %s.", ucfirst($propertyName), $type);
             }
             $this->addUseStatement($className);
-            $this->addProperty($propertyName, $shortClassName, $propertyComment);
-            $this->constructArguments[] = $shortClassName." $".$propertyName;
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            //$this->addProperty($propertyName, $shortClassName, $propertyComment);
+            $this->constructArguments[] = "protected ".$shortClassName." $".$propertyName;
+            //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
-        $methods[] = $this->renderMethod(
+        return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $this->constructArguments),
+            "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
             implode("", $this->constructArgumentsAssignment),
             ""
-        );
-        $methods[] = $this->renderHandleMethod();
-
-        return $this->renderClass(
-            self::CLASS_TEMPLATE_TYPE_FULL,
-            $classNamespace,
-            $this->useStatement,
-            $extends,
-            $implements,
-            $useTraits,
-            $this->properties,
-            $methods
         );
     }
 

@@ -106,12 +106,22 @@ trait CodeHelper
             //$name = sprintf("%s%s", $entity, $name);
         } elseif (
             $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY &&
-            $name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+            (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            )
         ) {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         }  elseif (
             $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
-            $name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+            (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            )
         ) {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         } else {
@@ -150,9 +160,20 @@ trait CodeHelper
         }
 
         if (
-            $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY &&
-            $name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+            (
+                $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY ||
+                $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE
+            ) &&
+            (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            )
         ) {
+            if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
+                throw new \Exception("test");
+            }
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
@@ -460,5 +481,23 @@ trait CodeHelper
         }
 
         return implode($glue, $parts);
+    }
+
+    /**
+     * Analize event name and return read model repository name.
+     */
+    protected function getReadModelRepositoryMethodName(string $eventName): string
+    {
+        $eventName = strtolower($eventName);
+
+        if (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD)) {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD;
+        } elseif (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE)) {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE;
+        } else {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE;
+        }
+
+        return $methodName;
     }
 }

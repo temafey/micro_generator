@@ -10,5 +10,6 @@ namespace {namespace};
  *
  * @package {namespace}
  */
+{attributes}
 class {className}{extends}{implements}
 {{useTraits}{properties}{methods}}

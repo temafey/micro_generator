@@ -32,6 +32,9 @@ class EventSourcingStoreGenerator extends AbstractGenerator
      */
     public function generate(): ?string
     {
+        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
+            throw new Exception('test');
+        }
         $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]?:'Entity';
         $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
         $this->addUseStatement("Broadway\EventHandling\EventBus as EventBusInterface");

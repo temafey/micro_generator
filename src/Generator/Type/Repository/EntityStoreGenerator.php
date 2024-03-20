@@ -47,6 +47,7 @@ class EntityStoreGenerator extends AbstractGenerator
         $this->addUseStatement($interfaceNamespace);
         $this->addUseStatement("Ramsey\Uuid\UuidInterface");
         $implements[] = $interfaceShortName;
+        $this->additionalVariables['shortEntityInterfaceName'] = $this->getShortInterfaceName($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], DataTypeInterface::STRUCTURE_TYPE_ENTITY);
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_REPOSITORY_ENTITY_STORE,

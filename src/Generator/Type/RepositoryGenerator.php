@@ -43,6 +43,7 @@ class RepositoryGenerator extends AbstractGenerator
     protected function generateClass(): ?string
     {
         if (!isset($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS])) {
+            return null;
             throw new Exception(sprintf("Methods for repository '%s' was not found!", $this->name));
         }
         $useStatement = [];
