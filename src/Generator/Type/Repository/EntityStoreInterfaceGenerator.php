@@ -34,12 +34,12 @@ class EntityStoreInterfaceGenerator extends AbstractGenerator
     {
         $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]?:'Entity';
         $this->addUseStatement($this->getInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-        $this->addUseStatement("InvalidArgumentException");
-        $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\SnapshottingEventSourcingRepository");
+        //$this->addUseStatement("InvalidArgumentException");
+        //$this->addUseStatement("MicroModule\Snapshotting\EventSourcing\SnapshottingEventSourcingRepository");
         $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\SnapshottingEventSourcingRepositoryException");
         $implements = [];
         $methods = [];
-        $interfaceNamespace = $this->getClassNamespace($this->type);
+        $interfaceNamespace = $this->getClassNamespace($this->type, $this->name);
         $this->addUseStatement("Ramsey\Uuid\UuidInterface");
         $this->additionalVariables['shortEntityInterfaceName'] = $this->getShortInterfaceName($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], DataTypeInterface::STRUCTURE_TYPE_ENTITY);
 

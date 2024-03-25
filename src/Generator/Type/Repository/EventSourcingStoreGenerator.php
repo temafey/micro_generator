@@ -42,11 +42,12 @@ class EventSourcingStoreGenerator extends AbstractGenerator
         $this->addUseStatement("Broadway\EventSourcing\EventSourcingRepository");
         $this->addUseStatement("Broadway\EventSourcing\EventStreamDecorator as EventStreamDecoratorInterface");
         $this->addUseStatement("Broadway\EventStore\EventStore as EventStoreInterface");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         $extends = "EventSourcingRepository";
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $classNamespace = $this->getClassNamespace($this->type);
+        $classNamespace = $this->getClassNamespace($this->type, $this->name);
         $addVar = [
           "entityName" => ucfirst($this->underscoreAndHyphenToCamelCase($entityName)),
         ];

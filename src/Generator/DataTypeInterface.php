@@ -63,6 +63,12 @@ interface DataTypeInterface
     public const STRUCTURE_TYPE_READ_MODEL_INTERFACE = "readModelInterface";
     public const STRUCTURE_TYPE_FACTORY = "factory";
     public const STRUCTURE_TYPE_FACTORY_INTERFACE = "factoryInterface";
+    public const STRUCTURE_TYPE_FACTORY_READ_MODEL = "readModelFactory";
+    public const STRUCTURE_TYPE_FACTORY_COMMAND = "commandFactory";
+    public const STRUCTURE_TYPE_FACTORY_EVENT = "eventFactory";
+    public const STRUCTURE_TYPE_FACTORY_QUERY = "queryFactory";
+    public const STRUCTURE_TYPE_FACTORY_ENTITY = "entityFactory";
+    public const STRUCTURE_TYPE_FACTORY_VALUE_OBJECT = "valueObjectFactory";
     public const STRUCTURE_TYPE_SERVICE = "service";
     public const STRUCTURE_TYPE_SERVICE_INTERFACE = "serviceInterface";
     public const STRUCTURE_TYPE_DTO = "dto";
@@ -73,7 +79,9 @@ interface DataTypeInterface
     public const STRUCTURE_TYPE_SAGA = "saga";
     public const STRUCTURE_TYPE_PROJECTOR = "projector";
     public const STRUCTURE_TYPE_REPOSITORY = "repository";
+    public const STRUCTURE_TYPE_REPOSITORY_READ_MODEL = "readModelStore";
     public const STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE = "entityStore";
+    public const STRUCTURE_TYPE_REPOSITORY_QUERY_STORE = "queryStore";
     public const STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE = "eventSourcingStore";
     public const STRUCTURE_TYPE_REPOSITORY_TASK = "task";
     public const STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE = "taskInterface";
@@ -184,5 +192,28 @@ interface DataTypeInterface
          self::DATA_SCALAR_TYPE_STRING => self::DATA_ORM_TYPE_STRING,
          self::DATA_SCALAR_TYPE_BOOL => self::DATA_ORM_TYPE_BOOL,
          self::DATA_SCALAR_TYPE_DATETIME => self::DATA_ORM_TYPE_DATETIME,
+    ];
+
+    public const STRUCTURE_REPOSITORY_DATA_TYPES = [
+        self::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE,
+        self::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
+        self::STRUCTURE_TYPE_REPOSITORY_READ_MODEL,
+        self::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE,
+        self::STRUCTURE_TYPE_REPOSITORY_TASK,
+        self::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE,
+    ];
+    
+    public const STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING = [
+        self::STRUCTURE_TYPE_REPOSITORY_READ_MODEL => self::STRUCTURE_TYPE_READ_MODEL,
+        self::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE => self::STRUCTURE_TYPE_QUERY,
+    ];
+
+    public const STRUCTURE_FACTORY_DATA_TYPES = [
+        self::STRUCTURE_TYPE_FACTORY_READ_MODEL,
+        self::STRUCTURE_TYPE_FACTORY_COMMAND,
+        self::STRUCTURE_TYPE_FACTORY_EVENT,
+        self::STRUCTURE_TYPE_FACTORY_ENTITY,
+        self::STRUCTURE_TYPE_FACTORY_QUERY,
+        self::STRUCTURE_TYPE_FACTORY_VALUE_OBJECT,
     ];
 }

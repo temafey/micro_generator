@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MicroModule\MicroserviceGenerator\Generator\Helper;
 
+use League\Tactician\CommandBus;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Exception\CodeExtractException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\FileNotExistsException;
@@ -31,18 +32,32 @@ trait CodeHelper
      *
      * @throws InvalidClassTypeException
      */
-    protected function getContainerServiceName(string $name, string $type, bool $useName = true): string
+    protected function getContainerServiceName(string $name, string $type): string
     {
         switch ($type) {
             case DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS:
-                $containerServiceName = sprintf("tactician.commandbus.%s.%s", $name, strtolower($this->domainName));
+                $commandBusType = "command";
+                $containerServiceName = sprintf("tactician.commandbus.%s.%s", $commandBusType, strtolower($this->domainName));
                 break;
-
+                
             default:
-                throw new \Exception(sprintf("Container service type '%s' was not found!", $type));
+                $containerServiceName = $this->getClassName($name, $type);
+                break;
         }
 
         return $containerServiceName;
+    }
+    
+    protected function getAutowiringServiceName(string $name, string $type): string
+    {
+        $conainerServiceName = $this->getContainerServiceName($name, $type);
+        
+        return $this->getAutowiringName($conainerServiceName);
+    }
+
+    protected function getAutowiringName(string $serviceName): string
+    {
+        return sprintf("#[Autowire(service: '%s')]", $serviceName);
     }
 
     /**
@@ -58,7 +73,7 @@ trait CodeHelper
             return $this->getValueObjectClassName($name);
         }
 
-        return $this->getClassNamespace($type).'\\'.$this->getShortClassName($name, $type, $useName);
+        return $this->getClassNamespace($type, $name).'\\'.$this->getShortClassName($name, $type, $useName);
     }
 
     /**
@@ -68,7 +83,10 @@ trait CodeHelper
      */
     protected function getInterfaceName(string $name, string $type, bool $useName = true): string
     {
-        return $this->getInterfaceNamespace($type).'\\'.$this->getShortInterfaceName($name, $type, $useName);
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS) {
+            return CommandBus::class;
+        }
+        return $this->getInterfaceNamespace($type, $name).'\\'.$this->getShortInterfaceName($name, $type, $useName);
     }
 
     /**
@@ -113,7 +131,7 @@ trait CodeHelper
                 $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             )
         ) {
-            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         }  elseif (
             $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
             (
@@ -123,7 +141,7 @@ trait CodeHelper
                 $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             )
         ) {
-            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
         }
@@ -131,13 +149,17 @@ trait CodeHelper
         if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
             $type = "taskRepository";
             $useName = false;
+        } elseif (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
+            $type = DataTypeInterface::STRUCTURE_TYPE_REPOSITORY;
         }
         $shortClassName = $this->getClassNameSuffix($type);
-
-        if (!$useName) {
+        
+        if (
+            !$useName ||
+            in_array($type, DataTypeInterface::STRUCTURE_FACTORY_DATA_TYPES)
+        ) {
             return $shortClassName;
         }
-
 
         return $name.$shortClassName;
     }
@@ -152,10 +174,15 @@ trait CodeHelper
         if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
             $type = "taskRepository";
             $useName = false;
+        } elseif (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
+            $type = DataTypeInterface::STRUCTURE_TYPE_REPOSITORY;
         }
         $shortInterfaceName = $this->getClassNameSuffix($type)."Interface";
 
-        if (!$useName) {
+        if (
+            !$useName ||
+            in_array($type, DataTypeInterface::STRUCTURE_FACTORY_DATA_TYPES)
+        ) {
             return $shortInterfaceName;
         }
 
@@ -171,10 +198,7 @@ trait CodeHelper
                 $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             )
         ) {
-            if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
-                throw new \Exception("test");
-            }
-            $name = ucfirst($this->underscoreAndHyphenToCamelCase($name."-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
         }
@@ -217,36 +241,92 @@ trait CodeHelper
     /**
      * Generate class namespace by pattern type.
      */
-    protected function getClassNamespace(string $type): string
+    protected function getClassNamespace(string $type, string $name = null): string
     {
         $layerNamespace = $this->getLayerNamespace($type);
-        $type = str_replace(
-            ["Interface", "taskCommandHandler", "taskCommand", "dtoFactory"], 
-            ["", "commandHandler\Task", "command\Task", "Factory"], 
-            $type
-        );
+
+        if (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
+            $layerNamespace .= "\\".ucfirst(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
+
+            if (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type])) {
+                $type = DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type];
+            }
+        } else {
+            $type = str_replace(
+                ["Interface", "taskCommandHandler", "taskCommand", "dtoFactory"],
+                ["", "commandHandler\Task", "command\Task", "Factory"],
+                $type
+            );
+        }
         
-        return $layerNamespace.'\\'.ucfirst($this->underscoreAndHyphenToCamelCase($type));
+        if (in_array($type, DataTypeInterface::STRUCTURE_FACTORY_DATA_TYPES)) {
+            return $layerNamespace."\\".ucfirst(DataTypeInterface::STRUCTURE_TYPE_FACTORY);
+        }
+        $namespace = $layerNamespace."\\".ucfirst($this->underscoreAndHyphenToCamelCase($type));
+
+        if (
+            (
+                $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY ||
+                $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE
+            ) &&
+            (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            )
+        ) {
+            $namespace .= "\\".ucfirst($name);
+        }
+        
+        return $namespace;
     }
 
     /**
      * Generate interface namespace by pattern type.
      */
-    protected function getInterfaceNamespace(string $type): string
+    protected function getInterfaceNamespace(string $type, string $name = null): string
     {
         $layerNamespace = $this->getLayerInterfaceNamespace($type);
 
-        if ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK) {
+        if (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
             $layerFolder = ucfirst(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
         } else {
             $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(
-                ["Interface", "interface", "dtoFactory"], 
-                ["", "", "Factory"], 
-                $type)
+                    ["Interface", "interface", "dtoFactory"],
+                    ["", "", "Factory"],
+                    $type)
             ));
         }
+        
+        if (in_array($type, DataTypeInterface::STRUCTURE_FACTORY_DATA_TYPES)) {
+            return $layerNamespace."\\".ucfirst(DataTypeInterface::STRUCTURE_TYPE_FACTORY);
+        }
+        $namespace = $layerNamespace.'\\'.$layerFolder;
 
-        return $layerNamespace.'\\'.$layerFolder;
+        if (
+            (
+                $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY ||
+                $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE
+            ) &&
+            (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            )
+        ) {
+            $namespace .= "\\".ucfirst($name);
+        }
+
+        if (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
+            if (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type])) {
+                $type = DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type];
+            } 
+            $namespace .= "\\".ucfirst($type);
+        }
+
+        return $namespace;
     }
 
     /**
@@ -333,6 +413,12 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT:
             case DataTypeInterface::STRUCTURE_TYPE_SERVICE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_READ_MODEL:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_COMMAND:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_QUERY:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_VALUE_OBJECT:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_EVENT:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_ENTITY:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_DTO_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;
@@ -352,6 +438,10 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_MIGRATIONS:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_READ_MODEL:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_INFRASTRUCTURE;
                 break;
 
@@ -388,10 +478,16 @@ trait CodeHelper
             case DataTypeInterface::STRUCTURE_TYPE_SERVICE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_READ_MODEL:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE:
+            case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_EVENT_SOURCIHNG_STORE:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE:
             case DataTypeInterface::STRUCTURE_TYPE_FACTORY_INTERFACE:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_COMMAND:
+            case DataTypeInterface::STRUCTURE_TYPE_FACTORY_READ_MODEL:
             case DataTypeInterface::STRUCTURE_TYPE_DTO:
             case DataTypeInterface::STRUCTURE_TYPE_DTO_INTERFACE:
                 $layer = DataTypeInterface::STRUCTURE_LAYER_DOMAIN;

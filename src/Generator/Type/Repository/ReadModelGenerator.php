@@ -54,13 +54,14 @@ class ReadModelGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $classNamespace = $this->getClassNamespace($this->type);
+        $classNamespace = $this->getClassNamespace($this->type, $this->name);
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($interfaceNamespace);
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException");
         $this->addUseStatement("MicroModule\Common\Domain\Exception\ReadModelException");
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\DBALEventStoreException");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         $implements[] = $interfaceShortName;
         $addVar = [
             "ReadModelException" => "ReadModelException",
@@ -120,10 +121,15 @@ class ReadModelGenerator extends AbstractGenerator
                 $propertyName = $this->underscoreAndHyphenToCamelCase($arg);
                 $propertyType = $type;
             }
-            //$propertyComment = sprintf("%s %s.", $propertyType, $type);
-            //$this->addProperty($propertyName, $propertyType, $propertyComment);
-            $this->constructArguments[] = "protected ".$propertyType." $".$propertyName;
-            //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $constructArgument = sprintf("protected %s $%s", $propertyType, $propertyName);
+
+            if (strpos($type, "ReadModelStoreInterface") !== false) {
+                $constructArgument = sprintf(
+                    "#[Autowire(service: '%s.infrastructure.repository.storage.read_model.dbal')]\n\t\t",
+                    $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]
+                ).$constructArgument;
+            }            
+            $this->constructArguments[] = $constructArgument;
         }
 
         return $this->renderMethod(

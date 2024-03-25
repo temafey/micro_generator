@@ -333,6 +333,7 @@ class ProjectBuilder implements ProjectBuilderInterface
                 $queryRepositoryStructure[$entity] = [
                     DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        //$this->namespace."\Domain\Repository\ReadModel\\".ucfirst($this->camelCaseToUnderscore($entity))."RepositoryInterface",
                         "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
                         $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
                         $this->namespace."\Domain\Factory\ValueObjectFactoryInterface",
@@ -383,12 +384,12 @@ class ProjectBuilder implements ProjectBuilderInterface
             if (!isset($projectorStructure[$entity])) {
                 $projectorStructure[$entity] = [
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
-                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE."-".$entity => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY,
-                        DataTypeInterface::STRUCTURE_TYPE_READ_MODEL."-".$entity => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY,
-                        $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
-                        DataTypeInterface::STRUCTURE_TYPE_QUERY."-".$entity => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY,
-                        "League\Tactician\CommandBus",
-                        $this->namespace."\Domain\Factory\CommandFactoryInterface",
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_READ_MODEL,
+                        DataTypeInterface::STRUCTURE_TYPE_FACTORY_READ_MODEL,
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE,
+                        DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS,
+                        DataTypeInterface::STRUCTURE_TYPE_FACTORY_COMMAND,
                     ],
                     DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
                 ];
@@ -491,7 +492,7 @@ class ProjectBuilder implements ProjectBuilderInterface
             } else {
                 $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(["Interface", "interface"], "", $type)));
             }
-            $layerPatternPath =  $domainLayerPath.DIRECTORY_SEPARATOR.$layerFolder;
+            $layerPatternPath = $domainLayerPath.DIRECTORY_SEPARATOR.$layerFolder;
 
             if (!file_exists($layerPatternPath)) {
                 if (!mkdir($layerPatternPath, 0755) && !is_dir($layerPatternPath)) {
@@ -512,8 +513,15 @@ class ProjectBuilder implements ProjectBuilderInterface
                         $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
                     )
                 ) {
+                    $layerRepositoryPatternPath = $layerPatternPath.DIRECTORY_SEPARATOR.ucfirst($name);
+
+                    if (!file_exists($layerRepositoryPatternPath)) {
+                        if (!mkdir($layerRepositoryPatternPath, 0755) && !is_dir($layerRepositoryPatternPath)) {
+                            throw new \RuntimeException(sprintf('Directory "%s" was not created', $layerRepositoryPatternPath));
+                        }
+                    }
                     foreach ($layerStructure as $layerName => $structure) {
-                        $classBuilder->generate($domainName, $domainLayer, $type, $name, $structure, $domainStructure, $layerPatternPath);
+                        $classBuilder->generate($domainName, $domainLayer, $type, $name, $structure, $domainStructure, $layerRepositoryPatternPath);
                     }
                     continue;
                 }

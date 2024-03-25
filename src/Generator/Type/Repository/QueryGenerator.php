@@ -43,12 +43,13 @@ class QueryGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $classNamespace = $this->getClassNamespace($this->type);
+        $classNamespace = $this->getClassNamespace($this->type, $this->name);
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
-        $this->addUseStatement($interfaceNamespace);
-        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException");
-        $implements[] = $interfaceShortName;
+        $this->addUseStatement($interfaceNamespace." as QueryRepositoryInterface");
+        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException"); 
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
+        $implements[] = "QueryRepositoryInterface";
         $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]?:'Entity';
         $addVar = [
             "shortEntityName" => $this->underscoreAndHyphenToCamelCase($entityName),
@@ -82,35 +83,37 @@ class QueryGenerator extends AbstractGenerator
                 $this->addUseStatement($this->getValueObjectClassName($arg));
                 $shortClassName = $this->getValueObjectShortClassName($arg);
                 $propertyName = lcfirst($shortClassName);
-                $propertyComment = sprintf("%s value object.", $shortClassName);
-                $this->constructArguments[] = $shortClassName." $".$propertyName;
+                $constructArgument = "protected ".$shortClassName." $".$propertyName;
             } elseif ($type === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
                 $this->addUseStatement($this->getClassName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
                 $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
                 $propertyName = lcfirst($shortClassName);
-                $propertyComment = sprintf("%s %s.", $shortClassName, $type);
-                $methodArguments[] = $shortClassName." $".$propertyName;
+                $constructArgument = "protected ".$shortClassName." $".$propertyName;
             } elseif (strpos($type, "\\")) {
                 $this->addUseStatement($type);
                 $classNameArray = explode("\\", $type);
                 $type = array_pop($classNameArray);
                 $propertyName = lcfirst(str_replace(["Interface", "interface"], "", $type));
-                $propertyComment = sprintf("%s service.", $type);
-                $this->constructArguments[] = $type." $".$propertyName;
+                $constructArgument = sprintf("protected %s $%s", $type, $propertyName);
+
+                if (strpos($type, "ReadModelStoreInterface") !== false) {
+                    $constructArgument = sprintf(
+                            "#[Autowire(service: '%s.infrastructure.repository.storage.read_model.dbal')]\n\t\t",
+                            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]
+                        ).$constructArgument;
+                }
             }  else {
                 $propertyName = lcfirst($arg);
-                $propertyComment = sprintf("%s %s value.", $arg, $type);
-                $this->constructArguments[] = $type." $".$this->underscoreAndHyphenToCamelCase($arg);
+                $constructArgument = "protected ".$type." $".$this->underscoreAndHyphenToCamelCase($arg);
             }
-            $this->addProperty($propertyName, $type, $propertyComment);
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+            $this->constructArguments[] = $constructArgument;
         }
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $this->constructArguments),
+            "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
             implode("", $this->constructArgumentsAssignment),
             ""

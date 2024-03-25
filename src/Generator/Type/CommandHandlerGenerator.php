@@ -96,9 +96,6 @@ class CommandHandlerGenerator extends AbstractGenerator
     protected function renderConstructMethod(): string
     {
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $type => $arg) {
-            if ($arg === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE) {
-                $arg .= "-".$this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-            }
             $className = ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT)
                 ? $this->getClassName($arg, $type)
                 : $this->getInterfaceName($arg, $type);

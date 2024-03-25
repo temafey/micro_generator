@@ -9,6 +9,7 @@ use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\ReturnTypeNotFoundException;
 use Exception;
 use ReflectionException;
+use Symfony\Component\VarDumper\Cloner\Data;
 
 /**
  * Generator for
@@ -40,25 +41,45 @@ class ProjectorGenerator extends AbstractGenerator
         $methods = [];
         $classNamespace = $this->getClassNamespace($this->type);
         $this->addUseStatement("Broadway\ReadModel\Projector");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         $extends = "Projector";
+        $attributes = ["#[AutoconfigureTag(name: 'broadway.domain.event_listener')]"];
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
             if (is_string($arg)) {
                 $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getInterfaceName($arg, $type) : $this->getClassName($arg, $type);
                 $this->addUseStatement($className);
-                $shortClassName = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
+                $propertyType = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
                 $propertyName = lcfirst($this->getShortClassName($arg, $type));
-            } else {
+                $autowiring = $this->getAutowiringName($className);
+            } elseif (strpos("\\", $type) !== false) {
                 $arg = $type;
                 $this->addUseStatement($arg);
                 $classNameArray = explode("\\", $arg);
-                $shortClassName = array_pop($classNameArray);
-                $propertyName = str_replace("Interface", "", lcfirst($shortClassName));
+                $propertyType = array_pop($classNameArray);
+                $propertyName = str_replace("Interface", "", lcfirst($propertyType));
+                $autowiring = $this->getAutowiringName($arg);
+            } else {
+                $classNameInterface = $this->getInterfaceName($this->name, $type);
+
+                if ($type === DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS) {
+                    $aliasShortClassName = ucfirst($type);
+                    $this->addUseStatement($classNameInterface);
+                } else {
+                    $aliasShortClassName = (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type]))
+                        ? ucfirst(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type]) . "Interface"
+                        : ucfirst($type) . "Interface";
+                    $this->addUseStatement($classNameInterface . " as " . $aliasShortClassName);
+                }
+                $propertyType = $aliasShortClassName;
+                $propertyName = $type;
+                $autowiring = $this->getAutowiringServiceName($this->name, $type);
             }
+            $constructArgument = sprintf("%s\n\t\tprotected %s $%s", $autowiring, $propertyType, $propertyName);
+            $this->constructArguments[] = $constructArgument;
             //$propertyComment = sprintf("%s %s.", $shortClassName, $type);
             //$this->addProperty($propertyName, $shortClassName, $propertyComment);
-            $this->constructArguments[] = "protected ".$shortClassName." $".$propertyName;
-            //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -79,7 +100,9 @@ class ProjectorGenerator extends AbstractGenerator
             $implements,
             $useTraits,
             $this->properties,
-            $methods
+            $methods,
+            [],
+            $attributes
         );
     }
 
@@ -93,17 +116,15 @@ class ProjectorGenerator extends AbstractGenerator
                 throw new Exception(sprintf("Event '%' not found!", $event));
             }
             $entity = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_EVENT][$event][DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-            $entityShortName = lcfirst($this->getShortClassName($entity, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
             $this->addUseStatement($this->getClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT));
             $eventShortName = $this->getShortClassName($event, DataTypeInterface::STRUCTURE_TYPE_EVENT);
             $methodName = sprintf("apply%s", $eventShortName);
             $methodComment = sprintf("Apply %s event.", $eventShortName);
             $methodArguments = sprintf("%s \$event", $eventShortName);
-            $eventStoreRepositoryPropertyName = $this->getShortClassName("entityStore-".$entity, DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
-            $methodLogic = sprintf("\r\n\t\t\$%s = \$this->%s->get(\$event->getUuid());", $entityShortName, lcfirst($eventStoreRepositoryPropertyName));
+            $methodLogic = "\r\n\t\t\$entity = \$this->entityStore->get(\$event->getUuid());";
             $readModelRepositoryMethodName = $this->getReadModelRepositoryMethodName($event);
-            $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->make%sActualInstanceByEntity(\$%s);", ucfirst($entity), $entityShortName);
-            $methodLogic .= sprintf("\r\n\t\t\$this->readModel%sRepository->%s(\$readModel);", ucfirst($entity), $readModelRepositoryMethodName);
+            $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->make%sActualInstanceByEntity(\$entity);", ucfirst($entity));
+            $methodLogic .= sprintf("\r\n\t\t\$this->readModelStore->%s(\$readModel);", $readModelRepositoryMethodName);
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_VOID,
                 $methodComment,

@@ -37,17 +37,27 @@ class EntityStoreGenerator extends AbstractGenerator
         $this->addUseStatement("InvalidArgumentException");
         $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\SnapshottingEventSourcingRepository");
         $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\SnapshottingEventSourcingRepositoryException");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
+        $this->addUseStatement("Broadway\EventSourcing\EventSourcingRepository");
+        $this->addUseStatement("Broadway\EventStore\EventStore");
+        $this->addUseStatement("MicroModule\Snapshotting\Snapshot\SnapshotRepositoryInterface");
+        $this->addUseStatement("MicroModule\Snapshotting\Snapshot\TriggerInterface");
         $extends = "SnapshottingEventSourcingRepository";
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $classNamespace = $this->getClassNamespace($this->type);
+        $classNamespace = $this->getClassNamespace($this->type, $this->name);
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($interfaceNamespace);
         $this->addUseStatement("Ramsey\Uuid\UuidInterface");
         $implements[] = $interfaceShortName;
-        $this->additionalVariables['shortEntityInterfaceName'] = $this->getShortInterfaceName($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $this->additionalVariables['shortEntityInterfaceName'] = $this->getShortInterfaceName(
+            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY], 
+            DataTypeInterface::STRUCTURE_TYPE_ENTITY
+        );
+        $this->additionalVariables['entityRepositoryName'] = ucfirst($this->underscoreAndHyphenToCamelCase($entityName))."Repository";
+        $this->additionalVariables['entityName'] = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_REPOSITORY_ENTITY_STORE,
@@ -59,5 +69,15 @@ class EntityStoreGenerator extends AbstractGenerator
             $this->properties,
             $methods
         );
+    }
+
+
+
+    /**
+     * Set source file full path.
+     */
+    protected function setSourceFile(): void
+    {
+        $this->sourceFile = $this->layerPatternPath.DIRECTORY_SEPARATOR.$this->getShortClassName($this->name , $this->type).".php";
     }
 }

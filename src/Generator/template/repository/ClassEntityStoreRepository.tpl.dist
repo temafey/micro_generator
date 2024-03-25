@@ -12,6 +12,20 @@ namespace {namespace};
  */
 class {className}{extends}{implements}
 {{useTraits}{properties}
+
+    public function __construct(
+        #[Autowire(service: 'Micro\Tournament\Infrastructure\Repository\EventSourcingStore\{entityRepositoryName}')]
+        EventSourcingRepository $eventSourcingRepository,
+        #[Autowire(service: 'Broadway\EventStore\Dbal\DBALEventStore')]
+        EventStore $eventStore,
+        #[Autowire(service: 'micro_module.snapshotting.snapshot.{entityName}.repository')]
+        SnapshotRepositoryInterface $snapshotRepository,
+        #[Autowire(service: 'MicroModule\Snapshotting\Snapshot\Trigger\EventCountTrigger')]
+        TriggerInterface $trigger
+    ) {
+        parent::__construct($eventSourcingRepository, $eventStore, $snapshotRepository, $trigger);
+    }
+
 {methods}
    /**
      * Retrieve {shortEntityName} with applied events.

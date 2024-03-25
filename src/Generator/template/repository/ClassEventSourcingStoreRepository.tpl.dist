@@ -16,7 +16,9 @@ class {className}{extends}{implements}
      * @param EventStreamDecoratorInterface[] $eventStreamDecorators
      */
     public function __construct(
+        #[Autowire(service: 'Broadway\EventStore\Dbal\DBALEventStore')]
         EventStoreInterface $eventStore,
+        #[Autowire(service: 'queue_event_bus.global')]
         EventBusInterface $eventBus,
         array $eventStreamDecorators = []
     ) {

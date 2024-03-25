@@ -35,7 +35,7 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $interfaceNamespace = $this->getInterfaceNamespace($this->type);
+        $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
     
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
             throw new Exception(sprintf("ValueObject '%s' for entity was not found!", $this->name));

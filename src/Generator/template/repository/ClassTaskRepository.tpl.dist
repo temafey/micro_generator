@@ -15,11 +15,8 @@ class {className}{extends}{implements}
     protected const KEY_MESSAGE_TYPE = 'type';
     protected const KEY_MESSAGE_ARGS = 'args';
 
-    protected ProducerInterface $taskProducer;
-
-    public function __construct(ProducerInterface $taskProducer)
+    public function __construct(protected ProducerInterface $taskProducer)
     {
-        $this->taskProducer = $taskProducer;
     }
 
     protected function produce(string $type, array $args): void

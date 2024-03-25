@@ -39,7 +39,7 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
             throw new Exception(sprintf("Methods for repository '%s' was not found!", $this->name));
         }
         $methods = [];
-        $interfaceNamespace = $this->getInterfaceNamespace($this->type);
+        $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName => $structure) {
             if (is_numeric($methodName)) {
