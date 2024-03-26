@@ -52,6 +52,7 @@ class QueryHandlerGenerator extends AbstractGenerator
         } else {
             $this->addUseStatement($classNamespace. "\\"."QueryHandlerInterface");
         }
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag");
         $extends = "";
         $implements[] = "QueryHandlerInterface";
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_QUERY));
@@ -142,16 +143,44 @@ class QueryHandlerGenerator extends AbstractGenerator
         } else {
             $methodComment = sprintf("Handle %s query.", $queryShortClassName);
         }
-        $return = sprintf("\$this->%s->%s(%s)", $repositoryShortName, $this->underscoreAndHyphenToCamelCase($this->name), implode(", ", $valueObjects));
+        $additionalVariables = [];
+        $additionalVariables["repositoryShortName"] = $repositoryShortName;
+        $additionalVariables["repositoryMethodName"] = $this->getQueryRepositoryMethodName($this->name, $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]);
+        $additionalVariables["valueObjectArguments"] = implode(", ", $valueObjects);
+        $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+        
+        if (!isset($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
+            $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
+            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
+        }
+        $returnType = $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
 
+        if (is_array($returnType)) {
+            $entityName = key($returnType);
+            $returnType = $returnType[$name];
+        }
+        
+        if ($returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
+            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+            $shortClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+            $returnType = $shortClassName;
+        } elseif (strpos($returnType, "\\")) {
+            $this->addUseStatement($returnType);
+            $classNameArray = explode("\\", $returnType);
+            $returnType = array_pop($classNameArray);
+        } else {
+            $return = "\$result";
+        }
+        
         return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_DEFAULT,
+            self::METHOD_TEMPLATE_TYPE_QUERY_HANDLER_HANDLE,
             $methodComment,
             "handle",
             $queryShortClassName." $".$queryPropertyName,
-            "?array",
+            "?".$returnType,
             $methodBody,
-            $return
+            "",
+            $additionalVariables
         );
     }
 }

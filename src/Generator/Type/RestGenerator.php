@@ -40,15 +40,27 @@ class RestGenerator extends AbstractGenerator
         $this->addUseStatement("Nelmio\ApiDocBundle\Annotation\Model");
         $this->addUseStatement("OpenApi\Attributes as OA");
         $this->addUseStatement("Symfony\Component\HttpFoundation\JsonResponse");
-        $this->addUseStatement("Symfony\Component\HttpKernel\Attribute\MapRequestPayload");
         $this->addUseStatement("Symfony\Component\Routing\Annotation\Route");
         $this->addUseStatement("Symfony\Bundle\FrameworkBundle\Controller\AbstractController");
         $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         $extends = "AbstractController";
 
         foreach ($this->structure as $name => $action) {
-            if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$action[DataTypeInterface::STRUCTURE_TYPE_COMMAND]])) {
-                throw new Exception(sprintf("Command '%s' was not found!", $action[DataTypeInterface::STRUCTURE_TYPE_COMMAND]));
+            $actionType = false;
+
+            if (isset($action[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
+                $actionType = DataTypeInterface::STRUCTURE_TYPE_COMMAND;
+                $this->addUseStatement("Symfony\Component\HttpKernel\Attribute\MapRequestPayload");
+            } elseif (isset($action[DataTypeInterface::STRUCTURE_TYPE_QUERY])) {
+                $actionType = DataTypeInterface::STRUCTURE_TYPE_QUERY;
+                $this->addUseStatement("Symfony\Component\HttpKernel\Attribute\MapQueryString");
+            }
+            if (!$actionType) {
+                throw new Exception(sprintf("Action type was not set for action '%s'!", $name));
+            }
+
+            if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][$actionType][$action[$actionType]])) {
+                throw new Exception(sprintf("%s '%s' was not found!", ucfirst($actionType), $action[$actionType]));
             }
             if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_DTO][$action[DataTypeInterface::STRUCTURE_TYPE_DTO]])) {
                 throw new Exception(sprintf("Dto '%s' was not found!", $action[DataTypeInterface::STRUCTURE_TYPE_DTO]));
@@ -56,7 +68,7 @@ class RestGenerator extends AbstractGenerator
             if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$action[DataTypeInterface::STRUCTURE_TYPE_DTO]])) {
                 throw new Exception(sprintf("Value object for dto '%s' was not found!", $action[DataTypeInterface::STRUCTURE_TYPE_DTO]));
             }
-            $methods[] = $this->renderActionMethod($name, $action);
+            $methods[] = $this->renderActionMethod($name, $actionType, $action);
         }
 
         if (!empty($this->constructArguments)) {
@@ -86,26 +98,21 @@ class RestGenerator extends AbstractGenerator
         );
     }
 
-    protected function renderActionMethod(string $actionName, array $action): string
+    protected function renderActionMethod(string $actionName, string $actionType, array $action): string
     {
         $dtoParameters = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_DTO][$action[DataTypeInterface::STRUCTURE_TYPE_DTO]];
         $qaParametrs = [];
 
-        if (isset($action[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
-            $returnType = DataTypeInterface::STRUCTURE_TYPE_COMMAND;
-            $busType = $action[DataTypeInterface::STRUCTURE_TYPE_COMMAND];
-        } elseif (isset($action[DataTypeInterface::STRUCTURE_TYPE_QUERY])) {
-            $returnType = DataTypeInterface::STRUCTURE_TYPE_QUERY;
-            $busType = $action[DataTypeInterface::STRUCTURE_TYPE_QUERY];
-        } else {
-            throw new Exception(sprintf("Command bus type in contoller '%s' was not set!", $this->name));
+        if (isset($action[$actionType])) {
+            $returnType = $actionType;
+            $busType = $action[$actionType];
         }
 
         foreach ($dtoParameters as $arg) {
             $qaParametrs[] = $this->renderQaParameter($action, $arg);
         }
         $dtoShortClassName = $this->getShortClassName($action[DataTypeInterface::STRUCTURE_TYPE_DTO], DataTypeInterface::STRUCTURE_TYPE_DTO);
-        $actionCommand = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$action[DataTypeInterface::STRUCTURE_TYPE_COMMAND]];
+        $actionCommand = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][$actionType][$action[$actionType]];
         $methodComment = sprintf("Request of \'%s\' to process \'%s\' %s", $dtoShortClassName, $this->underscoreAndHyphenToCamelCase($busType), $returnType);
         $additionalVariables = [];
         $additionalVariables["methodRoute"] = $action["route"];
@@ -115,9 +122,15 @@ class RestGenerator extends AbstractGenerator
         $additionalVariables["methodResponseClass"] = $dtoShortClassName;
         $additionalVariables["methodTag"] = $this->name;
         $additionalVariables["methodQaParameters"] = implode("", $qaParametrs);
-        $methodLogic = $this->renderActionLogic($action);
-        $return = "new JsonResponse([\"uuid\" => \$result])";
-        $arguments = sprintf("#[MapRequestPayload] %s \$%s", $dtoShortClassName, lcfirst($dtoShortClassName));
+        $methodLogic = $this->renderActionLogic($actionType, $action);
+        
+        if ($actionType === DataTypeInterface::STRUCTURE_TYPE_COMMAND) {
+            $return = "new JsonResponse([\"uuid\" => \$result])";
+            $arguments = sprintf("#[MapRequestPayload] %s \$%s", $dtoShortClassName, lcfirst($dtoShortClassName));
+        } elseif ($actionType === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
+            $return = "new JsonResponse(\$result)";
+            $arguments = sprintf("#[MapQueryString] %s \$%s", $dtoShortClassName, lcfirst($dtoShortClassName));
+        }
 
         return $this->renderMethod(
             static::METHOD_TEMPLATE_TYPE_CONTROLLER_ACTION,
@@ -139,9 +152,9 @@ class RestGenerator extends AbstractGenerator
         $propertyType = $this->getValueObjectScalarType($valueObjectType);
         $additionalVariables = [];
         $additionalVariables["name"] = $arg;
-        $additionalVariables["parametrIn"] = "query";
         $dtoShortClassName = $this->getShortClassName($dtoName, DataTypeInterface::STRUCTURE_TYPE_DTO);
         $additionalVariables["description"] = sprintf("The field \'%s\' of \'%s\'", $arg, $dtoShortClassName);
+        $additionalVariables["parametrIn"] = "query";
         $additionalVariables["type"] = $propertyType;
 
         return $this->renderMethod(
@@ -156,48 +169,27 @@ class RestGenerator extends AbstractGenerator
         );
     }
 
-    protected function renderActionLogic(array $action): string
+    protected function renderActionLogic(string $actionType, array $action): string
     {
-        if (isset($action[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
-            $returnType = DataTypeInterface::STRUCTURE_TYPE_COMMAND;
-            $busType = $action[DataTypeInterface::STRUCTURE_TYPE_COMMAND];
-            $this->addUseStatement($this->getInterfaceName(DataTypeInterface::STRUCTURE_TYPE_COMMAND, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
-            $shortClassName = $this->getShortInterfaceName(DataTypeInterface::STRUCTURE_TYPE_COMMAND, DataTypeInterface::STRUCTURE_TYPE_FACTORY);
-            $commandBusContainerServicename = $this->getContainerServiceName($returnType, DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS);
-            $autowiring = sprintf("#[Autowire(service: '%s')]", $commandBusContainerServicename);
-            $constructArgument = sprintf("%s protected %sBus $%sBus", $autowiring, ucfirst($returnType), lcfirst($returnType));
-            
-            if (!in_array($constructArgument, $this->constructArguments)) {
-                $this->constructArguments[] = $constructArgument;
-            }
-            $constructArgument = sprintf("protected %s $%sFactory", $shortClassName, lcfirst($returnType));
-            
-            if (!in_array($constructArgument, $this->constructArguments)) {
-                $this->constructArguments[] = $constructArgument;
-            }
-        } elseif (isset($action[DataTypeInterface::STRUCTURE_TYPE_QUERY])) {
-            $returnType = DataTypeInterface::STRUCTURE_TYPE_QUERY;
-            $busType = $action[DataTypeInterface::STRUCTURE_TYPE_QUERY];
-            $this->addUseStatement($this->getInterfaceName(DataTypeInterface::STRUCTURE_TYPE_QUERY, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
-            $shortClassName = $this->getShortInterfaceName(DataTypeInterface::STRUCTURE_TYPE_QUERY, DataTypeInterface::STRUCTURE_TYPE_FACTORY);
-            $commandBusContainerServicename = $this->getContainerServiceName($returnType, DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS);
-            $autowiring = sprintf("#[Autowire(service: '%s')]\n\t\t", $commandBusContainerServicename);
-            $constructArgument = sprintf("%s protected %sBus $%sBus", $autowiring, ucfirst($returnType), lcfirst($returnType));
-                
-            if (!in_array($constructArgument, $this->constructArguments)) {
-                $this->constructArguments[] = $constructArgument;
-            }
-            $this->constructArguments[] = sprintf("protected %s $%sFactory", $shortClassName, lcfirst($returnType));
-
-            if (!in_array($constructArgument, $this->constructArguments)) {
-                $this->constructArguments[] = $constructArgument;
-            }
-        } else {
-            throw new Exception(sprintf("Command bus type in contoller '%s' was not set!", $this->name));
+        $returnType = $actionType;
+        $busType = $action[$actionType];
+        $this->addUseStatement($this->getInterfaceName($actionType, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $shortClassName = $this->getShortInterfaceName($actionType, DataTypeInterface::STRUCTURE_TYPE_FACTORY);
+        $commandBusContainerServicename = $this->getContainerServiceName($returnType, DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS);
+        $autowiring = sprintf("#[Autowire(service: '%s')]", $commandBusContainerServicename);
+        $constructArgument = sprintf("%s protected commandBus $%sBus", $autowiring, lcfirst($returnType));
+        
+        if (!in_array($constructArgument, $this->constructArguments)) {
+            $this->constructArguments[] = $constructArgument;
+        }
+        $constructArgument = sprintf("protected %s $%sFactory", $shortClassName, lcfirst($returnType));
+        
+        if (!in_array($constructArgument, $this->constructArguments)) {
+            $this->constructArguments[] = $constructArgument;
         }
         $this->addUseStatement($this->getClassName($action[DataTypeInterface::STRUCTURE_TYPE_DTO], DataTypeInterface::STRUCTURE_TYPE_DTO));
         $dtoShortClassName = $this->getShortClassName($action[DataTypeInterface::STRUCTURE_TYPE_DTO], DataTypeInterface::STRUCTURE_TYPE_DTO);
-        $argConstant  = $this->getCommandFactoryConst($busType);
+        $argConstant  = ($actionType === DataTypeInterface::STRUCTURE_TYPE_COMMAND) ? $this->getCommandFactoryConst($busType) : $this->getQueryFactoryConst($busType);
 
         return sprintf(
             "\n\t\t\$result = \$this->%sBus->handle(

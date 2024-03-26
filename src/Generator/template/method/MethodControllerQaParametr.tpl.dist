@@ -1,6 +1,6 @@
     #[OA\Parameter(
         name: '{name}',
-        in: '{parametrIn}',
         description: '{description}',
+        in: '{parametrIn}',
         schema: new OA\Schema(type: '{type}')
     )]

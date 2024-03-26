@@ -68,4 +68,12 @@ class {className}{extends}{implements}
     {
         return $this->toArray();
     }
+
+     /**
+      * Specify data which should be serialized to JSON
+      */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
 }

@@ -49,6 +49,7 @@ class QueryGenerator extends AbstractGenerator
         $this->addUseStatement($interfaceNamespace." as QueryRepositoryInterface");
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException"); 
         $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
+        $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
         $implements[] = "QueryRepositoryInterface";
         $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]?:'Entity';
         $addVar = [
@@ -58,8 +59,8 @@ class QueryGenerator extends AbstractGenerator
         ];
         $methods[] = $this->renderConstructMethod();
 
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName) {
-            $methods[] = $this->renderStructureMethod($methodName);
+        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $commandName => $methodName) {
+            $methods[] = $this->renderStructureMethod($commandName, $methodName);
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
 
@@ -120,17 +121,17 @@ class QueryGenerator extends AbstractGenerator
         );
     }
 
-    public function renderStructureMethod(string $methodName): string
+    public function renderStructureMethod(string $commandName, string $methodName): string
     {
-        $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$methodName];
+        $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$commandName];
         $addVar = [];
         $addVar["criteriaParams"] = [];
 
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
-            throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $methodName));
+            throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $commandName));
         }
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-            //throw new Exception(sprintf("Return type for repository method '%s' was not found!", $methodName));
+            //throw new Exception(sprintf("Return type for repository method '%s' was not found!", $commandName));
         }
         $methodArguments = [];
         $methodComment = "";
@@ -177,6 +178,7 @@ class QueryGenerator extends AbstractGenerator
             $name = key($returnType);
             $returnType = $returnType[$name];
         }
+        $methodName = $this->getQueryRepositoryMethodName($methodName, $entityName);
         $methodTemplate = $this->getMethodTemplateName($methodName);
         $methodLogic = "";
 
@@ -221,11 +223,15 @@ class QueryGenerator extends AbstractGenerator
                 break;
 
             case self::METHOD_TYPE_FIND_BY_CRITERIA:
-            case self::METHOD_TYPE_FIND_BY_CRITERIA:
+            case self::METHOD_TYPE_FIND_ALL:
+            case self::METHOD_TYPE_FIND:
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_BY_CRITERIA;
                 break;
 
             case self::METHOD_TYPE_FIND_ONE_BY:
+            case self::METHOD_TYPE_FIND_ONE:
+            case self::METHOD_TYPE_FETCH_ONE:
+            case self::METHOD_TYPE_FETCH:
             default:
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_ONE_BY;
                 break;

@@ -53,6 +53,7 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const METHOD_TEMPLATE_TYPE_READ_MODEL_ADD     = "MethodReadModelAdd";
     protected const METHOD_TEMPLATE_TYPE_TASK               = "MethodTask";
     protected const METHOD_TEMPLATE_TYPE_FACTORY            = "MethodFactory";
+    protected const METHOD_TEMPLATE_TYPE_QUERY_HANDLER_HANDLE = "MethodQueryHandlerHandle";
     protected const METHOD_TEMPLATE_TYPE_FACTORY_CREATE_INSTANCE = "MethodFactoryCreateIntance";
     protected const METHOD_TEMPLATE_TYPE_FACTORY_CREATE_INSTANCE_INTERFACE = "MethodFactoryCreateIntanceInterface";
     protected const METHOD_TEMPLATE_TYPE_FACTORY_MAKE_ACTUAL_INSTANCE = "MethodFactoryMakeActualIntance";
@@ -74,7 +75,11 @@ abstract class AbstractGenerator implements GeneratorInterface
 
     public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";
     public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";
+    public const METHOD_TYPE_FIND_ONE                       = "findOne";
+    public const METHOD_TYPE_FETCH_ONE                      = "fetchOne";
+    public const METHOD_TYPE_FETCH                          = "fetch";
     public const METHOD_TYPE_FIND_BY_CRITERIA               = "findByCriteria";
+    public const METHOD_TYPE_FIND                           = "find";
     public const METHOD_TYPE_FIND_ALL                       = "findAll";
 
     /**

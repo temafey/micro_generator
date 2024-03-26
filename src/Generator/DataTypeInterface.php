@@ -114,6 +114,7 @@ interface DataTypeInterface
     public const VALUE_OBJECT_TYPE_PERSON_AGE = "person_age";
     public const VALUE_OBJECT_TYPE_PERSON_GENDER = "person_gender";
     public const VALUE_OBJECT_TYPE_PERSON_NAME = "person_name";
+    public const VALUE_OBJECT_TYPE_FIND_CRITERIA = "find_criteria";
 
     public const PROPERTY_VISIBILITY_PUBLIC = "public";
     public const PROPERTY_VISIBILITY_PROTECTED = "protected";
@@ -182,6 +183,7 @@ interface DataTypeInterface
          self::VALUE_OBJECT_TYPE_PERSON_GENDER => self::DATA_SCALAR_TYPE_INT,
          self::VALUE_OBJECT_TYPE_PERSON_NAME => self::DATA_SCALAR_TYPE_STRING,
          self::VALUE_OBJECT_TYPE_ENTITY => self::DATA_SCALAR_TYPE_ARRAY,
+         self::VALUE_OBJECT_TYPE_FIND_CRITERIA => self::DATA_SCALAR_TYPE_ARRAY,
     ];
 
     public const DATA_ORM_TYPE_SCALAR_MAPPING = [

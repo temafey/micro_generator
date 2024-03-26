@@ -4,7 +4,7 @@
      *
      * @throws Exception
      */
-    public function findByUuid(Uuid $uuid): ?{entityName}ReadModelInterface
+    public function {methodName}(Uuid $uuid): ?{entityName}ReadModelInterface
     {
         try {
             $result = $this->readModelStore->findOne($uuid->toString());
@@ -14,7 +14,7 @@
         $uuid = $result[{entityName}ReadModelInterface::KEY_UUID];
         unset($result[{entityName}ReadModelInterface::KEY_UUID]);
 
-        return $this->readModelFactory->makeActualInstance(
+        return $this->readModelFactory->make{entityName}ActualInstance(
             $this->valueObjectFactory->make{entityName}($result),
             $this->valueObjectFactory->makeUuid($uuid)
         );

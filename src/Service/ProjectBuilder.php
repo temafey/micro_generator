@@ -341,7 +341,7 @@ class ProjectBuilder implements ProjectBuilderInterface
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
                 ];
             }
-            $queryRepositoryStructure[$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][] = $name;
+            $queryRepositoryStructure[$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$name] = $name;
         }
 
         return $queryRepositoryStructure;

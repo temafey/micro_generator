@@ -45,9 +45,22 @@ class {className}{extends}{implements}
      */
     public function makeQueryInstanceByTypeFromDto(string $queryType, DtoInterface $dto): BaseQueryInterface
     {
-        $data = array_values($dto->normalize());
+        $data = $dto->normalize();
+        $args = [];
 
-        return $this->makeQueryInstanceByType($queryType, ...$data);
+        if (isset($data[DtoInterface::KEY_PROCESS_UUID])) {
+            $args[] = $data[DtoInterface::KEY_PROCESS_UUID];
+            unset($data[DtoInterface::KEY_PROCESS_UUID]);
+        }
+        if (isset($data[DtoInterface::KEY_UUID])) {
+            $args[] = $data[DtoInterface::KEY_UUID];
+            unset($data[DtoInterface::KEY_UUID]);
+        }
+        if (!empty($data)) {
+            $args[] = $data;
+        }
+
+        return $this->makeQueryInstanceByType($queryType, ...$args);
     }
 {methods}
 }

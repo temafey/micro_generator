@@ -232,19 +232,19 @@ class ReadModelGenerator extends AbstractGenerator
         array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
 
         foreach ($entityValueObject as $valueObject) {
-            if ($valueObject === self::KEY_UNIQUE_UUID) {
+            /*if ($valueObject === self::KEY_UNIQUE_UUID) {
                 continue;
-            }
+            }*/
             $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $propertyName = lcfirst($shortClassName);
-            $methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s) {", $propertyName);
+            //$methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s) {", $propertyName);
             $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
             
             if ($scalarType === DataTypeInterface::DATA_SCALAR_TYPE_DATETIME) {
                 $propertyName .= "->format(\DateTime::ATOM)";
             }
             $methodLogic .= sprintf("\r\n\t\t\t\$data[\"%s\"] = \$this->%s;", $valueObject, $propertyName);
-            $methodLogic .= "\r\n\t\t}";
+            //$methodLogic .= "\r\n\t\t}";
         }
 
         return $this->renderMethod(

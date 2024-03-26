@@ -37,6 +37,10 @@ trait CodeHelper
         switch ($type) {
             case DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS:
                 $commandBusType = "command";
+
+                if ($name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
+                    $commandBusType = DataTypeInterface::STRUCTURE_TYPE_QUERY;
+                }
                 $containerServiceName = sprintf("tactician.commandbus.%s.%s", $commandBusType, strtolower($this->domainName));
                 break;
                 
@@ -99,6 +103,16 @@ trait CodeHelper
         $name = strtoupper($this->underscoreAndHyphenToCamelCase($name, "_"));
 
         return sprintf("%s_COMMAND", $name);
+    }
+
+    /**
+     * Generate command factory constant.
+     */
+    protected function getQueryFactoryConst(string $name): string
+    {
+        $name = strtoupper($this->underscoreAndHyphenToCamelCase($name, "_"));
+
+        return sprintf("%s_QUERY", $name);
     }
 
     /**
@@ -595,5 +609,36 @@ trait CodeHelper
         }
 
         return $methodName;
+    }
+
+    /**
+     * Analize method name and return query repository name.
+     */
+    protected function getQueryRepositoryMethodName(string $methodName, string $entityName = null): string
+    {
+        $methodName = $this->underscoreAndHyphenToCamelCase($methodName);
+        $methodName = str_ireplace($entityName, "", $methodName);
+
+        switch ($methodName) {
+            case self::METHOD_TYPE_FIND_BY_UUID:
+                $methodTemplate = self::METHOD_TYPE_FIND_BY_UUID;
+                break;
+
+            case self::METHOD_TYPE_FIND_BY_CRITERIA:
+            case self::METHOD_TYPE_FIND_ALL:
+            case self::METHOD_TYPE_FIND:
+                $methodTemplate = self::METHOD_TYPE_FIND_BY_CRITERIA;
+                break;
+
+            case self::METHOD_TYPE_FIND_ONE_BY:
+            case self::METHOD_TYPE_FIND_ONE:
+            case self::METHOD_TYPE_FETCH_ONE:
+            case self::METHOD_TYPE_FETCH:
+            default:
+                $methodTemplate = self::METHOD_TYPE_FIND_ONE_BY;
+                break;
+        }
+
+        return $methodTemplate;
     }
 }

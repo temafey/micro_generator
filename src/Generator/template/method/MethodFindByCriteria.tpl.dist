@@ -17,7 +17,7 @@
         foreach ($result as $data) {
             $uuid = $data[{entityName}ReadModelInterface::KEY_UUID];
             unset($data[{entityName}ReadModelInterface::KEY_UUID]);
-            $collection[] = $this->readModelFactory->makeActualInstance(
+            $collection[] = $this->readModelFactory->make{entityName}ActualInstance(
                 $this->valueObjectFactory->make{entityName}($data),
                 $this->valueObjectFactory->makeUuid($uuid)
             );

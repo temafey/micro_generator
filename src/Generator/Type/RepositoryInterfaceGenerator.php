@@ -41,102 +41,8 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         $methods = [];
         $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
 
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $methodName => $structure) {
-            if (is_numeric($methodName)) {
-                $methodName = $structure;
-                
-                if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
-                    $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$methodName];
-                } else {
-                    $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$methodName];
-                }
-            }
-            if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
-                $methodName = $this->getReadModelRepositoryMethodName($methodName);
-            }
-            if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
-                throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $methodName));
-            }
-            if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-                $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-                $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
-                $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
-            }
-            if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-                throw new Exception(sprintf("Return type for repository method '%s' was not found!", $methodName));
-            }
-            $methodArguments = [];
-            $methodComment = "";
-
-            foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
-                if (is_numeric($arg)) {
-                    $arg = $type;
-                    $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
-                }
-                if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
-                    $shortClassName = $this->getValueObjectShortClassName($arg);
-
-                    if (
-                        $this->type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
-                        $this->name === DataTypeInterface::STRUCTURE_TYPE_QUERY &&
-                        $shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID
-                    ) {
-                        continue;
-                    }
-                    $className = $this->getValueObjectClassName($arg);
-                    $this->addUseStatement($className);
-                    $propertyName = lcfirst($shortClassName);
-                    $methodArguments[] = $shortClassName." $".$propertyName;
-                } elseif (
-                    $type === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
-                    $type === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
-                ) {
-                    $this->addUseStatement($this->getInterfaceName($arg, $type));
-                    $shortClassName = $this->getShortInterfaceName($arg, $type);
-                    $propertyName = lcfirst($shortClassName);
-                    $methodArguments[] = $shortClassName." $".$propertyName;
-                } elseif (strpos($type, "\\")) {
-                    $this->addUseStatement($type);
-                    $classNameArray = explode("\\", $type);
-                    $type = array_pop($classNameArray);
-                    $propertyName = lcfirst($type);
-                    $methodArguments[] = $type." $".$propertyName;
-                }  else {
-                    $methodArguments[] = $type." $".$this->underscoreAndHyphenToCamelCase($arg);
-                }
-            }
-            $returns = $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
-
-            if (!is_array($returns)) {
-                $returns = [$returns];
-            }
-            $returnTypes = [];
-
-            foreach ($returns as $name => $returnType) {
-                if ($returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
-                    $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-                    $shortClassName = $this->getShortInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
-                    $returnTypes[] = $shortClassName;
-                } elseif (strpos($returnType, "\\")) {
-                    $this->addUseStatement($returnType);
-                    $classNameArray = explode("\\", $returnType);
-                    $returnTypes[] = array_pop($classNameArray);
-                } else {
-                    $returnTypes[] = $returnType;
-                }
-            }
-            $methodComment = sprintf("%s %s in Storage.", ucfirst($methodName), $shortClassName);
-            $methods[] = $this->renderMethod(
-                self::METHOD_TEMPLATE_TYPE_INTERFACE,
-                $methodComment,
-                $this->underscoreAndHyphenToCamelCase($methodName),
-                implode(", ", $methodArguments),
-                implode("|", $returnTypes),
-                "",
-                "",
-                [],
-                true
-            );
+        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $commandMethodName => $structure) {
+            $methods[] = $this->renderInterfaceMethod($commandMethodName, $structure);
         }
 
         return $this->renderInterface(
@@ -145,5 +51,124 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
             $this->useStatement,
             $methods
         );
+    }
+    
+    protected function renderInterfaceMethod(string|int $commandMethodName, array|string $structure): string
+    {
+        if (!is_array($structure)) {
+            if (is_numeric($commandMethodName)) {
+                $commandMethodName = $structure;
+            }
+            $methodName = $structure;
+
+            if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
+                $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandMethodName];
+            } else {
+                $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$commandMethodName];
+                
+                if (isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$commandMethodName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
+                    $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_APPLICATION][DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$commandMethodName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
+                }
+            }
+        }
+        if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
+            $methodName = $this->getReadModelRepositoryMethodName($commandMethodName);
+        } elseif ($this->name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
+            $methodName = $this->getQueryRepositoryMethodName($methodName, $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]);
+        }
+        if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
+            throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $commandMethodName));
+        }
+        if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
+            $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
+            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
+        }
+        $methodArguments = [];
+        $methodComment = "";
+
+        foreach ($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
+            $methodArgument = $this->processMethodArgument($arg, $type);
+
+            if (!$methodArgument) {
+                continue;
+            }
+            $methodArguments[] = $methodArgument;
+        }
+        $returns = $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
+
+        if (!is_array($returns)) {
+            $returns = [$returns];
+        }
+        $returnTypes = [];
+        $methodComment = "";
+
+        foreach ($returns as $name => $returnType) {
+            if ($returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
+                $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+                $shortClassName = $this->getShortInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+                $returnTypes[] = $shortClassName;
+            } elseif (strpos($returnType, "\\")) {
+                $this->addUseStatement($returnType);
+                $classNameArray = explode("\\", $returnType);
+                $returnTypes[] = array_pop($classNameArray);
+            } else {
+                $returnTypes[] = $returnType;
+            }
+        }
+        //$methodComment = sprintf("%s %s in Storage.", ucfirst($methodName), $shortClassName);
+        
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_INTERFACE,
+            $methodComment,
+            $this->underscoreAndHyphenToCamelCase($methodName),
+            implode(", ", $methodArguments),
+            implode("|", $returnTypes),
+            "",
+            "",
+            [],
+            true
+        );
+    }
+    
+    protected function processMethodArgument(string|int $arg, string $type): ?string
+    {
+        if (is_numeric($arg)) {
+            $arg = $type;
+            $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
+        }
+        if ($type === DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT) {
+            $shortClassName = $this->getValueObjectShortClassName($arg);
+
+            if (
+                $this->type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
+                $this->name === DataTypeInterface::STRUCTURE_TYPE_QUERY &&
+                $shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID
+            ) {
+                return null;
+            }
+            $className = $this->getValueObjectClassName($arg);
+            $this->addUseStatement($className);
+            $propertyName = lcfirst($shortClassName);
+            $methodArgument = $shortClassName." $".$propertyName;
+        } elseif (
+            $type === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
+            $type === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+        ) {
+            $this->addUseStatement($this->getInterfaceName($arg, $type));
+            $shortClassName = $this->getShortInterfaceName($arg, $type);
+            $propertyName = lcfirst($shortClassName);
+            $methodArgument = $shortClassName." $".$propertyName;
+        } elseif (strpos($type, "\\")) {
+            $this->addUseStatement($type);
+            $classNameArray = explode("\\", $type);
+            $type = array_pop($classNameArray);
+            $propertyName = lcfirst($type);
+            $methodArgument = $type." $".$propertyName;
+        }  else {
+            $methodArgument = $type." $".$this->underscoreAndHyphenToCamelCase($arg);
+        }
+
+        return $methodArgument;
     }
 }
