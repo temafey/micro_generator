@@ -52,11 +52,14 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
         } else {
             $this->addUseStatement($classNamespace."\\"."CommandHandlerInterface");
         }
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag");
+
         $extends = "";
         $implements[] = "CommandHandlerInterface";
         $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND));
         $methods[] = $this->renderConstructMethod();
         $methods[] = $this->renderHandleMethod();
+        $attributes = $this->renderAutowiringAttributes();
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_FULL,
@@ -66,8 +69,23 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
             $implements,
             $useTraits,
             $this->properties,
-            $methods
+            $methods,
+            [],
+            $attributes
         );
+    }
+
+    protected function renderAutowiringAttributes(): array
+    {
+        $attributes = [];
+        $attributes[] = sprintf("#[AutoconfigureTag(%s: '%s', attributes: [\n\t'command' => '%s',\n\t'bus' => '%s'\n])]",
+            "name",
+            "tactician.handler",
+            $this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND),
+            "command.".lcfirst($this->domainName)
+        );
+        
+        return $attributes;
     }
 
     protected function renderConstructMethod(): string
@@ -85,20 +103,16 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
             $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY],
             DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK)
         );
-        $propertyComment = sprintf("%s object.", ucfirst($propertyName));
-        $this->addProperty(
-            $propertyName,
-            $shortClassName,
-            $propertyComment
-        );
-        $this->constructArguments[] = $shortClassName." $".$propertyName;
-        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        //$propertyComment = sprintf("%s object.", ucfirst($propertyName));
+        //$this->addProperty($propertyName, $shortClassName, $propertyComment);
+        $this->constructArguments[] = "protected ".$shortClassName." $".$propertyName;
+        //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $this->constructArguments),
+            "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
             implode("", $this->constructArgumentsAssignment),
             ""

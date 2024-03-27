@@ -32,7 +32,6 @@ class TaskGenerator extends AbstractGenerator
      */
     public function generate(): ?string
     {
-        $extends = "";
         $implements = [];
         $useTraits = [];
         $methods = [];
@@ -40,14 +39,13 @@ class TaskGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($interfaceNamespace);
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\TaskException");
-        $this->addUseStatement("Enqueue\Client\ProducerInterface");
-        $this->addUseStatement("MicroModule\Task\Application\Processor\JobCommandBusProcessor");
-        $this->addUseStatement($this->getInterfaceName($this->domainName."Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\TaskRepository as BaseTaskRepository");
+        $this->addUseStatement($this->getInterfaceName("Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $interfaceShortName;
         $addVar = [
             "TaskException" => "TaskException",
         ];
+        $extends = "BaseTaskRepository";
 
         foreach ($this->structure as $entityName => $commands) {
             foreach ($commands as $commandName => $command) {
@@ -91,7 +89,7 @@ class TaskGenerator extends AbstractGenerator
         $returnType = "";
         $return = "";
         $entityName = $structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-        $shortCommandFactoryInterfaceName = $this->getShortInterfaceName($this->domainName."Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY);
+        $shortCommandFactoryInterfaceName = $this->getShortInterfaceName("Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY);
         $addVar["factoryCommandName"] = sprintf("%s::%s", $shortCommandFactoryInterfaceName, $this->getCommandFactoryConst($commandName));
         $addVar["commandArguments"] = implode(",\n\t\t\t\t", $commandArguments);
         $commandName = ucfirst($this->underscoreAndHyphenToCamelCase($commandName));

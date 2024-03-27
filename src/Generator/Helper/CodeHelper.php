@@ -272,8 +272,14 @@ trait CodeHelper
                 $type
             );
         }
-        
-        if (in_array($type, DataTypeInterface::STRUCTURE_FACTORY_DATA_TYPES)) {
+
+        if (
+            in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES) &&
+            (
+                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK &&
+                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE
+            )
+        ) {
             return $layerNamespace."\\".ucfirst(DataTypeInterface::STRUCTURE_TYPE_FACTORY);
         }
         $namespace = $layerNamespace."\\".ucfirst($this->underscoreAndHyphenToCamelCase($type));
@@ -333,7 +339,13 @@ trait CodeHelper
             $namespace .= "\\".ucfirst($name);
         }
 
-        if (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
+        if (
+            in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES) &&
+            (
+                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK &&
+                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE
+            )
+        ) {
             if (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type])) {
                 $type = DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type];
             } 

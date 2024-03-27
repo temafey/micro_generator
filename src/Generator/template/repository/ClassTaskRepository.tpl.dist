@@ -12,22 +12,5 @@ namespace {namespace};
  */
 class {className}{extends}{implements}
 {
-    protected const KEY_MESSAGE_TYPE = 'type';
-    protected const KEY_MESSAGE_ARGS = 'args';
-
-    public function __construct(protected ProducerInterface $taskProducer)
-    {
-    }
-
-    protected function produce(string $type, array $args): void
-    {
-        $this->taskProducer->sendCommand(
-            JobCommandBusProcessor::getRoute(),
-            [
-                static::KEY_MESSAGE_TYPE => $type,
-                static::KEY_MESSAGE_ARGS => $args,
-            ]
-        );
-    }
 {methods}
 }
