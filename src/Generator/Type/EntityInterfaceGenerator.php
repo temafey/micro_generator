@@ -35,6 +35,8 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
+        $extends = "EntityInterface";
+        $this->addUseStatement("MicroModule\Common\Domain\Entity\EntityInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
     
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
@@ -62,7 +64,8 @@ class EntityInterfaceGenerator extends AbstractGenerator
             self::INTERFACE_TEMPLATE_TYPE_DEFAULT,
             $interfaceNamespace,
             $this->useStatement,
-            $methods
+            $methods,
+            $extends
         );
     }
 
@@ -101,19 +104,18 @@ class EntityInterfaceGenerator extends AbstractGenerator
             if ($arg === self::KEY_UNIQUE_UUID) {
                 continue;
             }
-            $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $shortClassName = $this->getValueObjectShortClassName($arg);
+            $className = $this->getValueObjectClassName($arg);
+            $this->addUseStatement($className);
             $propertyName = lcfirst($shortClassName);
             $commandArguments[] = $shortClassName." $".$propertyName;
         }
 
-        return $this->renderMethod(
-            self::METHOD_TEMPLATE_TYPE_INTERFACE,
+        return $this->renderMethodInterface(
             $methodComment,
             $methodName,
             implode(", ", $commandArguments),
-            "",
-            "",
-            ""
+            "void"
         );
     }
 }

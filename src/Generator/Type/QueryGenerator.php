@@ -60,9 +60,9 @@ class QueryGenerator extends AbstractGenerator
             $methods[] = $renderedMethod;
         }
 
-        if (!empty($this->constructArgumentsAssignment)) {
-            $methodLogic = implode("", $this->constructArgumentsAssignment);
-            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid);";
+        if (!empty($this->constructArguments)) {
+            //$methodLogic = implode("", $this->constructArgumentsAssignment);
+            $methodLogic = "\r\n\t\tparent::__construct(\$processUuid);";
             array_unshift(
                 $methods, $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_DEFAULT,
@@ -95,13 +95,15 @@ class QueryGenerator extends AbstractGenerator
         $shortClassName = $this->getValueObjectShortClassName($arg);
         $propertyName = lcfirst($shortClassName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
-        $this->constructArguments[] = $shortClassName." $".$propertyName;
 
         if ($this->useCommonComponent && $arg === static::KEY_UNIQUE_PROCESS_UUID) {
+            $this->constructArguments[] = sprintf("\n\t\t%s $%s", $shortClassName, $propertyName);
             return null;
+        } else {
+            $this->constructArguments[] = sprintf("\n\t\tprotected %s $%s", $shortClassName, $propertyName);
         }
-        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
-        $this->addProperty($propertyName, $shortClassName, $methodComment);
+        ///$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        //$this->addProperty($propertyName, $shortClassName, $methodComment);
         $methodName = "get".$shortClassName;
 
         return $this->renderMethod(

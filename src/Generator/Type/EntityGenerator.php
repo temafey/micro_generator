@@ -42,16 +42,12 @@ class EntityGenerator extends AbstractGenerator
         $this->addUseStatement("Broadway\EventSourcing\EventSourcedAggregateRoot");
         $this->addUseStatement("Broadway\Serializer\Serializable");
         $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Snapshotting\EventSourcing\AggregateAssemblerInterface");
-        $this->addUseStatement("MicroModule\Common\Domain\Entity\EntityInterface");
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
         $this->addUseStatement($this->getClassName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $this->addUseStatement($this->getInterfaceName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $shortClassName."Interface";
-        $implements[] = "EntityInterface";
-        $implements[] = "AggregateAssemblerInterface";
         $implements[] = "Serializable";
         $extends = "EventSourcedAggregateRoot";
         $this->addProperty("eventFactory", "EventFactoryInterface", "EventFactory object.");
@@ -146,6 +142,8 @@ class EntityGenerator extends AbstractGenerator
 
         foreach ($commandArgs as $arg) {
             $shortClassName = $this->getValueObjectShortClassName($arg);
+            $className = $this->getValueObjectClassName($arg);
+            $this->addUseStatement($className);
             $propertyName = lcfirst($shortClassName);
 
             if ($shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID) {

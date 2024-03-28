@@ -58,7 +58,7 @@ class CommandGenerator extends AbstractGenerator
             $methods[] = $renderedMethod;
         }
 
-        if (!empty($this->constructArgumentsAssignment)) {
+        if (!empty($this->constructArguments)) {
             $methodLogic = implode("", $this->constructArgumentsAssignment);
             $uuidArgument = $this->constructArgumentUuidExists ? "\$uuid" : "null";
             $methodLogic .= sprintf("\r\n\t\tparent::__construct(\$processUuid, %s);", $uuidArgument);
@@ -95,15 +95,17 @@ class CommandGenerator extends AbstractGenerator
         $this->addUseStatement($this->getValueObjectClassName($arg));
         $shortClassName = $this->getValueObjectShortClassName($arg);
         $propertyName = lcfirst($shortClassName);
-        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         $propertyComment = sprintf("%s value object.", $shortClassName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
-        $this->constructArguments[] = $shortClassName." $".$propertyName;
 
         if ($this->useCommonComponent && in_array($arg, self::UNIQUE_KEYS)) {
+            $this->constructArguments[] = sprintf("\n\t\t%s $%s", $shortClassName, $propertyName);
             return null;
+        } else {
+            $this->constructArguments[] = sprintf("\n\t\tprotected %s $%s", $shortClassName, $propertyName);
         }
-        $this->addProperty($propertyName, $shortClassName, $propertyComment);
+        //$this->addProperty($propertyName, $shortClassName, $propertyComment);
         $methodName = "get".$shortClassName;
 
         return $this->renderMethod(
