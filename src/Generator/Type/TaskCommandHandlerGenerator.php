@@ -56,7 +56,7 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
 
         $extends = "";
         $implements[] = "CommandHandlerInterface";
-        $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND));
+        $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK));
         $methods[] = $this->renderConstructMethod();
         $methods[] = $this->renderHandleMethod();
         $attributes = $this->renderAutowiringAttributes();
@@ -81,7 +81,7 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
         $attributes[] = sprintf("#[AutoconfigureTag(%s: '%s', attributes: [\n\t'command' => '%s',\n\t'bus' => '%s'\n])]",
             "name",
             "tactician.handler",
-            $this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND),
+            $this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK),
             "command.".lcfirst($this->domainName)
         );
         
@@ -122,7 +122,7 @@ class TaskCommandHandlerGenerator extends AbstractGenerator
     protected function renderHandleMethod(): string
     {
         $commandStructure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$this->name];
-        $commandShortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND);
+        $commandShortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK);
         $commandPropertyName = lcfirst($commandShortClassName);
         $repositoryShortName = lcfirst($this->getShortClassName($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY], DataTypeInterface::STRUCTURE_TYPE_REPOSITORY));
         $propertyName = lcfirst($this->getShortClassName(
