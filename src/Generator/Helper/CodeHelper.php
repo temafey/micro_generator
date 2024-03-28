@@ -6,16 +6,10 @@ namespace MicroModule\MicroserviceGenerator\Generator\Helper;
 
 use League\Tactician\CommandBus;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
-use MicroModule\MicroserviceGenerator\Generator\Exception\CodeExtractException;
-use MicroModule\MicroserviceGenerator\Generator\Exception\FileNotExistsException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\GeneratorException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
 use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use Nette\Utils\Strings;
-use PhpParser\{Node\Stmt\ClassMethod, ParserFactory, Node, NodeFinder};
-use ReflectionClass;
-use ReflectionException;
-use ReflectionMethod;
 
 
 /**
@@ -260,29 +254,19 @@ trait CodeHelper
         $layerNamespace = $this->getLayerNamespace($type);
 
         if (in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES)) {
-            $layerNamespace .= "\\".ucfirst(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
-
-            if (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type])) {
-                $type = DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type];
-            }
+            $layerFolder = ucfirst(DataTypeInterface::STRUCTURE_TYPE_REPOSITORY);
         } else {
-            $type = str_replace(
+            $layerFolder = ucfirst($this->underscoreAndHyphenToCamelCase(str_replace(
                 ["Interface", "taskCommandHandler", "taskCommand", "dtoFactory"],
                 ["", "commandHandler\Task", "command\Task", "Factory"],
-                $type
-            );
+                $type)
+            ));
         }
 
-        if (
-            in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES) &&
-            (
-                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK &&
-                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE
-            )
-        ) {
+        if (in_array($type, DataTypeInterface::STRUCTURE_FACTORY_DATA_TYPES)) {
             return $layerNamespace."\\".ucfirst(DataTypeInterface::STRUCTURE_TYPE_FACTORY);
         }
-        $namespace = $layerNamespace."\\".ucfirst($this->underscoreAndHyphenToCamelCase($type));
+        $namespace = $layerNamespace.'\\'.$layerFolder;
 
         if (
             (
@@ -298,7 +282,20 @@ trait CodeHelper
         ) {
             $namespace .= "\\".ucfirst($name);
         }
-        
+
+        if (
+            in_array($type, DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES) &&
+            (
+                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK &&
+                $type !== DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_TASK_INTERFACE
+            )
+        ) {
+            if (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type])) {
+                $type = DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type];
+            }
+            $namespace .= "\\".ucfirst($type);
+        }
+
         return $namespace;
     }
 
