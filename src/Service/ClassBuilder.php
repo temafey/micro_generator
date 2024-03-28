@@ -16,7 +16,7 @@ use PHPUnit\Exception;
  *
  * @SuppressWarnings(PHPMD)
  */
-class ClassBuilder
+class ClassBuilder implements ClassBuilderInterface
 {
     use CodeHelper;
 

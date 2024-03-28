@@ -6,7 +6,7 @@ namespace MicroModule\MicroserviceGenerator\Service;
 
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
 
-interface ProjectBuilderInterface
+interface ClassBuilderInterface
 {
     /**
      * Generate test.
@@ -22,6 +22,7 @@ interface ProjectBuilderInterface
      * @throws InvalidClassTypeException
      */
     public function generate(
+        string $domainName,
         string $layer,
         string $type,
         string $name,
