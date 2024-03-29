@@ -26,7 +26,7 @@ interface GeneratorInterface
     public const UNIQUE_KEYS = [
         self::KEY_UNIQUE_PROCESS_UUID,
         self::KEY_UNIQUE_UUID,
-        self::KEY_UNIQUE_ID
+        //self::KEY_UNIQUE_ID,
     ];
 
     public const COMMON_VALUE_OBJECT_KEYS = [
