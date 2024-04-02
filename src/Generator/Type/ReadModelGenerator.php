@@ -6,6 +6,7 @@ namespace MicroModule\MicroserviceGenerator\Generator\Type;
 
 use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
+use MicroModule\MicroserviceGenerator\Generator\Exception\ValueObjectNotFoundException;
 use MicroModule\MicroserviceGenerator\Generator\Helper\ReturnTypeNotFoundException;
 use Exception;
 use ReflectionException;
@@ -47,25 +48,32 @@ class ReadModelGenerator extends AbstractGenerator
         $this->addUseStatement("Doctrine\ORM\Mapping\Id");
         $this->addUseStatement("Doctrine\ORM\Mapping\Table");
         $additionalVariables = [];
-        $additionalVariables["tableName"] = $this->name;
+        $additionalVariables["tableName"] = str_replace("-", "_", $this->name);
         $implements[] = $shortClassName."Interface";
 
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
             throw new Exception(sprintf("ValueObject '%s' for entity was not found!", $this->name));
         }
+        $readModelProperties = $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] ?? $this->structure;
+        $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $this->name;
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-        $this->addUseStatement($this->getInterfaceName($this->name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+        $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+        $this->addUseStatement($this->getInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
         $methods[] = $this->renderValueObjectGetMethod(self::KEY_UNIQUE_UUID);
 
-        foreach ($entityValueObject as $valueObject) {
-            if ($valueObject === self::KEY_UNIQUE_UUID) {
+        foreach ($readModelProperties as $property) {
+            if ($property === self::KEY_UNIQUE_UUID) {
                 continue;
             }
-            $methods[] = $this->renderGetMethod($valueObject);
+            if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$property])) {
+                throw new ValueObjectNotFoundException(sprintf("Value object '%s' from read model '%s' not found!", $property, $this->name));
+            }
+            $methods[] = $this->renderGetMethod($property);
         }
-        $methods[] = $this->renderAssembleFromValueObjectMethod();
-        $methods[] = $this->renderToArrayMethod();
+        $methods[] = $this->renderAssembleFromValueObjectMethod($readModelProperties, $entityName);
+        $methods[] = $this->renderToArrayMethod($readModelProperties);
+        $additionalVariables["shortEntityInterfaceName"] = $this->getShortInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables["shortValueObjectName"] = $this->getValueObjectShortClassName($entityName);
 
         return $this->renderClass(
             self::CLASS_TEMPLATE_TYPE_READ_MODEL,
@@ -160,6 +168,11 @@ class ReadModelGenerator extends AbstractGenerator
             $name === self::KEY_UNIQUE_UUID
         ) {
             $type = "guid";
+            $options["type"] = DataTypeInterface::DATA_ORM_TYPE_UUID_BINARY_ORDERED_TIME;
+            $this->addUseStatement("Doctrine\ORM\Mapping\GeneratedValue");
+            $this->addUseStatement("Doctrine\ORM\Mapping\CustomIdGenerator");
+            //$this->addUseStatement("Ramsey\Uuid\Doctrine\UuidGenerator");
+            $this->addUseStatement("Ramsey\Uuid\Doctrine\UuidOrderedTimeGenerator");
         }
         
         if (in_array($name, self::UNIQUE_KEYS)) {
@@ -189,24 +202,29 @@ class ReadModelGenerator extends AbstractGenerator
             $propertyAnnotation = "#[Id]\n\t";
         }
         $propertyAnnotation .= sprintf("#[Column(\n\t\t%s\n\t)]", implode(",\n\t\t", $optionArray));
+
+        if ($idFlag) {
+            $propertyAnnotation .= "\n\t#[GeneratedValue(strategy: \"CUSTOM\")]";
+            $propertyAnnotation .= "\n\t#[CustomIdGenerator(class: UuidOrderedTimeGenerator::class)]";
+        }
         
         return $propertyAnnotation;
     }
     
-    protected function renderAssembleFromValueObjectMethod(): string
+    protected function renderAssembleFromValueObjectMethod(array $readModelProperties, string $entityName): string
     {
-        $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+        $shortClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $methodLogic = sprintf("\r\n\t\tif (!\$valueObject instanceof %s) {", $shortClassName);
         $methodLogic .= sprintf("\r\n\t\t\tthrow new ValueObjectInvalidException('%sEntity can be assembled only with %s value object');", $shortClassName, $shortClassName);
         $methodLogic .= "\r\n\t\t}";
         $methodLogic .= "\r\n\t\t\$this->uuid = \$uuid;";
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
 
-        foreach ($entityValueObject as $valueObject) {
-            if ($valueObject === self::KEY_UNIQUE_UUID) {
+        foreach ($readModelProperties as $property) {
+            if ($property === self::KEY_UNIQUE_UUID) {
                 continue;
             }
-            $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $shortClassName = $this->getShortClassName($property, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
             $varName = lcfirst($shortClassName);
             $methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$valueObject->%s()) {", $methodName);
@@ -225,25 +243,23 @@ class ReadModelGenerator extends AbstractGenerator
         );
     }
 
-    protected function renderToArrayMethod(): string
+    protected function renderToArrayMethod(array $readModelProperties): string
     {
         $methodLogic = "\r\n\t\t\$data = [];";
-        $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
 
-        foreach ($entityValueObject as $valueObject) {
+        foreach ($readModelProperties as $property) {
             /*if ($valueObject === self::KEY_UNIQUE_UUID) {
                 continue;
             }*/
-            $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
+            $shortClassName = $this->getShortClassName($property, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $propertyName = lcfirst($shortClassName);
             //$methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s) {", $propertyName);
-            $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
+            $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$property]['type']);
             
             if ($scalarType === DataTypeInterface::DATA_SCALAR_TYPE_DATETIME) {
                 $propertyName .= "->format(\DateTime::ATOM)";
             }
-            $methodLogic .= sprintf("\r\n\t\t\t\$data[\"%s\"] = \$this->%s;", $valueObject, $propertyName);
+            $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s;", $property, $propertyName);
             //$methodLogic .= "\r\n\t\t}";
         }
 

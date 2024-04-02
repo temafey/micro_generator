@@ -67,7 +67,8 @@ class ReadModelGenerator extends AbstractGenerator
     {
         $shortEntityClassName = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
         $additionalVariables = [];
-        $additionalVariables['modelName'] = ucfirst($modelName);
+        $additionalVariables['modelName'] = ucfirst($this->underscoreAndHyphenToCamelCase($modelName));
+        $additionalVariables['shortEntityName'] = $shortEntityClassName;
         $additionalVariables['shortValueObjectName'] = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $additionalVariables['propertyValueObjectName'] = lcfirst($additionalVariables['shortValueObjectName']);
         $additionalVariables['shortReadModelInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
@@ -90,7 +91,8 @@ class ReadModelGenerator extends AbstractGenerator
     {
         $shortEntityClassName = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
         $additionalVariables = [];
-        $additionalVariables['modelName'] = ucfirst($modelName);
+        $additionalVariables['modelName'] = ucfirst($this->underscoreAndHyphenToCamelCase($modelName));
+        $additionalVariables['shortEntityName'] = $shortEntityClassName;
         $additionalVariables['shortValueObjectName'] = $this->getShortClassName($modelName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $additionalVariables['propertyValueObjectName'] = lcfirst($additionalVariables['shortValueObjectName']);
         $additionalVariables['shortReadModelInterfaceName'] = $this->getShortInterfaceName($modelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);

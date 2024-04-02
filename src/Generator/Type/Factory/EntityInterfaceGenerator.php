@@ -59,7 +59,7 @@ class EntityInterfaceGenerator extends AbstractGenerator
     {
         $shortEntityClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
         $additionalVariables = [];
-        $additionalVariables['entityName'] = ucfirst($entityName);
+        $additionalVariables['entityName'] = ucfirst($this->underscoreAndHyphenToCamelCase($entityName));
         $additionalVariables['shortValueObjectName'] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
         $additionalVariables['shortEntityName'] = $shortEntityClassName;
@@ -79,7 +79,7 @@ class EntityInterfaceGenerator extends AbstractGenerator
     {
         $shortEntityClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
         $additionalVariables = [];
-        $additionalVariables['entityName'] = ucfirst($entityName);
+        $additionalVariables['entityName'] = ucfirst($this->underscoreAndHyphenToCamelCase($entityName));
         $additionalVariables['shortValueObjectName'] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
         $additionalVariables['shortEntityName'] = $shortEntityClassName;

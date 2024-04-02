@@ -51,7 +51,7 @@ class ProjectorGenerator extends AbstractGenerator
                 $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getInterfaceName($arg, $type) : $this->getClassName($arg, $type);
                 $this->addUseStatement($className);
                 $propertyType = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
-                $propertyName = lcfirst($this->getShortClassName($arg, $type));
+                $propertyName = $type;
                 $autowiring = $this->getAutowiringName($className);
             } elseif (strpos("\\", $type) !== false) {
                 $arg = $type;

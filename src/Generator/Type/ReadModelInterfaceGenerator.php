@@ -6,6 +6,7 @@ namespace MicroModule\MicroserviceGenerator\Generator\Type;
 
 use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
+use MicroModule\MicroserviceGenerator\Generator\Exception\ValueObjectNotFoundException;
 use MicroModule\MicroserviceGenerator\Generator\Helper\ReturnTypeNotFoundException;
 use Exception;
 use ReflectionException;
@@ -35,6 +36,7 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
+        $additionalVariables = [];
         $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
         $this->addUseStatement("MicroModule\Common\Domain\ReadModel\ReadModelInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
@@ -42,24 +44,31 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
             throw new Exception(sprintf("ValueObject '%s' for entity was not found!", $this->name));
         }
-        $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        $this->addUseStatement($this->getClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-        $this->addUseStatement($this->getInterfaceName($this->name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
+        $readModelProperties = $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] ?? $this->structure;
+        $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $this->name;
+        $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
+        $this->addUseStatement($this->getInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
         $methods[] = $this->renderValueObjectGetMethod(self::KEY_UNIQUE_UUID);
 
-        foreach ($entityValueObject as $valueObject) {
-            if ($valueObject === self::KEY_UNIQUE_UUID) {
+        foreach ($readModelProperties as $property) {
+            if ($property === self::KEY_UNIQUE_UUID) {
                 continue;
             }
-            $methods[] = $this->renderGetMethod($valueObject);
+            if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$property])) {
+                throw new ValueObjectNotFoundException(sprintf("Value object '%s' from read model '%s' not found!", $property, $this->name));
+            }
+            $methods[] = $this->renderGetMethod($property);
         }
+        $additionalVariables["shortEntityInterfaceName"] = $this->getShortInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        $additionalVariables["shortValueObjectName"] = $this->getValueObjectShortClassName($entityName);
 
         return $this->renderInterface(
             self::CLASS_TEMPLATE_TYPE_READ_MODEL_INTERFACE,
             $interfaceNamespace,
             $this->useStatement,
             $methods,
-            "ReadModelInterface"
+            "ReadModelInterface",
+            $additionalVariables
         );
     }
 

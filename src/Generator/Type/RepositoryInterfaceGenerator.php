@@ -19,6 +19,8 @@ use ReflectionException;
  */
 class RepositoryInterfaceGenerator extends AbstractGenerator
 {
+    protected array $methods = [];
+    
     /**
      * Generate test class code.
      *
@@ -42,7 +44,10 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
 
         foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $commandMethodName => $structure) {
-            $methods[] = $this->renderInterfaceMethod($commandMethodName, $structure);
+            if (null === $method = $this->renderInterfaceMethod($commandMethodName, $structure)) {
+                continue;
+            }
+            $methods[] = $method;
         }
 
         return $this->renderInterface(
@@ -53,7 +58,7 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         );
     }
     
-    protected function renderInterfaceMethod(string|int $commandMethodName, array|string $structure): string
+    protected function renderInterfaceMethod(string|int $commandMethodName, array|string $structure): ?string
     {
         if (!is_array($structure)) {
             if (is_numeric($commandMethodName)) {
@@ -79,6 +84,11 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
             throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $commandMethodName));
         }
+        if (in_array($methodName, $this->methods)) {
+            return null;
+        }
+        $this->methods[] = $methodName;
+        
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
             $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
             $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);

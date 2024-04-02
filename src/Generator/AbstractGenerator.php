@@ -77,8 +77,10 @@ abstract class AbstractGenerator implements GeneratorInterface
     public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";
     public const METHOD_TYPE_FIND_ONE                       = "findOne";
     public const METHOD_TYPE_FETCH_ONE                      = "fetchOne";
+    public const METHOD_TYPE_FETCH_ONE_U                    = "fetch-one";
     public const METHOD_TYPE_FETCH                          = "fetch";
     public const METHOD_TYPE_FIND_BY_CRITERIA               = "findByCriteria";
+    public const METHOD_TYPE_FIND_BY_CRITERIA_U             = "find-by-criteria";
     public const METHOD_TYPE_FIND                           = "find";
     public const METHOD_TYPE_FIND_ALL                       = "findAll";
 

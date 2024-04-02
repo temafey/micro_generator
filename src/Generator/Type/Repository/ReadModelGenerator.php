@@ -33,6 +33,8 @@ class ReadModelGenerator extends AbstractGenerator
           "findOne", "fetch",
         ],
     ];
+    
+    protected array $methods = [];
 
     /**
      * Generate test class code.
@@ -81,6 +83,11 @@ class ReadModelGenerator extends AbstractGenerator
                 $type = DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT;
             }
             $methodName = $this->getReadModelRepositoryMethodName($methodName);
+
+            if (in_array($methodName, $this->methods)) {
+                continue;
+            }
+            $this->methods[] = $methodName;
             $methods[] = $this->renderStructureMethod($methodName, $structure, $addVar);
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);

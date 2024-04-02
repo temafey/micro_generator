@@ -47,8 +47,11 @@ interface DataTypeInterface
     public const DATA_ORM_TYPE_FLOAT = "float";
     public const DATA_ORM_TYPE_JSON = "json";
     public const DATA_ORM_TYPE_STRING = "string";
-    public const DATA_ORM_TYPE_BOOL = "bool";
+    public const DATA_ORM_TYPE_BOOL = "boolean";
     public const DATA_ORM_TYPE_DATETIME = "datetime";
+    public const DATA_ORM_TYPE_UUID = "uuid";
+    public const DATA_ORM_TYPE_UUID_BINARY = "uuid_binary";
+    public const DATA_ORM_TYPE_UUID_BINARY_ORDERED_TIME = "uuid_binary_ordered_time";
 
     public const STRUCTURE_TYPE_COMMAND = "command";
     public const STRUCTURE_TYPE_COMMAND_HANDLER = "commandHandler";
@@ -105,6 +108,7 @@ interface DataTypeInterface
     public const VALUE_OBJECT_TYPE_STRING = "stringLiteral_stringLiteral";
     public const VALUE_OBJECT_TYPE_NUMBER_INTEGER = "number_integer";
     public const VALUE_OBJECT_TYPE_NUMBER_REAL = "number_real";
+    public const VALUE_OBJECT_TYPE_LOGICAL_BOOL = "logical_boolean";
     public const VALUE_OBJECT_TYPE_STRUCTURE_COLLECTION = "structure_collection";
     public const VALUE_OBJECT_TYPE_STRUCTURE_DICTIONARY = "structure_dictionary";
     public const VALUE_OBJECT_TYPE_STRUCTURE_KEYVALUE = "structure_keyvalue";
@@ -184,6 +188,7 @@ interface DataTypeInterface
          self::VALUE_OBJECT_TYPE_PERSON_NAME => self::DATA_SCALAR_TYPE_STRING,
          self::VALUE_OBJECT_TYPE_ENTITY => self::DATA_SCALAR_TYPE_ARRAY,
          self::VALUE_OBJECT_TYPE_FIND_CRITERIA => self::DATA_SCALAR_TYPE_ARRAY,
+         self::VALUE_OBJECT_TYPE_LOGICAL_BOOL => self::DATA_SCALAR_TYPE_BOOL,
     ];
 
     public const DATA_ORM_TYPE_SCALAR_MAPPING = [
@@ -194,6 +199,7 @@ interface DataTypeInterface
          self::DATA_SCALAR_TYPE_STRING => self::DATA_ORM_TYPE_STRING,
          self::DATA_SCALAR_TYPE_BOOL => self::DATA_ORM_TYPE_BOOL,
          self::DATA_SCALAR_TYPE_DATETIME => self::DATA_ORM_TYPE_DATETIME,
+         self::DATA_TYPE_UUID => self::DATA_ORM_TYPE_UUID_BINARY,
     ];
 
     public const STRUCTURE_REPOSITORY_DATA_TYPES = [

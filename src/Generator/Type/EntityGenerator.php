@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MicroModule\MicroserviceGenerator\Generator\Type;
 
+use ast\Metadata;
 use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Exception\CommandNotFoundException;
@@ -84,7 +85,7 @@ class EntityGenerator extends AbstractGenerator
             $methods[] = $commandMethod;
             array_push($methods,  ...$applyMethods);
         }
-        $methods[] = $this->renderCreateMethod();
+        $methods[] = $this->renderCreateMethod($entityValueObject);
         $methods[] = $this->renderCreateActualMethod();
         $methods[] = $this->renderDeserializeMethod();
         $methods[] = $this->renderAssembleFromValueObjectMethod();
@@ -224,7 +225,7 @@ class EntityGenerator extends AbstractGenerator
         return [$applyEvents, $applyMethods];
     }
 
-    protected function renderCreateMethod(): string
+    protected function renderCreateMethod(array $entityValueObject): string
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
@@ -247,7 +248,16 @@ class EntityGenerator extends AbstractGenerator
         }
         $methodLogic .= "\r\n\t\t\$entity->uuid = \$uuid;";
         $firstMethodName = $this->underscoreAndHyphenToCamelCase($firstCommand);
-        $methodLogic .= "\r\n\t\t".sprintf("\$entity->%s(\$processUuid, \$%s);", $firstMethodName, lcfirst($shortClassName));
+
+        if (in_array(self::KEY_CREATED_AT, $entityValueObject)) {
+            $methodLogic .= "\r\n\t\t\$entity->createdAt = CreatedAt::now();";
+        }
+        if (in_array(self::KEY_UPDATED_AT, $entityValueObject)) {
+            $methodLogic .= "\r\n\t\t\$entity->updatedAt = UpdatedAt::now();";
+        }
+        if ($this->structure) {
+            $methodLogic .= "\r\n\t\t".sprintf("\$entity->%s(\$processUuid, \$%s);", $firstMethodName, lcfirst($shortClassName));
+        }
 
         if (!$uuidExists) {
             $shortClassName = $this->getValueObjectShortClassName(self::KEY_UNIQUE_UUID);

@@ -626,6 +626,7 @@ trait CodeHelper
     protected function getQueryRepositoryMethodName(string $methodName, string $entityName = null): string
     {
         $methodName = $this->underscoreAndHyphenToCamelCase($methodName);
+        $entityName = $this->underscoreAndHyphenToCamelCase($entityName);
         $methodName = str_ireplace($entityName, "", $methodName);
 
         switch ($methodName) {

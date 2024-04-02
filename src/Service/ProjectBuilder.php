@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace MicroModule\MicroserviceGenerator\Service;
 
 use Exception;
+use MicroModule\Common\Infrastructure\Service\Utils\DeclarationLocator;
+use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
+use MicroModule\MicroserviceGenerator\Generator\Exception\CommandNotFoundException;
+use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\CodeHelper;
 
 /**
@@ -80,18 +84,18 @@ class ProjectBuilder implements ProjectBuilderInterface
         if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT])) {
             throw new Exception('no value-object section');
         }
-        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
-            throw new Exception('no commands section');
-        }
+//        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
+//            throw new Exception('no commands section');
+//        }
 //        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY])) {
 //            throw new Exception('no repositories section');
 //        }
-        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER])) {
-            $domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] = [];
-        }
-        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER])) {
-            $domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER] = [];
-        }
+//        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER])) {
+//            $domainStructure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] = [];
+//        }
+//        if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER])) {
+//            $domainStructure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER] = [];
+//        }
         if (!isset($domainStructure[DataTypeInterface::STRUCTURE_TYPE_SAGA])) {
             $domainStructure[DataTypeInterface::STRUCTURE_TYPE_SAGA] = [];
         }
@@ -149,6 +153,9 @@ class ProjectBuilder implements ProjectBuilderInterface
      */
     protected function buildDefaultStructure(array $structure): array
     {
+        $structure = $this->buildCommandStructure($structure);
+        $structure = $this->buildQueryStructure($structure);
+
         if (!$structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR]) {
             $structure[DataTypeInterface::STRUCTURE_TYPE_PROJECTOR] = $this->buildProjectorStructure($structure);
         }
@@ -322,6 +329,156 @@ class ProjectBuilder implements ProjectBuilderInterface
         return $domainStructure;
     }
 
+    protected function buildCommandStructure(array $structure): array
+    {
+        if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND] = [];
+        }
+        if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER] = [];
+        }
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $entity => $entityStructure) {
+            foreach ($entityStructure as $commandName) {
+                if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName])) {
+                    $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName] = [
+                        DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                    ];
+                    $addCommandName = sprintf("%s-%s", $entity, "add");
+                    $deleteCommandName = sprintf("%s-%s", $entity, "delete");
+
+                    switch ($commandName) {
+                        case $addCommandName:
+                            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
+                                GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                                $entity,
+                            ];
+                            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::STRUCTURE_TYPE_EVENT] = [
+                                $commandName => [
+                                    GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                                    GeneratorInterface::KEY_UNIQUE_UUID,
+                                    $entity,
+                                ]
+                            ];
+                            break;
+                        case $deleteCommandName:
+                            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
+                                GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                                GeneratorInterface::KEY_UNIQUE_UUID,
+                            ];
+                            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::STRUCTURE_TYPE_EVENT] = [
+                                $commandName => [
+                                    GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                                    GeneratorInterface::KEY_UNIQUE_UUID,
+                                ]
+                            ];
+                            break;
+                        default:
+                            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
+                                GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                                GeneratorInterface::KEY_UNIQUE_UUID,
+                                $entity,
+                            ];
+                            $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::STRUCTURE_TYPE_EVENT] = [
+                                $commandName => [
+                                    GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                                    GeneratorInterface::KEY_UNIQUE_UUID,
+                                    $entity,
+                                ]
+                            ];
+                            break;
+                    }
+                }
+                if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER][$commandName])) {
+                    $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER][$commandName] = [
+                        DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                    ];
+                    $addCommandName = sprintf("%s-%s", $entity, "add");
+
+                    if ($commandName === $addCommandName) {
+                        $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
+                            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
+                            DataTypeInterface::STRUCTURE_TYPE_FACTORY => DataTypeInterface::STRUCTURE_TYPE_ENTITY,
+                        ];
+                    } else {
+                        $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
+                            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $structure;
+    }
+
+    protected function buildQueryStructure(array $structure): array
+    {
+        if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY] = [];
+        }
+        if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER])) {
+            $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] = [];
+        }
+
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $entity => $entityStructure) {
+            $fetchOneQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FETCH_ONE_U, $entity);
+
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$fetchOneQueryName])) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$fetchOneQueryName] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                        GeneratorInterface::KEY_UNIQUE_UUID,
+                    ],
+                ];
+            }
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$fetchOneQueryName])) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$fetchOneQueryName] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_QUERY,
+                    ],
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                ];
+            }
+            if (
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity]) &&
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&
+                !isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$fetchOneQueryName])
+            ) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$fetchOneQueryName] = $fetchOneQueryName;
+            }
+
+            $findByCriteriaQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FIND_BY_CRITERIA_U, $entity);
+
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$findByCriteriaQueryName])) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$findByCriteriaQueryName] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                        GeneratorInterface::KEY_FIND_CRITERIA,
+                    ],
+                ];
+            }
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$findByCriteriaQueryName])) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$findByCriteriaQueryName] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_QUERY,
+                    ],
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_ARRAY,
+                ];
+            }
+            if (
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity]) &&
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&
+                !isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$findByCriteriaQueryName])
+            ) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$findByCriteriaQueryName] = $findByCriteriaQueryName;
+            }
+        }
+
+        return $structure;
+    }
+
     protected function buildQueryRepositoryStructure(array $structure): array
     {
         $queryRepositoryStructure = [];
@@ -351,24 +508,30 @@ class ProjectBuilder implements ProjectBuilderInterface
     {
         $commandRepositoryStructure = [];
 
-        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER] as $name => $commandHandler) {
-            $entity = $commandHandler[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] as $readModelName => $readModelStructure) {
+            $entityName = $readModelStructure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $readModelName;
 
-            if (!isset($commandRepositoryStructure[$entity])) {
-                $commandRepositoryStructure[$entity] = [
-                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY][$entityName])) {
+                throw new EntityNotFoundException(sprintf("Entity '%s' from read model '%s' not found!", $entityName, $readModelName));
+            }
+
+            foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY][$entityName] as $commandName) {
+                if (!isset($commandRepositoryStructure[$readModelName])) {
+                    $commandRepositoryStructure[$readModelName] = [
+                        DataTypeInterface::STRUCTURE_TYPE_ENTITY => $readModelName,
+                        DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                            "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                        ],
+                        DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
+                    ];
+                }
+                $commandRepositoryStructure[$readModelName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$commandName] = [
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
-                        "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                        $readModelName => DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
                     ],
-                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_VOID,
                 ];
             }
-            $commandRepositoryStructure[$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$name] = [
-                DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
-                    $entity => DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
-                ],
-                DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_VOID,
-            ];
         }
 
         return $commandRepositoryStructure;
@@ -378,25 +541,36 @@ class ProjectBuilder implements ProjectBuilderInterface
     {
         $projectorStructure = [];
 
-        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND] as $name => $command) {
-            $entity = $command[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-
-            if (!isset($projectorStructure[$entity])) {
-                $projectorStructure[$entity] = [
-                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
-                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
-                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_READ_MODEL,
-                        DataTypeInterface::STRUCTURE_TYPE_FACTORY_READ_MODEL,
-                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE,
-                        DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS,
-                        DataTypeInterface::STRUCTURE_TYPE_FACTORY_COMMAND,
-                    ],
-                    DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
-                ];
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] as $readModelName => $readModelStructure) {
+            $entityName = $readModelStructure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $readModelName;
+            
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY][$entityName])) {
+                throw new EntityNotFoundException(sprintf("Entity '%s' from read model '%s' not found!", $entityName, $readModelName));
             }
+            
+            foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY][$entityName] as $commandName) {
+                if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY][$entityName])) {
+                    throw new CommandNotFoundException(sprintf("Command '%s' from entity '%s' not found!", $commandName, $entityName));
+                }
+                $command = $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName];
 
-            foreach ($command[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $eventName => $event) {
-                $projectorStructure[$entity][DataTypeInterface::STRUCTURE_TYPE_EVENT][] = $eventName;
+                if (!isset($projectorStructure[$readModelName])) {
+                    $projectorStructure[$readModelName] = [
+                        DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                            $entityName => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
+                            DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_READ_MODEL,
+                            DataTypeInterface::STRUCTURE_TYPE_FACTORY_READ_MODEL,
+                            //DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_QUERY_STORE,
+                            //DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS,
+                            //DataTypeInterface::STRUCTURE_TYPE_FACTORY_COMMAND,
+                        ],
+                        DataTypeInterface::STRUCTURE_TYPE_EVENT => [],
+                    ];
+                }
+
+                foreach ($command[DataTypeInterface::STRUCTURE_TYPE_EVENT] as $eventName => $event) {
+                    $projectorStructure[$readModelName][DataTypeInterface::STRUCTURE_TYPE_EVENT][] = $eventName;
+                }
             }
         }
 
@@ -406,7 +580,7 @@ class ProjectBuilder implements ProjectBuilderInterface
     protected function buildEventStoreRepositoryStructure(array $structure): array
     {
         $eventStoreStructure = [];
-
+        
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $name => $entity) {
             $eventStoreStructure[$name] = [
                 DataTypeInterface::STRUCTURE_TYPE_ENTITY => $name,
