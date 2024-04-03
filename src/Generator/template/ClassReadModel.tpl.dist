@@ -9,6 +9,12 @@ namespace {namespace};
  * @class {className}
  *
  * @package {namespace}
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
  */
  #[Entity]
  #[Table(name: '{tableName}')]

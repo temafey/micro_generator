@@ -123,7 +123,7 @@ class ProjectorGenerator extends AbstractGenerator
             $methodArguments = sprintf("%s \$event", $eventShortName);
             $methodLogic = "\r\n\t\t\$entity = \$this->entityStore->get(\$event->getUuid());";
             $readModelRepositoryMethodName = $this->getReadModelRepositoryMethodName($event);
-            $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->make%sActualInstanceByEntity(\$entity);", ucfirst($entity));
+            $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->make%sActualInstanceByEntity(\$entity);", ucfirst($this->underscoreAndHyphenToCamelCase($this->name)));
             $methodLogic .= sprintf("\r\n\t\t\$this->readModelStore->%s(\$readModel);", $readModelRepositoryMethodName);
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_VOID,

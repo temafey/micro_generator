@@ -2,4 +2,4 @@
     /**
       * Create {shortValueObjectName} read model from Entity.
       */
-     public function make{modelName}ActualInstanceByEntity({shortEntityNameInterfaceName} ${propertyValueObjectName}){returnType};
+     public function make{modelName}ActualInstanceByEntity({shortEntityNameInterfaceName} ${shortEntityName}){returnType};
