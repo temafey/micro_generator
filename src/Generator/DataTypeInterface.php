@@ -50,6 +50,7 @@ interface DataTypeInterface
     public const DATA_ORM_TYPE_BOOL = "boolean";
     public const DATA_ORM_TYPE_DATETIME = "datetime";
     public const DATA_ORM_TYPE_UUID = "uuid";
+    public const DATA_ORM_TYPE_GUID = "guid";
     public const DATA_ORM_TYPE_UUID_BINARY = "uuid_binary";
     public const DATA_ORM_TYPE_UUID_BINARY_ORDERED_TIME = "uuid_binary_ordered_time";
 

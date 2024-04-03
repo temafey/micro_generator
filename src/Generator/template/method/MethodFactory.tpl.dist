@@ -3,7 +3,7 @@
      * {methodComment}
      */
     public function {methodName}({arguments}): {shortFactoryClassName}
-    {
+    {{methodLogic}
         return new {shortFactoryClassName}(
 			{factoryArguments}
 		);

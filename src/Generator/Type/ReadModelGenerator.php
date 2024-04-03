@@ -168,11 +168,11 @@ class ReadModelGenerator extends AbstractGenerator
             $name === self::KEY_UNIQUE_UUID
         ) {
             $type = "guid";
-            $options["type"] = DataTypeInterface::DATA_ORM_TYPE_UUID_BINARY_ORDERED_TIME;
+            $options["type"] = DataTypeInterface::DATA_ORM_TYPE_GUID;
             $this->addUseStatement("Doctrine\ORM\Mapping\GeneratedValue");
-            $this->addUseStatement("Doctrine\ORM\Mapping\CustomIdGenerator");
+            //$this->addUseStatement("Doctrine\ORM\Mapping\CustomIdGenerator");
             //$this->addUseStatement("Ramsey\Uuid\Doctrine\UuidGenerator");
-            $this->addUseStatement("Ramsey\Uuid\Doctrine\UuidOrderedTimeGenerator");
+            //$this->addUseStatement("Ramsey\Uuid\Doctrine\UuidOrderedTimeGenerator");
         }
         
         if (in_array($name, self::UNIQUE_KEYS)) {
@@ -204,8 +204,8 @@ class ReadModelGenerator extends AbstractGenerator
         $propertyAnnotation .= sprintf("#[Column(\n\t\t%s\n\t)]", implode(",\n\t\t", $optionArray));
 
         if ($idFlag) {
-            $propertyAnnotation .= "\n\t#[GeneratedValue(strategy: \"CUSTOM\")]";
-            $propertyAnnotation .= "\n\t#[CustomIdGenerator(class: UuidOrderedTimeGenerator::class)]";
+            //$propertyAnnotation .= "\n\t#[GeneratedValue(strategy: \"CUSTOM\")]";
+            //$propertyAnnotation .= "\n\t#[CustomIdGenerator(class: UuidOrderedTimeGenerator::class)]";
         }
         
         return $propertyAnnotation;

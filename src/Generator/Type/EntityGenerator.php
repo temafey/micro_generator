@@ -195,7 +195,7 @@ class EntityGenerator extends AbstractGenerator
             $methodLogic = "";
 
             foreach ($args as $arg) {
-                if (in_array($arg, self::UNIQUE_KEYS)) {
+                if ($arg === self::KEY_UNIQUE_UUID && !$this->isCreateEntityMethodName($event)) {
                     continue;
                 }
                 $shortClassName = $this->getShortClassName($arg, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
@@ -249,12 +249,6 @@ class EntityGenerator extends AbstractGenerator
         $methodLogic .= "\r\n\t\t\$entity->uuid = \$uuid;";
         $firstMethodName = $this->underscoreAndHyphenToCamelCase($firstCommand);
 
-        if (in_array(self::KEY_CREATED_AT, $entityValueObject)) {
-            $methodLogic .= "\r\n\t\t\$entity->createdAt = CreatedAt::now();";
-        }
-        if (in_array(self::KEY_UPDATED_AT, $entityValueObject)) {
-            $methodLogic .= "\r\n\t\t\$entity->updatedAt = UpdatedAt::now();";
-        }
         if ($this->structure) {
             $methodLogic .= "\r\n\t\t".sprintf("\$entity->%s(\$processUuid, \$%s);", $firstMethodName, lcfirst($shortClassName));
         }
@@ -327,8 +321,8 @@ class EntityGenerator extends AbstractGenerator
         $methodLogic .= sprintf("\r\n\t\t\tthrow new ValueObjectInvalidException('%sEntity can be assembled only with %s value object');", $shortClassName, $shortClassName);
         $methodLogic .= "\r\n\t\t}";
         $entityValueObject = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
-        array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
-        array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
+        //array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
+        //array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
 
         foreach ($entityValueObject as $valueObject) {
             if (in_array($valueObject, self::UNIQUE_KEYS)) {

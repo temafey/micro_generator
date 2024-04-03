@@ -629,6 +629,17 @@ abstract class AbstractGenerator implements GeneratorInterface
         $this->preprocessor = $preprocessor;
     }
 
+    protected function isCreateEntityMethodName(string $methodName): bool
+    {
+        foreach (self::CREATE_METHOD_NAME_PREFIXES as $methodPrefix) {
+            if (strpos($methodName, $methodPrefix) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Generate test code.
      *

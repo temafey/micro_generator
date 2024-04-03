@@ -73,12 +73,14 @@ class CommandGenerator extends AbstractGenerator
     protected function renderCommandMethod(array $structure): string
     {
         $commandName = $structure['name'];
+        $entityName = $structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
         $shortCommandClassName = $this->getShortClassName($commandName, $structure['type']);
         $this->addUseStatement($this->getClassName($commandName, $structure['type']));
         $methodComment = sprintf("Create %s Command.", $shortCommandClassName);
         $methodArguments = [];
         $commandArguments = [];
         $additionalVariables = [];
+        $methodLogic = "";
 
         if ($structure['type'] === DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK) {
             $commandName .= "-task";
@@ -97,10 +99,33 @@ class CommandGenerator extends AbstractGenerator
             if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]) {
                 throw new Exception(sprintf("Argument '%s' in ValueObjects structure not found!", $arg));
             }
-            $propertyType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]['type']);
+            $valueObjectStructure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg];
+            $propertyType = $this->getValueObjectScalarType($valueObjectStructure['type']);
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $propertyType." $".$propertyName;
             $commandArguments[] = sprintf("%s::fromNative($%s)", $shortClassName, $propertyName);
+
+            if (
+                $structure['type'] === DataTypeInterface::STRUCTURE_TYPE_COMMAND_TASK ||
+                $valueObjectStructure['type'] !== DataTypeInterface::VALUE_OBJECT_TYPE_ENTITY
+            ) {
+                continue;
+            }
+            if (
+                $this->isCreateEntityMethodName($commandName) &&
+                in_array(
+                    self::KEY_CREATED_AT,
+                    $valueObjectStructure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS]
+                )
+            ) {
+                $methodLogic .= sprintf("\r\n\t\t\$%s[\"created_at\"] = \$%s[\"created_at\"] ?? date_create(\"now\");", $propertyName, $propertyName);
+            }
+            if (in_array(
+                self::KEY_UPDATED_AT,
+                $valueObjectStructure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS]
+            )) {
+                $methodLogic .= sprintf("\r\n\t\t\$%s[\"updated_at\"] = \$%s[\"updated_at\"] ?? date_create(\"now\");", $propertyName, $propertyName);
+            }
         }
         $additionalVariables["shortFactoryClassName"] = $shortCommandClassName;
         $additionalVariables["factoryArguments"] = implode(", \r\n\t\t\t", $commandArguments);
@@ -111,7 +136,7 @@ class CommandGenerator extends AbstractGenerator
             $methodName,
             implode(", ", $methodArguments),
             $shortCommandClassName,
-            "",
+            $methodLogic,
             "",
             $additionalVariables
         );
