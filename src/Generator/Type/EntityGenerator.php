@@ -374,9 +374,7 @@ class EntityGenerator extends AbstractGenerator
         foreach ($entityValueObject as $valueObject) {
             $shortClassName = $this->getShortClassName($valueObject, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
-            $methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s()) {", $methodName);
-            $methodLogic .= sprintf("\r\n\t\t\t\$data[\"%s\"] = \$this->%s()->toNative();", $valueObject, $methodName);
-            $methodLogic .= "\r\n\t\t}";
+            $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s()?->toNative();", $valueObject, $methodName);
         }
 
         return $this->renderMethod(

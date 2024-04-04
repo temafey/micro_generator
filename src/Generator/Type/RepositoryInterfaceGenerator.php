@@ -167,7 +167,7 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         ) {
             $this->addUseStatement($this->getInterfaceName($arg, $type));
             $shortClassName = $this->getShortInterfaceName($arg, $type);
-            $propertyName = lcfirst($shortClassName);
+            $propertyName = lcfirst($this->getShortClassName($arg, $type));
             $methodArgument = $shortClassName." $".$propertyName;
         } elseif (strpos($type, "\\")) {
             $this->addUseStatement($type);

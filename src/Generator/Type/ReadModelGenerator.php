@@ -47,6 +47,7 @@ class ReadModelGenerator extends AbstractGenerator
         $this->addUseStatement("Doctrine\ORM\Mapping\Entity");
         $this->addUseStatement("Doctrine\ORM\Mapping\Id");
         $this->addUseStatement("Doctrine\ORM\Mapping\Table");
+        $this->addUseStatement("Exception");
         $additionalVariables = [];
         $additionalVariables["tableName"] = str_replace("-", "_", $this->name);
         $implements[] = $shortClassName."Interface";
@@ -227,16 +228,14 @@ class ReadModelGenerator extends AbstractGenerator
             $shortClassName = $this->getShortClassName($property, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $methodName = "get".$shortClassName;
             $varName = lcfirst($shortClassName);
-            $methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$valueObject->%s()) {", $methodName);
-            $methodLogic .= sprintf("\r\n\t\t\t\$this->%s = \$valueObject->%s()->toNative();", $varName, $methodName);
-            $methodLogic .= "\r\n\t\t}";
+            $methodLogic .= sprintf("\r\n\t\t\$this->%s = \$valueObject->%s()?->toNative();", $varName, $methodName);
         }
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_VOID,
             "Assemble entity from value object.",
             "assembleFromValueObject",
-            "ValueObjectInterface \$valueObject, Uuid \$uuid",
+            "ValueObjectInterface \$valueObject, ?Uuid \$uuid",
             "",
             $methodLogic,
             ""
@@ -257,9 +256,10 @@ class ReadModelGenerator extends AbstractGenerator
             $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$property]['type']);
             
             if ($scalarType === DataTypeInterface::DATA_SCALAR_TYPE_DATETIME) {
-                $propertyName .= "->format(\DateTime::ATOM)";
+                $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s?->format(\DateTimeInterface::ATOM);", $property, $propertyName);
+            } else {
+                $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s;", $property, $propertyName);
             }
-            $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s;", $property, $propertyName);
             //$methodLogic .= "\r\n\t\t}";
         }
 

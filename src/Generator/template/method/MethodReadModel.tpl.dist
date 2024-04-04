@@ -9,7 +9,7 @@
         } catch (DBALEventStoreException $e) {
             throw new {ReadModelException}(
                 '{arguments} was not {methodName} in read model.',
-                (int) $e->getCode(),
+                $e->getCode(),
                 $e
             );
         }{return}

@@ -41,7 +41,7 @@ interface DataTypeInterface
     public const DATA_SCALAR_TYPE_ARRAY = "array";
     public const DATA_SCALAR_TYPE_STRING = "string";
     public const DATA_SCALAR_TYPE_BOOL = "bool";
-    public const DATA_SCALAR_TYPE_DATETIME = "\DateTime";
+    public const DATA_SCALAR_TYPE_DATETIME = "\DateTimeInterface";
 
     public const DATA_ORM_TYPE_INT = "integer";
     public const DATA_ORM_TYPE_FLOAT = "float";

@@ -24,10 +24,6 @@ class {className}{extends}{implements}
 {{useTraits}{properties}
     /**
      * Make {className} from DTO object or serialized string.
-     *
-     * @return {className}
-     *
-     * @throws Exception
      */
     public static function fromNative(): static
     {
@@ -89,8 +85,6 @@ class {className}{extends}{implements}
      * Return native value.
      *
      * @return mixed[]
-     *
-     * @throws Exception
      */
     public function toNative()
     {
@@ -99,8 +93,6 @@ class {className}{extends}{implements}
 
     /**
      * Returns a native string representation of the Collection object.
-     *
-     * @throws Exception
      */
     public function __toString(): string
     {
@@ -111,8 +103,6 @@ class {className}{extends}{implements}
      * Convert array to ValueObject.
      *
      * @param mixed[] $data
-     *
-     * @throws Exception
      */
     public static function deserialize(array $data): self
     {
@@ -123,8 +113,6 @@ class {className}{extends}{implements}
      * Convert ValueObject to array.
      *
      * @return mixed[]
-     *
-     * @throws Exception
      */
     public function serialize(): array
     {

@@ -24,9 +24,9 @@ class {className}{extends}{implements}
     /**
      * Return entity primary key value
      */
-    public function getPrimaryKeyValue(): string
+    public function getPrimaryKeyValue(): ?string
     {
-        return $this->uuid->toNative();
+        return $this->uuid?->toNative();
     }
 	
 	/**
