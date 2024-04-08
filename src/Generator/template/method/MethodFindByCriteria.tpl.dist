@@ -2,7 +2,7 @@
     /**
      * Find and return array of {entityName} Read Models by FindCriteria
      *
-	 * @return {entityName}ReadModelInterface[]|null
+	 * @return {readModelName}ReadModelInterface[]|null
      * @throws Exception
      */
     public function {methodName}(FindCriteria $findCriteria): ?array
@@ -15,9 +15,9 @@
         $collection = [];
 
         foreach ($result as $data) {
-            $uuid = $data[{entityName}ReadModelInterface::KEY_UUID];
-            unset($data[{entityName}ReadModelInterface::KEY_UUID]);
-            $collection[] = $this->readModelFactory->make{entityName}ActualInstance(
+            $uuid = $data[{readModelName}ReadModelInterface::KEY_UUID];
+            unset($data[{readModelName}ReadModelInterface::KEY_UUID]);
+            $collection[] = $this->readModelFactory->make{readModelName}ActualInstance(
                 $this->valueObjectFactory->make{entityName}($data),
                 $this->valueObjectFactory->makeUuid($uuid)
             );

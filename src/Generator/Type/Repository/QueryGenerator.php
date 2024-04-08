@@ -36,7 +36,7 @@ class QueryGenerator extends AbstractGenerator
             throw new Exception(sprintf("Methods for repository '%s' was not found!", $this->name));
         }
 
-        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
+        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL])) {
             throw new Exception(sprintf("Entity for repository '%s' was not found!", $this->name));
         }
         $extends = "";
@@ -49,9 +49,9 @@ class QueryGenerator extends AbstractGenerator
         $this->addUseStatement($interfaceNamespace." as QueryRepositoryInterface");
         $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException"); 
         $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
-        $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
         $implements[] = "QueryRepositoryInterface";
-        $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]?:'Entity';
+        $readModel = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]?:'ReadModel';
+        $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
         $addVar = [
             "shortEntityName" => $this->underscoreAndHyphenToCamelCase($entityName),
             "entityName" => ucfirst($this->underscoreAndHyphenToCamelCase($entityName)),
@@ -59,8 +59,8 @@ class QueryGenerator extends AbstractGenerator
         ];
         $methods[] = $this->renderConstructMethod();
 
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $commandName => $methodName) {
-            $methods[] = $this->renderStructureMethod($commandName, $methodName);
+        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS] as $queryName => $methodName) {
+            $methods[] = $this->renderStructureMethod($queryName, $methodName);
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
 
@@ -100,7 +100,7 @@ class QueryGenerator extends AbstractGenerator
                 if (strpos($type, "ReadModelStoreInterface") !== false) {
                     $constructArgument = sprintf(
                             "#[Autowire(service: '%s.infrastructure.repository.storage.read_model.dbal')]\n\t\t",
-                            $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]
+                            $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]
                         ).$constructArgument;
                 }
             }  else {
@@ -121,14 +121,14 @@ class QueryGenerator extends AbstractGenerator
         );
     }
 
-    public function renderStructureMethod(string $commandName, string $methodName): string
+    public function renderStructureMethod(string $queryName, string $methodName): string
     {
-        $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$commandName];
+        $structure = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$queryName];
         $addVar = [];
         $addVar["criteriaParams"] = [];
 
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
-            throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $commandName));
+            throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $queryName));
         }
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
             //throw new Exception(sprintf("Return type for repository method '%s' was not found!", $commandName));
@@ -168,9 +168,9 @@ class QueryGenerator extends AbstractGenerator
             }
         }
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-            $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
-            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
+            $readModelName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
+            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($readModelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
+            $this->addUseStatement($this->getClassName($readModelName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
         }
         $returnType = $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
 
@@ -178,7 +178,7 @@ class QueryGenerator extends AbstractGenerator
             $name = key($returnType);
             $returnType = $returnType[$name];
         }
-        $methodName = $this->getQueryRepositoryMethodName($methodName, $entityName);
+        $methodName = $this->getQueryRepositoryMethodName($methodName, $readModelName);
         $methodTemplate = $this->getMethodTemplateName($methodName);
         $methodLogic = "";
 
@@ -199,6 +199,7 @@ class QueryGenerator extends AbstractGenerator
             $return = "\$result";
         }
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
+        $addVar["readModelName"] = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]));
 
         return $this->renderMethod(
             $methodTemplate,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MicroModule\MicroserviceGenerator\Generator\Helper;
 
 use League\Tactician\CommandBus;
+use MicroModule\JWT\Parser\Exception;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Exception\GeneratorException;
 use MicroModule\MicroserviceGenerator\Generator\Exception\InvalidClassTypeException;
@@ -139,7 +140,14 @@ trait CodeHelper
                 $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             )
         ) {
-            $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            if (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            ) {
+                $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]));
+            } else {
+                $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            }
         }  elseif (
             $type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_INTERFACE &&
             (
@@ -149,7 +157,14 @@ trait CodeHelper
                 $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             )
         ) {
-            $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            if (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            ) {
+                $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]));
+            } else {
+                $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            }
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
         }
@@ -206,7 +221,14 @@ trait CodeHelper
                 $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
             )
         ) {
-            $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            if (
+                $name === DataTypeInterface::STRUCTURE_TYPE_QUERY ||
+                $name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
+            ) {
+                $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]));
+            } else {
+                $name = ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]));
+            }
         } else {
             $name = ucfirst($this->underscoreAndHyphenToCamelCase($name));
         }
@@ -613,6 +635,8 @@ trait CodeHelper
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD;
         } elseif (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE)) {
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE;
+        } elseif (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_GET)) {
+            $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_GET;
         } else {
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE;
         }

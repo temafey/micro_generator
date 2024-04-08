@@ -35,7 +35,7 @@ class QueryHandlerGenerator extends AbstractGenerator
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_QUERY][$this->name])) {
             throw new Exception(sprintf("Command for handler '%s' was not found!", $this->name));
         }
-        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])) {
+        if (!isset($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL])) {
             throw new Exception(sprintf("Entity for handler '%s' was not found!", $this->name));
         }
         if (!isset($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS][DataTypeInterface::STRUCTURE_TYPE_REPOSITORY])) {
@@ -145,24 +145,24 @@ class QueryHandlerGenerator extends AbstractGenerator
         }
         $additionalVariables = [];
         $additionalVariables["repositoryShortName"] = $repositoryShortName;
-        $additionalVariables["repositoryMethodName"] = $this->getQueryRepositoryMethodName($this->name, $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]);
+        $additionalVariables["repositoryMethodName"] = $this->getQueryRepositoryMethodName($this->name, $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]);
         $additionalVariables["valueObjectArguments"] = implode(", ", $valueObjects);
-        $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+        $readModel = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
         
         if (!isset($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-            $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
-            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
+            $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
+            $this->addUseStatement($this->getClassName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
         }
         $returnType = $this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
 
         if (is_array($returnType)) {
-            $entityName = key($returnType);
+            $readModel = key($returnType);
             $returnType = $returnType[$name];
         }
         
-        if ($returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
-            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
-            $shortClassName = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+        if ($returnType === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
+            $this->addUseStatement($this->getClassName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL));
+            $shortClassName = $this->getShortClassName($readModel, DataTypeInterface::STRUCTURE_TYPE_ENTITYSTRUCTURE_TYPE_READ_MODEL);
             $returnType = $shortClassName;
         } elseif (strpos($returnType, "\\")) {
             $this->addUseStatement($returnType);

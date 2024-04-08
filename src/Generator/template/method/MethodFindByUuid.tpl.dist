@@ -1,20 +1,20 @@
 
     /**
-     * Find and return {entityName} Read Model by Uuid
+     * Find and return {readModelName} Read Model by Uuid
      *
      * @throws Exception
      */
-    public function {methodName}(Uuid $uuid): ?{entityName}ReadModelInterface
+    public function {methodName}(Uuid $uuid): ?{readModelName}ReadModelInterface
     {
         try {
             $result = $this->readModelStore->findOne($uuid->toString());
         } catch (NotFoundException) {
             return null;
         }
-        $uuid = $result[{entityName}ReadModelInterface::KEY_UUID];
-        unset($result[{entityName}ReadModelInterface::KEY_UUID]);
+        $uuid = $result[{readModelName}ReadModelInterface::KEY_UUID];
+        unset($result[{readModelName}ReadModelInterface::KEY_UUID]);
 
-        return $this->readModelFactory->make{entityName}ActualInstance(
+        return $this->readModelFactory->make{readModelName}ActualInstance(
             $this->valueObjectFactory->make{entityName}($result),
             $this->valueObjectFactory->makeUuid($uuid)
         );

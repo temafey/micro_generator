@@ -65,17 +65,16 @@ class EventGenerator extends AbstractGenerator
             $methods[] = $methodLogic;
         }
 
-        if (!empty($this->constructArgumentsAssignment)) {
+        if (!empty($this->constructArguments)) {
             $this->constructArguments[] = "?Payload \$payload = null";
             $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
-            $methodLogic = implode("", $this->constructArgumentsAssignment);
-            $methodLogic .= "\r\n\t\tparent::__construct(\$processUuid, \$uuid, \$payload);";
+            $methodLogic = "\r\n\t\tparent::__construct(\$processUuid, \$uuid, \$payload);";
                 array_unshift(
                     $methods, $this->renderMethod(
                     self::METHOD_TEMPLATE_TYPE_DEFAULT,
                     "Constructor",
                     "__construct",
-                    implode(", ", $this->constructArguments),
+                    "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
                     "",
                     $methodLogic,
                     ""
@@ -104,8 +103,9 @@ class EventGenerator extends AbstractGenerator
         $shortClassName = $this->getValueObjectShortClassName($valueObjectName);
         $propertyName = lcfirst($shortClassName);
         $methodName = "get".$shortClassName;
-        $this->addUseStatement($className);
-        $this->constructArguments[] = $shortClassName." $".$propertyName;
+        $this->constructArguments[] = (in_array($valueObjectName, self::UNIQUE_KEYS)
+            ? $shortClassName." $".$propertyName
+            : "protected ".$shortClassName." $".$propertyName);
 
         if (
             $this->useCommonComponent &&
@@ -114,10 +114,7 @@ class EventGenerator extends AbstractGenerator
         ) {
             return null;
         }
-        $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         $methodComment = sprintf("Return %s value object.", $shortClassName);
-        $propertyComment = sprintf("%s value object.", $shortClassName);
-        $this->addProperty($propertyName, $shortClassName, $propertyComment);
 
         return $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,

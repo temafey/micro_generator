@@ -79,7 +79,7 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         if ($this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
             $methodName = $this->getReadModelRepositoryMethodName($commandMethodName);
         } elseif ($this->name === DataTypeInterface::STRUCTURE_TYPE_QUERY) {
-            $methodName = $this->getQueryRepositoryMethodName($methodName, $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]);
+            $methodName = $this->getQueryRepositoryMethodName($methodName, $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]);
         }
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS])) {
             throw new Exception(sprintf("Arguments for repository method '%s' was not found!", $commandMethodName));
@@ -90,10 +90,21 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
         $this->methods[] = $methodName;
         
         if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
-            $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
-            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $this->getShortClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE);
-            $this->addUseStatement($this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL_INTERFACE));
-        }
+            if (
+                $this->name === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL ||
+                $this->name === DataTypeInterface::STRUCTURE_TYPE_QUERY
+            ) {
+                $readModel = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
+                $shortClassName = $this->getShortInterfaceName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+                $className = $this->getClassName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+            } else {
+                $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+                $shortClassName = $this->getShortInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+                $className = $this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+            }
+            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $shortClassName;
+            $this->addUseStatement($className);
+        } 
         $methodArguments = [];
         $methodComment = "";
 
@@ -117,6 +128,13 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
             if ($returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY) {
                 $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY));
                 $shortClassName = $this->getShortInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+                $returnTypes[] = $shortClassName;
+            } elseif ($returnType === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL) {
+                if (is_numeric($name)) {
+                    $name = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
+                }
+                $this->addUseStatement($this->getInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL));
+                $shortClassName = $this->getShortInterfaceName($name, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
                 $returnTypes[] = $shortClassName;
             } elseif (strpos($returnType, "\\")) {
                 $this->addUseStatement($returnType);

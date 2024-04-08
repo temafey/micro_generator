@@ -72,6 +72,7 @@ abstract class AbstractGenerator implements GeneratorInterface
     protected const READ_MODEL_REPOSITORY_METHOD_NAME_ADD = "add";
     protected const READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE = "update";
     protected const READ_MODEL_REPOSITORY_METHOD_NAME_DELETE = "delete";
+    protected const READ_MODEL_REPOSITORY_METHOD_NAME_GET = "get";
 
     public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";
     public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";

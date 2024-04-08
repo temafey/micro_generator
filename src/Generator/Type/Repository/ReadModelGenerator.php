@@ -90,6 +90,7 @@ class ReadModelGenerator extends AbstractGenerator
             $this->methods[] = $methodName;
             $methods[] = $this->renderStructureMethod($methodName, $structure, $addVar);
         }
+        $methods[] = $this->renderGetMethod();
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
 
         return $this->renderClass(
@@ -133,7 +134,7 @@ class ReadModelGenerator extends AbstractGenerator
             if (strpos($type, "ReadModelStoreInterface") !== false) {
                 $constructArgument = sprintf(
                     "#[Autowire(service: '%s.infrastructure.repository.storage.read_model.dbal')]\n\t\t",
-                    $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY]
+                    $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]
                 ).$constructArgument;
             }            
             $this->constructArguments[] = $constructArgument;
@@ -235,6 +236,35 @@ class ReadModelGenerator extends AbstractGenerator
             implode(", ", $methodArguments),
             $returnType,
             $methodLogic,
+            $return,
+            $addVar
+        );
+    }
+
+    public function renderGetMethod(): string
+    {
+        if (!isset($structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN])) {
+            $readModelName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
+            $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $readModelName;
+        }
+        $this->addUseStatement($this->getValueObjectClassName(self::VALUE_OBJECT_UNIQUE_UUID));
+        $name = $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
+        $returnType = $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN];
+        $shortClassName = $this->getShortClassName($name, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+        $returnType = $shortClassName;
+        $return = "$".lcfirst($shortClassName);
+        $addVar = [
+            "readModelName" => ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL])),
+            "entityName" => ucfirst($this->underscoreAndHyphenToCamelCase($this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY])),
+        ];
+
+        return $this->renderMethod(
+            self::METHOD_TEMPLATE_TYPE_FIND_BY_UUID,
+            "",
+            "get",
+            "",
+            $returnType,
+            "",
             $return,
             $addVar
         );

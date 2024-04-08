@@ -421,8 +421,9 @@ class ProjectBuilder implements ProjectBuilderInterface
             $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] = [];
         }
 
-        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] as $entity => $entityStructure) {
-            $fetchOneQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FETCH_ONE_U, $entity);
+        foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] as $readModel => $readModelStructure) {
+            $entity = $readModelStructure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $readModel;
+            $fetchOneQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FETCH_ONE_U, $readModel);
 
             if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$fetchOneQueryName])) {
                 $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$fetchOneQueryName] = [
@@ -437,18 +438,18 @@ class ProjectBuilder implements ProjectBuilderInterface
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
                         DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_QUERY,
                     ],
+                    DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => $readModel,
                     DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                 ];
             }
             if (
-                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity]) &&
-                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&
-                !isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$fetchOneQueryName])
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel]) &&
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&
+                !isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$fetchOneQueryName])
             ) {
-                $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$fetchOneQueryName] = $fetchOneQueryName;
+                $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$fetchOneQueryName] = $fetchOneQueryName;
             }
-
-            $findByCriteriaQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FIND_BY_CRITERIA_U, $entity);
+            $findByCriteriaQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FIND_BY_CRITERIA_U, $readModel);
 
             if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$findByCriteriaQueryName])) {
                 $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$findByCriteriaQueryName] = [
@@ -463,16 +464,17 @@ class ProjectBuilder implements ProjectBuilderInterface
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
                         DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_QUERY,
                     ],
-                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                    DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => $readModel,
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_ARRAY,
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                 ];
             }
             if (
-                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity]) &&
-                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&
-                !isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$findByCriteriaQueryName])
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel]) &&
+                isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&
+                !isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$findByCriteriaQueryName])
             ) {
-                $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$findByCriteriaQueryName] = $findByCriteriaQueryName;
+                $structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$findByCriteriaQueryName] = $findByCriteriaQueryName;
             }
         }
 
@@ -484,11 +486,13 @@ class ProjectBuilder implements ProjectBuilderInterface
         $queryRepositoryStructure = [];
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER] as $name => $queryHandler) {
-            $entity = $queryHandler[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
+            $readModel = $queryHandler[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
+            $entityName = $queryHandler[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
 
-            if (!isset($queryRepositoryStructure[$entity])) {
-                $queryRepositoryStructure[$entity] = [
-                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+            if (!isset($queryRepositoryStructure[$readModel])) {
+                $queryRepositoryStructure[$readModel] = [
+                    DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => $readModel,
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entityName,
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
                         //$this->namespace."\Domain\Repository\ReadModel\\".ucfirst($this->camelCaseToUnderscore($entity))."RepositoryInterface",
                         "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
@@ -498,7 +502,7 @@ class ProjectBuilder implements ProjectBuilderInterface
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
                 ];
             }
-            $queryRepositoryStructure[$entity][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$name] = $name;
+            $queryRepositoryStructure[$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$name] = $name;
         }
 
         return $queryRepositoryStructure;
@@ -506,7 +510,7 @@ class ProjectBuilder implements ProjectBuilderInterface
 
     protected function buildReadModelRepositoryStructure(array $structure): array
     {
-        $commandRepositoryStructure = [];
+        $readModelRepositoryStructure = [];
 
         foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL] as $readModelName => $readModelStructure) {
             $entityName = $readModelStructure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $readModelName;
@@ -516,25 +520,37 @@ class ProjectBuilder implements ProjectBuilderInterface
             }
 
             foreach ($structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY][$entityName] as $commandName) {
-                if (!isset($commandRepositoryStructure[$readModelName])) {
-                    $commandRepositoryStructure[$readModelName] = [
-                        DataTypeInterface::STRUCTURE_TYPE_ENTITY => $readModelName,
+                if (!isset($readModelRepositoryStructure[$readModelName])) {
+                    $readModelRepositoryStructure[$readModelName] = [
+                        DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => $readModelName,
+                        DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entityName,
                         DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
                             "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                            $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
+                            $this->namespace."\Domain\Factory\ValueObjectFactoryInterface",
                         ],
                         DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS => [],
                     ];
                 }
-                $commandRepositoryStructure[$readModelName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$commandName] = [
+                $readModelRepositoryStructure[$readModelName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS][$commandName] = [
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
                         $readModelName => DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
                     ],
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::DATA_TYPE_VOID,
                 ];
             }
+            if (isset($readModelRepositoryStructure[$readModelName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]["get"])) {
+                continue;
+            }
+            $readModelRepositoryStructure[$readModelName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]["get"] = [
+                DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                    DataTypeInterface::DATA_TYPE_UUID => DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT,
+                ],
+                DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN => DataTypeInterface::STRUCTURE_TYPE_READ_MODEL,
+            ];
         }
 
-        return $commandRepositoryStructure;
+        return $readModelRepositoryStructure;
     }
 
     protected function buildProjectorStructure(array $structure): array
