@@ -346,8 +346,8 @@ class ProjectBuilder implements ProjectBuilderInterface
                     ];
                     $addCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_ADD_PREFIX);
                     $createCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_CREATE_PREFIX);
-                    $deleteCommandName = sprintf("%s-%s", $entity, "delete");
-                    $removeCommandName = sprintf("%s-%s", $entity, "remove");
+                    $deleteCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_DELETE_PREFIX);
+                    $removeCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_REMOVE_PREFIX);
 
                     switch ($commandName) {
                         case $addCommandName:

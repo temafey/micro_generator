@@ -25,6 +25,8 @@ interface GeneratorInterface
     public const CREATE_METHOD_ADD_PREFIX = "add";
     public const CREATE_METHOD_INSERT_PREFIX = "insert";
     public const CREATE_METHOD_CREATE_PREFIX = "create";
+    public const CREATE_METHOD_REMOVE_PREFIX = "remove";
+    public const CREATE_METHOD_DELETE_PREFIX = "delete";
 
     public const CREATE_METHOD_NAME_PREFIXES = [
         self::CREATE_METHOD_ADD_PREFIX,

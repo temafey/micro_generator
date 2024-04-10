@@ -6,10 +6,10 @@ namespace MicroModule\MicroserviceGenerator\Generator\Type;
 
 use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
+use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\ReturnTypeNotFoundException;
 use Exception;
 use ReflectionException;
-use Symfony\Component\VarDumper\Cloner\Data;
 
 /**
  * Generator for
@@ -121,10 +121,9 @@ class ProjectorGenerator extends AbstractGenerator
             $methodName = sprintf("apply%s", $eventShortName);
             $methodComment = sprintf("Apply %s event.", $eventShortName);
             $methodArguments = sprintf("%s \$event", $eventShortName);
-            $methodLogic = "\r\n\t\t\$entity = \$this->entityStore->get(\$event->getUuid());";
             $readModelRepositoryMethodName = $this->getReadModelRepositoryMethodName($event);
-            $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->make%sActualInstanceByEntity(\$entity);", ucfirst($this->underscoreAndHyphenToCamelCase($this->name)));
-            $methodLogic .= sprintf("\r\n\t\t\$this->readModelStore->%s(\$readModel);", $readModelRepositoryMethodName);
+            $methodLogic = $this->renderApplyMethodBody($readModelRepositoryMethodName);
+            
             $methods[] = $this->renderMethod(
                 self::METHOD_TEMPLATE_TYPE_VOID,
                 $methodComment,
@@ -137,5 +136,25 @@ class ProjectorGenerator extends AbstractGenerator
         }
 
         return $methods;
+    }
+
+    protected function renderApplyMethodBody(string $readModelRepositoryMethodName): string
+    {
+        switch ($readModelRepositoryMethodName) {
+            case GeneratorInterface::CREATE_METHOD_DELETE_PREFIX:
+            case GeneratorInterface::CREATE_METHOD_REMOVE_PREFIX:
+                $methodLogic = "\r\n\t\t\$readModel = \$this->readModelStore->get(\$event->getUuid());";
+                $methodLogic .= "\r\n\r\n\t\tif (\$readModel === null) {";
+                $methodLogic .= "\r\n\t\t\tthrow new \Exception(sprintf(\"ReadModel with id '%s' not found\", \$event->getUuid()->toNative()));\r\n\t\t}";
+                $methodLogic .= sprintf("\r\n\t\t\$this->readModelStore->%s(\$readModel);", $readModelRepositoryMethodName);
+                break;
+            default:
+                $methodLogic = "\r\n\t\t\$entity = \$this->entityStore->get(\$event->getUuid());";
+                $methodLogic .= sprintf("\r\n\t\t\$readModel = \$this->readModelFactory->make%sActualInstanceByEntity(\$entity);", ucfirst($this->underscoreAndHyphenToCamelCase($this->name)));
+                $methodLogic .= sprintf("\r\n\t\t\$this->readModelStore->%s(\$readModel);", $readModelRepositoryMethodName);
+                break;
+        }
+
+        return $methodLogic;
     }
 }
