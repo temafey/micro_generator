@@ -98,8 +98,7 @@ class ReadModelGenerator extends AbstractGenerator
         $methodComment = sprintf("Return %s value object.", $valueObject);
         $propertyName = lcfirst($shortClassName);
         $defaultValue = DataTypeInterface::DATA_TYPE_NULL;
-        $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
-        $propertyComment = $this->renderOrmColumnType($valueObject, $scalarType, $defaultValue);
+        $propertyComment = $this->renderOrmColumnType($valueObject, $defaultValue);
         $this->addProperty($propertyName, "?".$shortClassName, $propertyComment, $defaultValue, self::PROPERTY_TEMPLATE_TYPE_ANNOTATION);
 
         return $this->renderMethod(
@@ -124,8 +123,8 @@ class ReadModelGenerator extends AbstractGenerator
         if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]) {
             throw new Exception(sprintf("ValueObject '%s' in structure not found", $valueObject));
         }
+        $propertyComment = $this->renderOrmColumnType($valueObject, $defaultValue);
         $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$valueObject]['type']);
-        $propertyComment = $this->renderOrmColumnType($valueObject, $scalarType, $defaultValue);
         $this->addProperty($propertyName, "?".$scalarType, $propertyComment, $defaultValue, self::PROPERTY_TEMPLATE_TYPE_ANNOTATION);
 
         return $this->renderMethod(
@@ -140,10 +139,8 @@ class ReadModelGenerator extends AbstractGenerator
     }
 
     protected function renderOrmColumnType(
-        string $name, 
-        string $type, 
-        mixed $defaultValue = null, 
-        ?int $length = null
+        string $name,
+        mixed $defaultValue = null
     ): string {
         $options = [
             "name",
@@ -157,12 +154,16 @@ class ReadModelGenerator extends AbstractGenerator
             "precision",
             "columnDefinition",
             "enumType",
-            "options" => ["default" => false]
+            "options" => ["default" => $defaultValue]
         ];
         $idFlag = false;
         $options = [];
         $options["name"] = $name;
-        $options["type"] = DataTypeInterface::DATA_ORM_TYPE_SCALAR_MAPPING[$type];
+        $valueObjectType = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$name]['type'];
+        $scalarType = $this->getValueObjectScalarType($valueObjectType);
+        $options["type"] = ($scalarType === DataTypeInterface::DATA_SCALAR_TYPE_DATETIME)
+            ? DataTypeInterface::DATA_ORM_TYPE_SCALAR_MAPPING[$valueObjectType]
+            : DataTypeInterface::DATA_ORM_TYPE_SCALAR_MAPPING[$scalarType];
         
         if (
             $name === self::KEY_UNIQUE_PROCESS_UUID ||
@@ -253,10 +254,31 @@ class ReadModelGenerator extends AbstractGenerator
             $shortClassName = $this->getShortClassName($property, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
             $propertyName = lcfirst($shortClassName);
             //$methodLogic .= sprintf("\r\n\r\n\t\tif (null !== \$this->%s) {", $propertyName);
-            $scalarType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$property]['type']);
+            $valueObjectType = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$property]['type'];
+            $scalarType = $this->getValueObjectScalarType($valueObjectType);
+            $ormType = ($scalarType === DataTypeInterface::DATA_SCALAR_TYPE_DATETIME)
+                ? DataTypeInterface::DATA_ORM_TYPE_SCALAR_MAPPING[$valueObjectType]
+                : DataTypeInterface::DATA_ORM_TYPE_SCALAR_MAPPING[$scalarType];
             
             if ($scalarType === DataTypeInterface::DATA_SCALAR_TYPE_DATETIME) {
-                $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s?->format(\DateTimeInterface::ATOM);", $property, $propertyName);
+                switch ($ormType) {
+                    case DataTypeInterface::DATA_ORM_TYPE_DATETIME:
+                        $dateFormat = "\DateTimeInterface::ATOM";
+                        break;
+
+                    case DataTypeInterface::DATA_ORM_TYPE_DATE:
+                        $dateFormat = "\"Y-m-d\"";
+                        break;
+                        
+                    case DataTypeInterface::DATA_ORM_TYPE_TIME:
+                        $dateFormat = "\"H:i:s\"";
+                        break;
+                        
+                    default:
+                        throw new Exception(sprintf("Unknow orm date type '%s'!", $ormType));
+                        break;
+                }
+                $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s?->format(%s);", $property, $propertyName, $dateFormat);
             } else {
                 $methodLogic .= sprintf("\r\n\t\t\$data[\"%s\"] = \$this->%s;", $property, $propertyName);
             }

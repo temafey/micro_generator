@@ -49,6 +49,8 @@ interface DataTypeInterface
     public const DATA_ORM_TYPE_STRING = "string";
     public const DATA_ORM_TYPE_BOOL = "boolean";
     public const DATA_ORM_TYPE_DATETIME = "datetime";
+    public const DATA_ORM_TYPE_DATE = "date";
+    public const DATA_ORM_TYPE_TIME = "time";
     public const DATA_ORM_TYPE_UUID = "uuid";
     public const DATA_ORM_TYPE_GUID = "guid";
     public const DATA_ORM_TYPE_UUID_BINARY = "uuid_binary";
@@ -201,6 +203,9 @@ interface DataTypeInterface
          self::DATA_SCALAR_TYPE_BOOL => self::DATA_ORM_TYPE_BOOL,
          self::DATA_SCALAR_TYPE_DATETIME => self::DATA_ORM_TYPE_DATETIME,
          self::DATA_TYPE_UUID => self::DATA_ORM_TYPE_UUID_BINARY,
+         self::VALUE_OBJECT_TYPE_DATETIME_DATETIME => self::DATA_ORM_TYPE_DATETIME,
+         self::VALUE_OBJECT_TYPE_DATETIME_DATE => self::DATA_ORM_TYPE_DATE,
+         self::VALUE_OBJECT_TYPE_DATETIME_TIME => self::DATA_ORM_TYPE_TIME,
     ];
 
     public const STRUCTURE_REPOSITORY_DATA_TYPES = [

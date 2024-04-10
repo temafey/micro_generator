@@ -344,11 +344,14 @@ class ProjectBuilder implements ProjectBuilderInterface
                     $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName] = [
                         DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                     ];
-                    $addCommandName = sprintf("%s-%s", $entity, "add");
+                    $addCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_ADD_PREFIX);
+                    $createCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_CREATE_PREFIX);
                     $deleteCommandName = sprintf("%s-%s", $entity, "delete");
+                    $removeCommandName = sprintf("%s-%s", $entity, "remove");
 
                     switch ($commandName) {
                         case $addCommandName:
+                        case $createCommandName:
                             $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
                                 GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
                                 $entity,
@@ -362,6 +365,7 @@ class ProjectBuilder implements ProjectBuilderInterface
                             ];
                             break;
                         case $deleteCommandName:
+                        case $removeCommandName:
                             $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
                                 GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
                                 GeneratorInterface::KEY_UNIQUE_UUID,
@@ -393,9 +397,10 @@ class ProjectBuilder implements ProjectBuilderInterface
                     $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER][$commandName] = [
                         DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                     ];
-                    $addCommandName = sprintf("%s-%s", $entity, "add");
+                    $addCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_ADD_PREFIX);
+                    $createCommandName = sprintf("%s-%s", $entity, GeneratorInterface::CREATE_METHOD_CREATE_PREFIX);
 
-                    if ($commandName === $addCommandName) {
+                    if ($commandName === $addCommandName || $commandName === $createCommandName) {
                         $structure[DataTypeInterface::STRUCTURE_TYPE_COMMAND_HANDLER][$commandName][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] = [
                             DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_REPOSITORY_ENTITY_STORE,
                             DataTypeInterface::STRUCTURE_TYPE_FACTORY => DataTypeInterface::STRUCTURE_TYPE_ENTITY,
