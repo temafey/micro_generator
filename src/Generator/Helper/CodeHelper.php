@@ -631,11 +631,20 @@ trait CodeHelper
     {
         $eventName = strtolower($eventName);
 
-        if (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD)) {
+        if (
+            str_contains($eventName, GeneratorInterface::CREATE_METHOD_ADD_PREFIX) ||
+            str_contains($eventName, GeneratorInterface::CREATE_METHOD_CREATE_PREFIX) ||
+            str_contains($eventName, GeneratorInterface::CREATE_METHOD_INSERT_PREFIX)
+        ) {
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_ADD;
-        } elseif (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE)) {
+        } elseif (
+            str_contains($eventName, GeneratorInterface::CREATE_METHOD_DELETE_PREFIX) ||
+            str_contains($eventName, GeneratorInterface::CREATE_METHOD_REMOVE_PREFIX)
+        ) {
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_DELETE;
-        } elseif (str_contains($eventName, self::READ_MODEL_REPOSITORY_METHOD_NAME_GET)) {
+        } elseif (
+            str_contains($eventName, GeneratorInterface::CREATE_METHOD_GET_PREFIX)
+        ) {
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_GET;
         } else {
             $methodName = self::READ_MODEL_REPOSITORY_METHOD_NAME_UPDATE;
@@ -663,11 +672,14 @@ trait CodeHelper
             case self::METHOD_TYPE_FIND:
                 $methodTemplate = self::METHOD_TYPE_FIND_BY_CRITERIA;
                 break;
+                
+            case self::METHOD_TYPE_FETCH_ONE:
+            case self::METHOD_TYPE_FETCH:
+                $methodTemplate = self::METHOD_TYPE_FETCH_ONE;
+                break;
 
             case self::METHOD_TYPE_FIND_ONE_BY:
             case self::METHOD_TYPE_FIND_ONE:
-            case self::METHOD_TYPE_FETCH_ONE:
-            case self::METHOD_TYPE_FETCH:
             default:
                 $methodTemplate = self::METHOD_TYPE_FIND_ONE_BY;
                 break;

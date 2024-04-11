@@ -22,6 +22,7 @@ interface GeneratorInterface
     public const VALUE_OBJECT_UNIQUE_UUID = 'Uuid';
     public const VALUE_OBJECT_UNIQUE_ID = 'Id';
     public const VALUE_OBJECT_UNIQUE_PROCESS_UUID = 'ProcessUuid';
+    public const CREATE_METHOD_GET_PREFIX = "get";
     public const CREATE_METHOD_ADD_PREFIX = "add";
     public const CREATE_METHOD_INSERT_PREFIX = "insert";
     public const CREATE_METHOD_CREATE_PREFIX = "create";

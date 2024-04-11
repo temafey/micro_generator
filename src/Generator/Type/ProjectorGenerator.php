@@ -10,6 +10,7 @@ use MicroModule\MicroserviceGenerator\Generator\GeneratorInterface;
 use MicroModule\MicroserviceGenerator\Generator\Helper\ReturnTypeNotFoundException;
 use Exception;
 use ReflectionException;
+use Symfony\Component\VarDumper\Cloner\Data;
 
 /**
  * Generator for

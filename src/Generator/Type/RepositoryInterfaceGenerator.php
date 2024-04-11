@@ -96,11 +96,11 @@ class RepositoryInterfaceGenerator extends AbstractGenerator
             ) {
                 $readModel = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL];
                 $shortClassName = $this->getShortInterfaceName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
-                $className = $this->getClassName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
+                $className = $this->getInterfaceName($readModel, DataTypeInterface::STRUCTURE_TYPE_READ_MODEL);
             } else {
                 $entityName = $this->structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY];
                 $shortClassName = $this->getShortInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
-                $className = $this->getClassName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
+                $className = $this->getInterfaceName($entityName, DataTypeInterface::STRUCTURE_TYPE_ENTITY);
             }
             $structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_RETURN] = $shortClassName;
             $this->addUseStatement($className);

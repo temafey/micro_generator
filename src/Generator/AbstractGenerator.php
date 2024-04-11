@@ -76,6 +76,7 @@ abstract class AbstractGenerator implements GeneratorInterface
 
     public const METHOD_TYPE_FIND_BY_UUID                   = "findByUuid";
     public const METHOD_TYPE_FIND_ONE_BY                    = "findOneBy";
+    public const METHOD_TYPE_FIND_ONE_BY_U                  = "find-one-by";
     public const METHOD_TYPE_FIND_ONE                       = "findOne";
     public const METHOD_TYPE_FETCH_ONE                      = "fetchOne";
     public const METHOD_TYPE_FETCH_ONE_U                    = "fetch-one";

@@ -229,10 +229,13 @@ class QueryGenerator extends AbstractGenerator
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_BY_CRITERIA;
                 break;
 
-            case self::METHOD_TYPE_FIND_ONE_BY:
-            case self::METHOD_TYPE_FIND_ONE:
             case self::METHOD_TYPE_FETCH_ONE:
             case self::METHOD_TYPE_FETCH:
+                $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_BY_UUID;
+                break;
+
+            case self::METHOD_TYPE_FIND_ONE_BY:
+            case self::METHOD_TYPE_FIND_ONE:
             default:
                 $methodTemplate = self::METHOD_TEMPLATE_TYPE_FIND_ONE_BY;
                 break;

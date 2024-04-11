@@ -474,6 +474,25 @@ class ProjectBuilder implements ProjectBuilderInterface
                     DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
                 ];
             }
+            $findOneByQueryName = sprintf("%s-%s", AbstractGenerator::METHOD_TYPE_FIND_ONE_BY_U, $readModel);
+
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$findOneByQueryName])) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY][$findOneByQueryName] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        GeneratorInterface::KEY_UNIQUE_PROCESS_UUID,
+                        GeneratorInterface::KEY_FIND_CRITERIA,
+                    ],
+                ];
+            }
+            if (!isset($structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$findOneByQueryName])) {
+                $structure[DataTypeInterface::STRUCTURE_TYPE_QUERY_HANDLER][$findOneByQueryName] = [
+                    DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
+                        DataTypeInterface::STRUCTURE_TYPE_REPOSITORY => DataTypeInterface::STRUCTURE_TYPE_QUERY,
+                    ],
+                    DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => $readModel,
+                    DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entity,
+                ];
+            }
             if (
                 isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel]) &&
                 isset($structure[DataTypeInterface::STRUCTURE_TYPE_REPOSITORY][$readModel][DataTypeInterface::BUILDER_STRUCTURE_TYPE_METHODS]) &&

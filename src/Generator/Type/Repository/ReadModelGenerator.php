@@ -87,10 +87,13 @@ class ReadModelGenerator extends AbstractGenerator
             if (in_array($methodName, $this->methods)) {
                 continue;
             }
+            if ($methodName === self::READ_MODEL_REPOSITORY_METHOD_NAME_GET) {
+                $methods[] = $this->renderGetMethod();
+                continue;
+            }
             $this->methods[] = $methodName;
             $methods[] = $this->renderStructureMethod($methodName, $structure, $addVar);
         }
-        $methods[] = $this->renderGetMethod();
         $addVar["criteriaParams"] = implode("", $addVar["criteriaParams"]);
 
         return $this->renderClass(
@@ -211,8 +214,8 @@ class ReadModelGenerator extends AbstractGenerator
             $returnType === DataTypeInterface::STRUCTURE_TYPE_ENTITY ||
             $returnType === DataTypeInterface::STRUCTURE_TYPE_READ_MODEL
         ) {
-            $this->addUseStatement($this->getClassName($name, $returnType));
-            $shortClassName = $this->getShortClassName($name, $returnType);
+            $this->addUseStatement($this->getClassName($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL], $returnType));
+            $shortClassName = $this->getShortClassName($this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL], $returnType);
             $returnType = $shortClassName;
             $return = "$".lcfirst($shortClassName);
         } elseif (strpos($returnType, "\\")) {
