@@ -46,19 +46,25 @@ class EntityGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
-        $this->addUseStatement($this->getClassName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
-        $this->addUseStatement($this->getInterfaceName("event", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $this->addUseStatement($this->getClassName(DataTypeInterface::STRUCTURE_TYPE_EVENT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $this->addUseStatement($this->getInterfaceName(DataTypeInterface::STRUCTURE_TYPE_EVENT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $this->addUseStatement($this->getClassName(DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
+        $this->addUseStatement($this->getInterfaceName(DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $shortClassName."Interface";
         $implements[] = "Serializable";
         $extends = "EventSourcedAggregateRoot";
-        $this->addProperty("eventFactory", "EventFactoryInterface", "EventFactory object.");
+        $this->constructArguments[] = "protected ?EventFactoryInterface \$eventFactory = null";
+        $this->constructArguments[] = "protected ?ValueObjectFactoryInterface \$valueObjectFactory = null";
+        $methodLogic = "\r\n\t\t\$this->eventFactory = \$this->eventFactory ?? new EventFactory();";
+        $methodLogic .= "\r\n\t\t\$this->valueObjectFactory = \$this->valueObjectFactory ?? new ValueObjectFactory();";
+        
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            "?EventFactoryInterface \$eventFactory = null",
+            "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
-            "\r\n\t\t\$this->eventFactory = \$eventFactory ?? new EventFactory();",
+            $methodLogic,
             ""
         );
 
@@ -228,7 +234,7 @@ class EntityGenerator extends AbstractGenerator
     protected function renderCreateMethod(array $entityValueObject): string
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
-        $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
+        $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory, \$valueObjectFactory);";
         $firstCommand = $this->structure[0];
         $commandArgs = $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_COMMAND][$firstCommand][DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS];
         $commandProperties = [];
@@ -270,7 +276,7 @@ class EntityGenerator extends AbstractGenerator
             self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf('Factory method for creating a new %sEntity.', $shortClassName),
             "create",
-            sprintf("\n\t\t%s,\n\t\t?EventFactoryInterface \$eventFactory = null\n\t", $varName),
+            sprintf("\n\t\t%s,\n\t\t?EventFactoryInterface \$eventFactory = null,\n\t\t?ValueObjectFactoryInterface \$valueObjectFactory = null\n\t", $varName),
             "self",
             $methodLogic,
             "\$entity"
@@ -281,7 +287,7 @@ class EntityGenerator extends AbstractGenerator
     {
         $shortClassName = $this->getShortClassName($this->name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT);
         $varName = lcfirst($shortClassName);
-        $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory);";
+        $methodLogic = "\r\n\t\t\$entity = new static(\$eventFactory, \$valueObjectFactory);";
         $methodLogic .= "\r\n\t\t\$entity->uuid = \$uuid;";
         $methodLogic .= sprintf("\r\n\t\t\$entity->assembleFromValueObject(\$%s);", $varName);
 
@@ -289,7 +295,7 @@ class EntityGenerator extends AbstractGenerator
             self::METHOD_TEMPLATE_TYPE_STATIC,
             sprintf('Factory method for creating a new %sEntity.', $shortClassName),
             "createActual",
-            sprintf('Uuid $uuid, %s $%s, ?EventFactoryInterface $eventFactory = null', $shortClassName, $varName),
+            sprintf('Uuid $uuid, %s $%s, ?EventFactoryInterface $eventFactory = null, ?ValueObjectFactoryInterface $valueObjectFactory = null', $shortClassName, $varName),
             "self",
             $methodLogic,
             "\$entity"

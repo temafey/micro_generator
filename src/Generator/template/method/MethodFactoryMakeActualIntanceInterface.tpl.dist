@@ -7,5 +7,6 @@
     public function makeActual{entityName}Instance(
         Uuid $uuid,
         {shortValueObjectName} ${propertyValueObjectName},
-        ?EventFactoryInterface $eventFactory = null
+        ?EventFactoryInterface $eventFactory = null,
+        ?ValueObjectFactoryInterface $valueObjectFactory = null
     ){returnType};

@@ -5,7 +5,8 @@
     public function create{entityName}Instance(
         ProcessUuid $processUuid,
         {shortValueObjectName} ${propertyValueObjectName},
-        ?EventFactoryInterface $eventFactory = null
+        ?EventFactoryInterface $eventFactory = null,
+        ?ValueObjectFactoryInterface $valueObjectFactory = null
     ): {shortEntityInterfaceName} {
         $uuid = new Uuid();
 
@@ -13,6 +14,7 @@
             $processUuid,
             $uuid,
             ${propertyValueObjectName},
-            $eventFactory
+            $eventFactory,
+            $valueObjectFactory
         );
     }

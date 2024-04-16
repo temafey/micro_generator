@@ -121,7 +121,7 @@ class CommandHandlerGenerator extends AbstractGenerator
             "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
             implode("", $this->constructArgumentsAssignment),
-            ""
+            "",
         );
     }
 
