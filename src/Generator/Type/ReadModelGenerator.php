@@ -167,7 +167,8 @@ class ReadModelGenerator extends AbstractGenerator
         
         if (
             $name === self::KEY_UNIQUE_PROCESS_UUID ||
-            $name === self::KEY_UNIQUE_UUID
+            $name === self::KEY_UNIQUE_UUID ||
+            strpos($name, self::KEY_UNIQUE_UUID) !== false
         ) {
             $type = "guid";
             $options["type"] = DataTypeInterface::DATA_ORM_TYPE_GUID;

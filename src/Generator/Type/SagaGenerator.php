@@ -42,28 +42,58 @@ class SagaGenerator extends AbstractGenerator
         $this->addUseStatement("Broadway\Saga\Metadata\StaticallyConfiguredSagaInterface");
         $this->addUseStatement("Broadway\Saga\State");
         $this->addUseStatement("MicroModule\Saga\AbstractSaga");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag");
+        $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         //$this->addUseStatement($this->getInterfaceName("Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $extends = "AbstractSaga";
         $implements[] = "StaticallyConfiguredSagaInterface";
-        $this->properties[] = "\r\n   protected const STATE_CRITERIA_KEY = 'processId';";
+        $this->properties[] = "\r\n\tprotected const STATE_CRITERIA_KEY = 'processId';";
+        $attributes = [];
+        $attributes[] = sprintf("#[AutoconfigureTag(name: 'broadway.saga', attributes: ['type' => 'api.%s.%s'])]", $this->camelCaseToUnderscore($this->domainName), $this->name);
 
-        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg) {
-            $this->addUseStatement($arg);
-            $classNameArray = explode("\\", $arg);
-            $shortClassName = array_pop($classNameArray);
-            $propertyName = str_replace("Interface", "", lcfirst($shortClassName));
-            $this->addProperty($propertyName, $shortClassName);
-            $this->constructArguments[] = $shortClassName." $".$propertyName;
-            $this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
+        foreach ($this->structure[DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS] as $arg => $type) {
+            if (is_string($arg)) {
+                $className = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getInterfaceName($arg, $type) : $this->getClassName($arg, $type);
+                $this->addUseStatement($className);
+                $propertyType = ($type === DataTypeInterface::STRUCTURE_TYPE_REPOSITORY) ? $this->getShortInterfaceName($arg, $type) : $this->getShortClassName($arg, $type);
+                $propertyName = $type;
+                $autowiring = $this->getAutowiringName($className);
+            } elseif (strpos("\\", $type) !== false) {
+                $arg = $type;
+                $this->addUseStatement($arg);
+                $classNameArray = explode("\\", $arg);
+                $propertyType = array_pop($classNameArray);
+                $propertyName = str_replace("Interface", "", lcfirst($propertyType));
+                $autowiring = $this->getAutowiringName($arg);
+            } else {
+                $classNameInterface = $this->getInterfaceName($this->name, $type);
+
+                if ($type === DataTypeInterface::STRUCTURE_TYPE_COMMAND_BUS) {
+                    $aliasShortClassName = ucfirst($type);
+                    $this->addUseStatement($classNameInterface);
+                } else {
+                    $aliasShortClassName = (isset(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type]))
+                        ? ucfirst(DataTypeInterface::STRUCTURE_REPOSITORY_DATA_TYPES_MAPPING[$type]) . "Interface"
+                        : ucfirst($type) . "Interface";
+                    $this->addUseStatement($classNameInterface . " as " . $aliasShortClassName);
+                }
+                $propertyType = $aliasShortClassName;
+                $propertyName = $type;
+                $autowiring = $this->getAutowiringServiceName($this->name, $type);
+            }
+            //$this->addProperty($propertyName, $shortClassName);
+            $constructArgument = sprintf("%s\n\t\tprotected %s $%s", $autowiring, $propertyType, $propertyName);
+            $this->constructArguments[] = $constructArgument;
+            //$this->constructArgumentsAssignment[] = sprintf("\r\n\t\t\$this->%s = $%s;", $propertyName, $propertyName);
         }
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
             "__construct",
-            implode(", ", $this->constructArguments),
+            "\n\t\t".implode(",\n\t\t", $this->constructArguments)."\n\t",
             "",
             implode("", $this->constructArgumentsAssignment),
-            ""
+            "",
         );
         $methods[] = $this->renderConfigurationMethod();
         $this->renderHandleMethods($methods);
@@ -76,7 +106,9 @@ class SagaGenerator extends AbstractGenerator
             $implements,
             $useTraits,
             $this->properties,
-            $methods
+            $methods,
+            [],
+            $attributes
         );
     }
 
