@@ -81,18 +81,18 @@ class EntityGenerator extends AbstractGenerator
         if (!in_array(self::KEY_UNIQUE_PROCESS_UUID, $entityValueObject)) {
             array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
         }
-
-        foreach ($entityValueObject as $valueObject) {
-            $methods[] = $this->renderValueObjectGetMethod($valueObject);
-        }
+        $methods[] = $this->renderCreateMethod($entityValueObject);
+        $methods[] = $this->renderCreateActualMethod();
 
         foreach ($this->structure as $command) {
             [$commandMethod, $applyMethods] = $this->renderCommandMethodandApplyMethods($command);
             $methods[] = $commandMethod;
             array_push($methods,  ...$applyMethods);
         }
-        $methods[] = $this->renderCreateMethod($entityValueObject);
-        $methods[] = $this->renderCreateActualMethod();
+
+        foreach ($entityValueObject as $valueObject) {
+            $methods[] = $this->renderValueObjectGetMethod($valueObject);
+        }
         $methods[] = $this->renderDeserializeMethod();
         $methods[] = $this->renderAssembleFromValueObjectMethod();
         $methods[] = $this->renderAssembleToValueObjectMethod();

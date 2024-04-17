@@ -47,6 +47,10 @@ class EntityInterfaceGenerator extends AbstractGenerator
         array_unshift($entityValueObject, self::KEY_UNIQUE_UUID);
         array_unshift($entityValueObject, self::KEY_UNIQUE_PROCESS_UUID);
 
+        foreach ($this->structure as $command) {
+            $methods[] = $this->renderCommandMethod($command);
+        }
+
         foreach ($entityValueObject as $valueObject) {
             $renderedMethod = $this->renderValueObjectMethod($valueObject);
 
@@ -54,10 +58,6 @@ class EntityInterfaceGenerator extends AbstractGenerator
                 continue;
             }
             $methods[] = $renderedMethod;
-        }
-
-        foreach ($this->structure as $command) {
-            $methods[] = $this->renderCommandMethod($command);
         }
 
         return $this->renderInterface(
