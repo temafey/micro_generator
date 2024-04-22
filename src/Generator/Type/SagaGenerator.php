@@ -48,6 +48,7 @@ class SagaGenerator extends AbstractGenerator
         $extends = "AbstractSaga";
         $implements[] = "StaticallyConfiguredSagaInterface";
         $this->properties[] = "\r\n\tprotected const STATE_CRITERIA_KEY = 'processId';";
+        $this->properties[] = "\r\n\tprotected const STATE_ID_KEY = 'id';";
         $attributes = [];
         $attributes[] = sprintf("#[AutoconfigureTag(name: 'broadway.saga', attributes: ['type' => 'api.%s.%s'])]", $this->camelCaseToUnderscore($this->domainName), $this->name);
 
@@ -153,6 +154,7 @@ class SagaGenerator extends AbstractGenerator
             $methodComment = sprintf("Handle %s event.", $eventShortName);
             $methodArguments = sprintf("State \$state, %s \$event", $eventShortName);
             $methodLogic = "\r\n\t\t\$state->set(self::STATE_CRITERIA_KEY, (string) \$event->getProcessUuid());";
+            $methodLogic .= "\r\n\t\t\$state->set(self::STATE_ID_KEY, (string) \$event->getUuid());";
 
             if (true === $command) {
                 $methodLogic .= "\r\n\t\t\$state->setDone();";
