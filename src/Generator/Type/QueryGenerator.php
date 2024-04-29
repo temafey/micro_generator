@@ -45,7 +45,7 @@ class QueryGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
         
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Domain\Query\AbstractQuery");
+            $this->addUseStatement("MicroModule\Base\Domain\Query\AbstractQuery");
         } else {
             $this->addUseStatement($classNamespace. "\\"."AbstractQuery");
         }

@@ -34,7 +34,7 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
     {
         $methods = [];
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
 
         foreach ($this->structure as $name => $structure) {
             $entityName = $structure[DataTypeInterface::STRUCTURE_TYPE_ENTITY] ?? $name;

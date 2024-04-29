@@ -52,7 +52,7 @@ class CommandHandlerGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
 
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Application\CommandHandler\CommandHandlerInterface");
+            $this->addUseStatement("MicroModule\Base\Application\CommandHandler\CommandHandlerInterface");
             $this->addUseStatement("MicroModule\Base\Domain\Command\CommandInterface");
         } else {
             $this->addUseStatement($classNamespace."\\"."CommandHandlerInterface");

@@ -40,7 +40,7 @@ class DtoGenerator extends AbstractGenerator
         $useTraits = [];
         $methods = [];
         $extends = "";
-        $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\Dto\DtoInterface");
         $this->addUseStatement("MicroModule\Base\Domain\Exception\FactoryException");
         $classNamespace = $this->getClassNamespace(DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY_INTERFACE);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
@@ -80,10 +80,16 @@ class DtoGenerator extends AbstractGenerator
         $this->makeDtosInstanceByType[] = sprintf("self::%s => \$this->make%s(...\$args)", $dtoConstant, $shortDtoClassName);
 
         foreach ($structure as $arg) {
-            if (!$this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]) {
+            if (
+                !isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]) &&
+                $arg !== DataTypeInterface::VALUE_OBJECT_TYPE_PAYLOAD
+            ) {
                 throw new Exception(sprintf("Argument '%s' in ValueObjects structure not found!", $arg));
             }
-            $propertyType = $this->getValueObjectScalarType($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]["type"]);
+            $valueObjectType = $arg === DataTypeInterface::VALUE_OBJECT_TYPE_PAYLOAD
+                ? DataTypeInterface::VALUE_OBJECT_TYPE_PAYLOAD
+                : $this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]["type"];
+            $propertyType = $this->getValueObjectScalarType($valueObjectType);
             $propertyName = lcfirst($this->underscoreAndHyphenToCamelCase($arg));
             $methodArguments[] = $propertyType." $".$propertyName;
             $dtoArguments[] = sprintf("$%s", $propertyName);

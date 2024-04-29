@@ -36,10 +36,10 @@ class EntityGenerator extends AbstractGenerator
         $useTraits = [];
         $methods = [];
         $extends = "";
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
         $implements[] = $shortClassName."Interface";

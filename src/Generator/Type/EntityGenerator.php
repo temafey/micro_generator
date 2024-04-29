@@ -42,8 +42,8 @@ class EntityGenerator extends AbstractGenerator
         $this->addUseStatement("Assert\Assertion");
         $this->addUseStatement("Broadway\EventSourcing\EventSourcedAggregateRoot");
         $this->addUseStatement("Broadway\Serializer\Serializable");
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
         $this->addUseStatement($this->getClassName(DataTypeInterface::STRUCTURE_TYPE_EVENT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));

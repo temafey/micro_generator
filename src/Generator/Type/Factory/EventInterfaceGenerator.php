@@ -37,10 +37,10 @@ class EventInterfaceGenerator extends AbstractGenerator
         $methods = [];
         $extends = "";
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Id");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
 
         foreach ($this->structure as $name => $event) {

@@ -37,8 +37,8 @@ class ReadModelInterfaceGenerator extends AbstractGenerator
         $useTraits = [];
         $methods = [];
         $additionalVariables = [];
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Common\Domain\ReadModel\ReadModelInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Base\Domain\ReadModel\ReadModelInterface");
         $this->addUseStatement("Exception");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
     

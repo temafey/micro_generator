@@ -105,7 +105,7 @@ interface DataTypeInterface
     public const STRUCTURE_LAYER_PRESENTATION = "presentation";
 
     public const VALUE_OBJECT_NAMESPACE = "MicroModule\ValueObject";
-    public const VALUE_OBJECT_NAMESPACE_COMMON = "MicroModule\Common\Domain\ValueObject";
+    public const VALUE_OBJECT_NAMESPACE_COMMON = "MicroModule\Base\Domain\ValueObject";
     public const VALUE_OBJECT_TYPE_ENTITY = "value_object_entity";
     public const VALUE_OBJECT_TYPE_IDENTITY_UUID = "identity_uuid";
     public const VALUE_OBJECT_TYPE_STRING = "stringLiteral_stringLiteral";
@@ -122,6 +122,7 @@ interface DataTypeInterface
     public const VALUE_OBJECT_TYPE_PERSON_GENDER = "person_gender";
     public const VALUE_OBJECT_TYPE_PERSON_NAME = "person_name";
     public const VALUE_OBJECT_TYPE_FIND_CRITERIA = "find_criteria";
+    public const VALUE_OBJECT_TYPE_PAYLOAD = "payload";
 
     public const PROPERTY_VISIBILITY_PUBLIC = "public";
     public const PROPERTY_VISIBILITY_PROTECTED = "protected";
@@ -191,6 +192,7 @@ interface DataTypeInterface
          self::VALUE_OBJECT_TYPE_PERSON_NAME => self::DATA_SCALAR_TYPE_STRING,
          self::VALUE_OBJECT_TYPE_ENTITY => self::DATA_SCALAR_TYPE_ARRAY,
          self::VALUE_OBJECT_TYPE_FIND_CRITERIA => self::DATA_SCALAR_TYPE_ARRAY,
+        self::VALUE_OBJECT_TYPE_PAYLOAD => self::DATA_SCALAR_TYPE_ARRAY,
          self::VALUE_OBJECT_TYPE_LOGICAL_BOOL => self::DATA_SCALAR_TYPE_BOOL,
     ];
 

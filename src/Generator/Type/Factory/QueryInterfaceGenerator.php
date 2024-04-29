@@ -41,9 +41,9 @@ class QueryInterfaceGenerator extends AbstractGenerator
         $methods = [];
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
         $shortInterfaceName = $this->getShortInterfaceName($this->name, $this->type);
-        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement("MicroModule\Common\Domain\Factory\QueryFactoryInterface as BaseQueryFactoryInterface");
+        //$this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
+        //$this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\Factory\QueryFactoryInterface as BaseQueryFactoryInterface");
         $extends = "BaseQueryFactoryInterface";
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
 

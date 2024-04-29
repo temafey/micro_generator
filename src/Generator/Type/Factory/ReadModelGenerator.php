@@ -38,8 +38,8 @@ class ReadModelGenerator extends AbstractGenerator
         $extends = "";
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
         $implements[] = $shortClassName."Interface";
 
         foreach ($this->structure as $name => $structure) {

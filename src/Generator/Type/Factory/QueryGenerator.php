@@ -42,12 +42,12 @@ class QueryGenerator extends AbstractGenerator
         $extends = "";
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\Query\QueryInterface as BaseQueryInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\Query\QueryInterface as BaseQueryInterface");
         $this->addUseStatement("MicroModule\Base\Domain\Exception\FactoryException");
-        $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
-        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        //$this->addUseStatement("MicroModule\Common\Domain\ValueObject\Id");
+        $this->addUseStatement("MicroModule\Base\Domain\Dto\DtoInterface");
+        //$this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
+        //$this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
+        //$this->addUseStatement("MicroModule\Base\Domain\ValueObject\Id");
         $implements[] = $shortClassName."Interface";
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
 

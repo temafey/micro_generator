@@ -39,7 +39,7 @@ class ValueObjectInterfaceGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
         $shortInterfaceName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
-        $this->addUseStatement("MicroModule\Common\Domain\Factory\CommonValueObjectFactoryInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\Factory\CommonValueObjectFactoryInterface");
 
         foreach ($this->structure as $name => $valueObject) {
             if ($this->useCommonComponent && in_array($name, self::COMMON_VALUE_OBJECT_KEYS)) {

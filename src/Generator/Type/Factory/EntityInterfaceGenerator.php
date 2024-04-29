@@ -34,10 +34,10 @@ class EntityInterfaceGenerator extends AbstractGenerator
     {
         $methods = [];
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
 
         foreach ($this->structure as $name => $structure) {
             $this->addUseStatement($this->getClassName($name, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));

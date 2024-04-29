@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MicroModule\MicroserviceGenerator\Service;
 
 use Exception;
-use MicroModule\Common\Infrastructure\Service\Utils\DeclarationLocator;
+use MicroModule\Base\Infrastructure\Service\Utils\DeclarationLocator;
 use MicroModule\MicroserviceGenerator\Generator\AbstractGenerator;
 use MicroModule\MicroserviceGenerator\Generator\DataTypeInterface;
 use MicroModule\MicroserviceGenerator\Generator\Exception\CommandNotFoundException;
@@ -519,7 +519,7 @@ class ProjectBuilder implements ProjectBuilderInterface
                     DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entityName,
                     DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
                         //$this->namespace."\Domain\Repository\ReadModel\\".ucfirst($this->camelCaseToUnderscore($entity))."RepositoryInterface",
-                        "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                        "MicroModule\Base\Domain\Repository\ReadModelStoreInterface",
                         $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
                         $this->namespace."\Domain\Factory\ValueObjectFactoryInterface",
                     ],
@@ -549,7 +549,7 @@ class ProjectBuilder implements ProjectBuilderInterface
                         DataTypeInterface::STRUCTURE_TYPE_READ_MODEL => $readModelName,
                         DataTypeInterface::STRUCTURE_TYPE_ENTITY => $entityName,
                         DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
-                            "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                            "MicroModule\Base\Domain\Repository\ReadModelStoreInterface",
                             $this->namespace."\Domain\Factory\ReadModelFactoryInterface",
                             $this->namespace."\Domain\Factory\ValueObjectFactoryInterface",
                         ],
@@ -625,7 +625,7 @@ class ProjectBuilder implements ProjectBuilderInterface
             $eventStoreStructure[$name] = [
                 DataTypeInterface::STRUCTURE_TYPE_ENTITY => $name,
                 DataTypeInterface::BUILDER_STRUCTURE_TYPE_ARGS => [
-                    "MicroModule\Common\Domain\Repository\ReadModelStoreInterface",
+                    "MicroModule\Base\Domain\Repository\ReadModelStoreInterface",
                 ],
             ];
         }

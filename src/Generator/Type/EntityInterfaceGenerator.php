@@ -36,7 +36,7 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $useTraits = [];
         $methods = [];
         $extends = "EntityInterface";
-        $this->addUseStatement("MicroModule\Common\Domain\Entity\EntityInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\Entity\EntityInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
     
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {

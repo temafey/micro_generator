@@ -38,9 +38,9 @@ class EventGenerator extends AbstractGenerator
         $extends = "";
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\ProcessUuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Uuid");
-        $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $implements[] = $shortClassName."Interface";
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);

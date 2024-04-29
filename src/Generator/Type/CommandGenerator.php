@@ -43,7 +43,7 @@ class CommandGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
 
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Domain\Command\AbstractCommand");
+            $this->addUseStatement("MicroModule\Base\Domain\Command\AbstractCommand");
         } else {
             $this->addUseStatement($classNamespace."\\"."AbstractCommand");
         }

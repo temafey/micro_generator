@@ -48,7 +48,7 @@ class DtoGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
 
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Application\Dto\AbstractDto");
+            $this->addUseStatement("MicroModule\Base\Application\Dto\AbstractDto");
             $extends = "AbstractDto";
         } else {
             $this->addUseStatement($this->getInterfaceName($this->name, DataTypeInterface::STRUCTURE_TYPE_DTO));

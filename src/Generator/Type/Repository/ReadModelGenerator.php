@@ -60,9 +60,9 @@ class ReadModelGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($interfaceNamespace);
-        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException");
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ReadModelException");
-        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\DBALEventStoreException");
+        $this->addUseStatement("MicroModule\Base\Infrastructure\Repository\Exception\NotFoundException");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ReadModelException");
+        $this->addUseStatement("MicroModule\Base\Infrastructure\Repository\Exception\DBALEventStoreException");
         $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         $implements[] = $interfaceShortName;
         $addVar = [

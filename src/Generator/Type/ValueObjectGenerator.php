@@ -44,7 +44,7 @@ class ValueObjectGenerator extends AbstractGenerator
         if ($this->structure['type'] !== DataTypeInterface::VALUE_OBJECT_TYPE_ENTITY) {
             $extendsClassName = $this->getValueObjectClassName($this->structure['type'], true);
             $extendsShortClassName = "Base" . $this->getValueObjectShortClassName($this->structure['type']);
-            $this->addUseStatement( $extendsClassName . " as $extendsShortClassName");
+            $this->addUseStatement($extendsClassName . " as $extendsShortClassName");
             $extends = $extendsShortClassName;
 
             return $this->renderClass(
@@ -58,12 +58,9 @@ class ValueObjectGenerator extends AbstractGenerator
                 $methods
             );
         }
-        $this->addUseStatement("Broadway\Serializer\Serializable");
-        $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidNativeValueException");
-        $implements[] = "Serializable";
-        $implements[] = "ValueObjectInterface";
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\BaseEntityValueObject");
+        $extends = "BaseEntityValueObject";
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidNativeValueException");
         $comparedFieldsProperty = "[";
         $methods[] = $this->renderFromArrayMethod();
         $methods[] = $this->renderToArrayMethod();
@@ -154,7 +151,7 @@ class ValueObjectGenerator extends AbstractGenerator
             "",
             "array",
             $methodBody,
-            "\$data"
+            "\$this->enrich(\$data)"
         );
     }
 }

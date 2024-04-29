@@ -47,7 +47,7 @@ class QueryGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($interfaceNamespace." as QueryRepositoryInterface");
-        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\Exception\NotFoundException"); 
+        $this->addUseStatement("MicroModule\Base\Infrastructure\Repository\Exception\NotFoundException"); 
         $this->addUseStatement("Symfony\Component\DependencyInjection\Attribute\Autowire");
         $implements[] = "QueryRepositoryInterface";
         $readModel = $this->structure[DataTypeInterface::STRUCTURE_TYPE_READ_MODEL]?:'ReadModel';

@@ -47,8 +47,8 @@ class QueryHandlerGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
  
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Domain\Query\QueryInterface");
-            $this->addUseStatement("MicroModule\Common\Application\QueryHandler\QueryHandlerInterface");
+            $this->addUseStatement("MicroModule\Base\Domain\Query\QueryInterface");
+            $this->addUseStatement("MicroModule\Base\Application\QueryHandler\QueryHandlerInterface");
         } else {
             $this->addUseStatement($classNamespace. "\\"."QueryHandlerInterface");
         }

@@ -39,7 +39,7 @@ class DtoInterfaceGenerator extends AbstractGenerator
         $implements = [];
         $useTraits = [];
         $methods = [];
-        $this->addUseStatement("MicroModule\Common\Application\Factory\DtoFactoryInterface as BaseDtoFactoryInterface");
+        $this->addUseStatement("MicroModule\Base\Application\Factory\DtoFactoryInterface as BaseDtoFactoryInterface");
         $interfaceNamespace = $this->getInterfaceNamespace(DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY_INTERFACE);
         $shortInterfaceName = $this->getShortInterfaceName($this->name, DataTypeInterface::STRUCTURE_TYPE_DTO_FACTORY_INTERFACE);
         $extends = "BaseDtoFactoryInterface";

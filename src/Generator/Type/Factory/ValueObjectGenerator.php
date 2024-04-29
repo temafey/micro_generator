@@ -43,7 +43,7 @@ class ValueObjectGenerator extends AbstractGenerator
 
         if ($this->useCommonComponent) {
             $extends = "CommonValueObjectFactory";
-            $this->addUseStatement("MicroModule\Common\Domain\Factory\CommonValueObjectFactory");
+            $this->addUseStatement("MicroModule\Base\Domain\Factory\CommonValueObjectFactory");
         }
 
         foreach ($this->structure as $name => $valueObject) {

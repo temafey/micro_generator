@@ -50,7 +50,7 @@ class EventGenerator extends AbstractGenerator
         $this->addUseStatement("Assert\AssertionFailedException");
         
         if ($this->useCommonComponent) {
-            $this->addUseStatement("MicroModule\Common\Domain\Event\AbstractEvent");
+            $this->addUseStatement("MicroModule\Base\Domain\Event\AbstractEvent");
         } else {
             $this->addUseStatement($classNamespace. "\\AbstractEvent");
         }
@@ -67,7 +67,7 @@ class EventGenerator extends AbstractGenerator
 
         if (!empty($this->constructArguments)) {
             $this->constructArguments[] = "?Payload \$payload = null";
-            $this->addUseStatement("MicroModule\Common\Domain\ValueObject\Payload");
+            $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
             $methodLogic = "\r\n\t\tparent::__construct(\$processUuid, \$uuid, \$payload);";
                 array_unshift(
                     $methods, $this->renderMethod(

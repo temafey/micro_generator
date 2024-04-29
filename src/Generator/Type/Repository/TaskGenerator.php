@@ -39,7 +39,7 @@ class TaskGenerator extends AbstractGenerator
         $interfaceNamespace = $this->getInterfaceName($this->name, $this->type);
         $interfaceShortName = $this->getShortInterfaceName($this->name, $this->type);
         $this->addUseStatement($interfaceNamespace);
-        $this->addUseStatement("MicroModule\Common\Infrastructure\Repository\TaskRepository as BaseTaskRepository");
+        $this->addUseStatement("MicroModule\Base\Infrastructure\Repository\TaskRepository as BaseTaskRepository");
         $this->addUseStatement($this->getInterfaceName("Command", DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $implements[] = $interfaceShortName;
         $addVar = [

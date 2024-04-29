@@ -40,11 +40,14 @@ class DtoInterfaceGenerator extends AbstractGenerator
     public function generate(): ?string
     {
         $methods = [];
-        $this->addUseStatement("MicroModule\Common\Domain\Dto\DtoInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\Dto\DtoInterface");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type);
 
         foreach ($this->structure as $arg) {
-            if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg])) {
+            if (
+                !isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$arg]) &&
+                $arg !== DataTypeInterface::VALUE_OBJECT_TYPE_PAYLOAD
+            ) {
                 throw new Exception(sprintf("Value object for dto '%s' was not found!", $arg));
             }
 

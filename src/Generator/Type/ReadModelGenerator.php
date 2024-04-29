@@ -41,7 +41,7 @@ class ReadModelGenerator extends AbstractGenerator
         $classNamespace = $this->getClassNamespace($this->type);
         $shortClassName = $this->getShortClassName($this->name, $this->type);
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
-        $this->addUseStatement("MicroModule\Common\Domain\Exception\ValueObjectInvalidException");
+        $this->addUseStatement("MicroModule\Base\Domain\Exception\ValueObjectInvalidException");
 
         $this->addUseStatement("Doctrine\ORM\Mapping\Column");
         $this->addUseStatement("Doctrine\ORM\Mapping\Entity");
