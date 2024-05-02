@@ -128,8 +128,8 @@ class CommandGenerator extends AbstractGenerator
                 $methodLogic .= sprintf("\r\n\t\t\$%s[\"updated_at\"] = \$%s[\"updated_at\"] ?? date_create(\"now\");", $propertyName, $propertyName);
             }
         }
-        $methodArguments[] = "array \$payload = []";
-        $commandArguments[] = "Payload::fromNative(\$payload)";
+        $methodArguments[] = "?array \$payload = null";
+        $commandArguments[] = "\$payload ? Payload::fromNative(\$payload) : null";
         $additionalVariables["shortFactoryClassName"] = $shortCommandClassName;
         $additionalVariables["factoryArguments"] = implode(", \r\n\t\t\t", $commandArguments);
 
