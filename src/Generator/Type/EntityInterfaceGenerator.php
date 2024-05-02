@@ -37,8 +37,9 @@ class EntityInterfaceGenerator extends AbstractGenerator
         $methods = [];
         $extends = "EntityInterface";
         $this->addUseStatement("MicroModule\Base\Domain\Entity\EntityInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $interfaceNamespace = $this->getInterfaceNamespace($this->type, $this->name);
-    
+
         if (!isset($this->domainStructure[DataTypeInterface::STRUCTURE_LAYER_DOMAIN][DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT][$this->name])) {
             throw new Exception(sprintf("ValueObject '%s' for entity was not found!", $this->name));
         }
@@ -110,6 +111,7 @@ class EntityInterfaceGenerator extends AbstractGenerator
             $propertyName = lcfirst($shortClassName);
             $commandArguments[] = $shortClassName." $".$propertyName;
         }
+        $commandArguments[] = "?Payload \$payload = null";
 
         return $this->renderMethodInterface(
             $methodComment,

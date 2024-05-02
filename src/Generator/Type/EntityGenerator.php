@@ -46,6 +46,7 @@ class EntityGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $this->addUseStatement("MicroModule\ValueObject\ValueObjectInterface");
         $this->addUseStatement("Broadway\Serializer\Serializable");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $this->addUseStatement($this->getClassName(DataTypeInterface::STRUCTURE_TYPE_EVENT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $this->addUseStatement($this->getInterfaceName(DataTypeInterface::STRUCTURE_TYPE_EVENT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
         $this->addUseStatement($this->getClassName(DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT, DataTypeInterface::STRUCTURE_TYPE_FACTORY));
@@ -57,7 +58,7 @@ class EntityGenerator extends AbstractGenerator
         $this->constructArguments[] = "protected ?ValueObjectFactoryInterface \$valueObjectFactory = null";
         $methodLogic = "\r\n\t\t\$this->eventFactory = \$this->eventFactory ?? new EventFactory();";
         $methodLogic .= "\r\n\t\t\$this->valueObjectFactory = \$this->valueObjectFactory ?? new ValueObjectFactory();";
-        
+
         $methods[] = $this->renderMethod(
             self::METHOD_TEMPLATE_TYPE_DEFAULT,
             "Constructor",
@@ -164,9 +165,11 @@ class EntityGenerator extends AbstractGenerator
             $commandProperties[] = "$".$propertyName;
             $commandArguments[] = $shortClassName." $".$propertyName;
         }
+        $commandArguments[] = "?Payload \$payload = null";
+
         if (!$uuidExists) {
             $uuid = "\$this->".self::KEY_UNIQUE_UUID;
-            
+
             if ($processUuidExists) {
                 $commandProperties = array_merge(array_slice($commandProperties, 0, 1), [$uuid], array_slice($commandProperties, 1));
             } else {
@@ -225,6 +228,7 @@ class EntityGenerator extends AbstractGenerator
                 $methodLogic,
                 ""
             );
+            $commandProperties[] = "\$payload";
             $applyEvents[] = sprintf("\r\n\t\t\$this->apply(\$this->eventFactory->make%s(%s));", $eventShortName, implode(", ", $commandProperties));
         }
 
@@ -244,7 +248,7 @@ class EntityGenerator extends AbstractGenerator
         foreach ($commandArgs as $arg) {
             $shortClassName = $this->getValueObjectShortClassName($arg);
             $commandProperties[] = $shortClassName." $".lcfirst($shortClassName);
-            
+
             if ($shortClassName === self::VALUE_OBJECT_UNIQUE_PROCESS_UUID) {
                 $processUuidExists = true;
             }
