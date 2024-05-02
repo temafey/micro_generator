@@ -89,7 +89,7 @@ class CommandInterfaceGenerator extends AbstractGenerator
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $propertyType." $".$propertyName;
         }
-        $methodArguments[] = "?Payload \$payload = null";
+        $methodArguments[] = "?array \$payload = null";
 
         return $this->renderMethodInterface(
             $methodComment,
