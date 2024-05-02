@@ -59,9 +59,11 @@ class CommandGenerator extends AbstractGenerator
         }
 
         if (!empty($this->constructArguments)) {
+            $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
+            $this->constructArguments[] = sprintf("\n\t\t%s $%s = null", "?Payload", "payload");
             $methodLogic = implode("", $this->constructArgumentsAssignment);
             $uuidArgument = $this->constructArgumentUuidExists ? "\$uuid" : "null";
-            $methodLogic .= sprintf("\r\n\t\tparent::__construct(\$processUuid, %s);", $uuidArgument);
+            $methodLogic .= sprintf("\r\n\t\tparent::__construct(\$processUuid, %s, \$payload);", $uuidArgument);
             array_unshift(
                 $methods, $this->renderMethod(
                     self::METHOD_TEMPLATE_TYPE_DEFAULT,
