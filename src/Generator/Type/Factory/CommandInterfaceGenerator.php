@@ -44,6 +44,7 @@ class CommandInterfaceGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
         $this->addUseStatement("MicroModule\Base\Domain\Factory\CommandFactoryInterface as BaseCommandFactoryInterface");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $extends = "BaseCommandFactoryInterface";
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
@@ -88,6 +89,7 @@ class CommandInterfaceGenerator extends AbstractGenerator
             $propertyName = lcfirst($shortClassName);
             $methodArguments[] = $propertyType." $".$propertyName;
         }
+        $methodArguments[] = "?Payload \$payload = null";
 
         return $this->renderMethodInterface(
             $methodComment,

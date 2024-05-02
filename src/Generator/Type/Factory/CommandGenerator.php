@@ -48,6 +48,7 @@ class CommandGenerator extends AbstractGenerator
         $this->addUseStatement("MicroModule\Base\Domain\ValueObject\ProcessUuid");
         $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Uuid");
         $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Id");
+        $this->addUseStatement("MicroModule\Base\Domain\ValueObject\Payload");
         $implements[] = $shortClassName."Interface";
         $this->addUseStatement($this->getClassName($this->domainName, DataTypeInterface::STRUCTURE_TYPE_VALUE_OBJECT));
         $this->additionalVariables['propertyValueObjectName'] = lcfirst($this->additionalVariables['shortValueObjectName']);
@@ -127,6 +128,8 @@ class CommandGenerator extends AbstractGenerator
                 $methodLogic .= sprintf("\r\n\t\t\$%s[\"updated_at\"] = \$%s[\"updated_at\"] ?? date_create(\"now\");", $propertyName, $propertyName);
             }
         }
+        $methodArguments[] = "?Payload \$payload = null";
+        $commandArguments[] = "Payload::fromNative(\$payload)";
         $additionalVariables["shortFactoryClassName"] = $shortCommandClassName;
         $additionalVariables["factoryArguments"] = implode(", \r\n\t\t\t", $commandArguments);
 
