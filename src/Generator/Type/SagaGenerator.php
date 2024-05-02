@@ -194,6 +194,7 @@ class SagaGenerator extends AbstractGenerator
             $methodName = "get".$shortClassName;
             $commandGetArgs[] = sprintf("\$event->%s()->toNative()", $methodName);
         }
+        $commandGetArgs[] = "\$event->getPayload()?->toNative()";
 
         return $commandGetArgs;
     }
