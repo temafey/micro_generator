@@ -36,3 +36,5 @@ build/
 ###> Phpunit ###
 bin/.phpunit
 ###< Phpunit ###
+
+composer.lock
