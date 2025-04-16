@@ -4,7 +4,7 @@
     "type": "library",
     "license": "proprietary",
     "require": {
-      "php": "^7.4 || ^8.0",
+      "php": "^8.3",
       "ext-json": "*",
       "nette/utils": "^4.0"
     },
@@ -12,16 +12,14 @@
         "micro-module/value-object": "^0.6",
         "mockery/mockery": "^1.6",
         "nikic/php-parser": "^5.4",
-        "phan/phan": "^5.4",
-        "php-parallel-lint/php-console-highlighter": "^v1.0",
+        "php-parallel-lint/php-console-highlighter": "^1.0",
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpmd/phpmd": "^2.15",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-mockery": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
-        "phpunit/phpunit": "^9.0",
-        "roave/no-leaks": "^1.5",
+        "phpunit/phpunit": "^12.1",
         "symplify/easy-coding-standard": "^12.5",
         "vimeo/psalm": "^6.10"
     },
@@ -29,5 +27,10 @@
       "psr-4": {
         "MicroModule\\MicroserviceGenerator\\": "src/"
       }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     }
 }
